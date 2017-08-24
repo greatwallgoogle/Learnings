@@ -129,4 +129,83 @@ public class Vector3 implements Cloneable {
                 throw new IllegalArgumentException("The specified Axis is not a valid choice.--zsx");
         }
     }
+
+    public boolean isZero()
+    {
+        return (x == 0 && y == 0 && z == 0);
+    }
+
+    public boolean isUnit()
+    {
+        return isUnit(1e-8);
+    }
+
+    public boolean isUnit(double margin)
+    {
+        return Math.abs(length2() - 1) < margin * margin;
+    }
+
+    public double length2()
+    {
+        return (x * x + y * y + z * z);
+    }
+
+    public double normalize()
+    {
+        double mag = Math.sqrt(x * x + y * y + z * z);
+        if (mag != 0 && mag != 1)
+        {
+            double mod = 1 / mag;
+            x *= mod;
+            y *= mod;
+            z *= mod;
+        }
+        return mag;
+    }
+
+    public Vector3 subtractAndSet(Vector3 u, Vector3 v)
+    {
+        x = u.x - v.x;
+        y = u.y - v.y;
+        z = u.z - v.z;
+        return this;
+    }
+
+    public Vector3 inverse()
+    {
+        x = -x;
+        y = -y;
+        z = -z;
+        return this;
+    }
+
+    public static double dot(Vector3 u, Vector3 v)
+    {
+        return u.x * v.x + u.y * v.y + u.z * v.z;
+    }
+
+    public double dot(Vector3 v)
+    {
+        return x * v.x + y * v.y + z * v.z;
+    }
+
+    public static double length2(double x, double y, double z)
+    {
+        return (x * x + y * y + z * z);
+    }
+
+    public double length()
+    {
+        return length(this);
+    }
+
+    public static double length(Vector3 v)
+    {
+        length(v.x ,v.y, v.z);
+    }
+
+    public static double length(double x, double y, double z)
+    {
+        return Math.sqrt(length2(x, y, z));
+    }
 }

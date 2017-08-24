@@ -1,5 +1,7 @@
 package zsx.rajawali3d.math.vector;
 
+import android.opengl.Matrix;
+
 import zsx.rajawali3d.util.ArrayUtils;
 
 /**
@@ -97,5 +99,17 @@ public final class Matrix4 implements Cloneable {
         return this;
     }
 
+    public Matrix4 leftMultiply(Matrix4 matrix)
+    {
+        //拷贝到mTmp
+        System.arraycopy(m, 0, mTmp, 0, 16);
+        Matrix.multiplyMM(m, 0, matrix.getDoubleValues(), 0, mTmp, 0);
+        return this;
+    }
 
+
+    public double[] getDoubleValues()
+    {
+        return m;
+    }
 }

@@ -54,12 +54,43 @@ public abstract class ATransformable3D implements IGraphNodeMember {
     {
         if (mIsModelMatrixDirty)
         {
-
+            calculateModelMatrix(parentMatrix);
+            mGraphNode.updateObject(this);
+            mIsModelMatrixDirty = false;
+            return true;
         }
+
+        return false;
     }
+
 
     public void calculateModelMatrix(final Matrix4 parentMatrix)
     {
-        mMMatrix
+        mMMatrix.setAll(mPosition, mScale, mOrientation);
+        if (parentMatrix != null)
+        {
+            mMMatrix.leftMultiply(parentMatrix);
+        }
+    }
+    public void setPosition(Vector3 position)
+    {
+        mPosition.setAll(position);
+    }
+
+    public ATransformable3D resetToLookAt()
+    {
+        resetToLookAt(mUpAxis);
+        return this;
+    }
+
+    public ATransformable3D resetToLookAt(Vector3 upAxis)
+    {
+        mTempVec.subtractAndSet(mLookAt, mPosition);
+        if (mIsCamera)
+        {
+            mTempVec.inverse();
+        }
+
+        mOrientation
     }
 }
