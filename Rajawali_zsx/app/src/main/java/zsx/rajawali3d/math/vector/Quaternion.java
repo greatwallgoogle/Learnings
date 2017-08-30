@@ -31,7 +31,7 @@ public final class Quaternion implements Cloneable {
         setAll(quat);
     }
 
-    /*根据旋转轴(单位向量)和旋转角(弧度)，转化为四元数形式
+    /*根据旋转轴(单位向量)和旋转角(弧度)，转化为四元数形式，公式：
     * w = cos(angle / 2)
     * x = sin(angle / 2) * axis.x;
     * y = sin(angle / 2) * axis.y;
@@ -99,13 +99,66 @@ public final class Quaternion implements Cloneable {
             {
                 mTmpVec1.inverse();
             }
+            fromRotationBetween(Vector3.FORWARD_AXIS,mTmpVec1);
 
+            return this;
         }
+
+        Vector3
     }
 
     public Quaternion fromRotationBetween(Vector3 u, Vector3 v)
     {
         final  double dot = u.dot(v);
-        final double dotError =
+        final double dotError = 1.0 - Math.abs(MathUtil.clamp(dot, -1, 1));
+        if (dotError <= PARALLEL_TOLERANCE)//两个向量平行或接近平行
+        {
+            if (dot < 0) {//这两个向量平行但是方向相反
+                mTmpVec3.crossAndSet(Vector3.RIGHT_AXIS, u);
+                if (mTmpVec3.length() < 1e-6) {
+                    mTmpVec3.crossAndSet(Vector3.UP_AXIS, u);
+                }
+
+                mTmpVec3.normalize();
+                return fromAngleAxis(mTmpVec3, 180.0);
+            } else {
+                return identity();
+            }
+        }
+
+        mTmpVec3.crossAndSet(u, v).normalize();
+        x = mTmpVec3.x;
+        y = mTmpVec3.y;
+        z = mTmpVec3.z;
+        w = 1 + dot;
+
+        normalize();
+        return this;
+    }
+
+    public double normalize()
+    {
+        double len = length2();
+        if (len != 0 && (Math.abs(len - 1)) > NORMALIZATION_TOLERANCE)
+        {
+            double factor = 1.0/Math.sqrt(len);
+            multiply(factor);
+        }
+
+        return len;
+    }
+
+    public double length2()
+    {
+        return w * w + x * x + y * y + z * z;
+    }
+
+    public Quaternion multiply(double factor)
+    {
+        w *= factor;
+        x *= factor;
+        y *= factor;
+        z *= factor;
+        return this;
     }
 }

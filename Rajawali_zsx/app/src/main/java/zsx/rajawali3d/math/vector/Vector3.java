@@ -26,6 +26,13 @@ public class Vector3 implements Cloneable {
 
     public static final Vector3 ONE = new Vector3(1, 1, 1);
 
+    public static final Vector3 RIGHT_AXIS = X.clone();
+
+    public static final Vector3 UP_AXIS = Y.clone();
+
+    public static final Vector3 FORWARD_AXIS = Z.clone();
+
+
     private Vector3 mTmpVector3 = null;
 
     private Matrix4 mTmpMatrix3 = null;
@@ -150,6 +157,7 @@ public class Vector3 implements Cloneable {
         return (x * x + y * y + z * z);
     }
 
+    //单位化
     public double normalize()
     {
         double mag = Math.sqrt(x * x + y * y + z * z);
@@ -163,6 +171,7 @@ public class Vector3 implements Cloneable {
         return mag;
     }
 
+    //计算差向量
     public Vector3 subtractAndSet(Vector3 u, Vector3 v)
     {
         x = u.x - v.x;
@@ -171,6 +180,7 @@ public class Vector3 implements Cloneable {
         return this;
     }
 
+    //反向量
     public Vector3 inverse()
     {
         x = -x;
@@ -179,21 +189,25 @@ public class Vector3 implements Cloneable {
         return this;
     }
 
+    //向量点乘
     public static double dot(Vector3 u, Vector3 v)
     {
         return u.x * v.x + u.y * v.y + u.z * v.z;
     }
 
+    //点乘
     public double dot(Vector3 v)
     {
         return x * v.x + y * v.y + z * v.z;
     }
 
+    //向量模长的平方
     public static double length2(double x, double y, double z)
     {
         return (x * x + y * y + z * z);
     }
 
+    //向量模长
     public double length()
     {
         return length(this);
@@ -207,5 +221,56 @@ public class Vector3 implements Cloneable {
     public static double length(double x, double y, double z)
     {
         return Math.sqrt(length2(x, y, z));
+    }
+
+    public Vector3 clone()
+    {
+        return new Vector3(x, y, z);
+    }
+
+    //向量叉乘
+    public Vector3 crossAndSet(Vector3 u, Vector3 v)
+    {
+        //类似矩阵计算余子式
+        double nx = u.y * v.z - u.z * v.y;
+        double ny  =  u.z * v.x - u.x * v.z;
+        double nz = u.x * v.y - u.y * v.x;
+        return setAll(nx, ny, nz);
+    }
+
+    /*
+    * 向量u在向量v上的投影向量,公式：
+    * result = |u| * cos(夹角) * v
+    * ->推导：result = (|u| * dot(u, v) * v) / (|u| * |v|)
+    * ->推导：result = (dot(u, v) * v) / |v|
+    * */
+    public  static Vector3 projectAndCreate(Vector3 u, Vector3 v)
+    {
+        double dotValue = u.dot(v);
+        double dotValue_div = dotValue / v.length();
+        return v.clone().multiply(dotValue_div);
+    }
+
+    public Vector3 multiply(double value)
+    {
+        x *= value;
+        y *= value;
+        z *= value;
+        return this;
+    }
+
+    public static void orthoNormalize(Vector3 v1, Vector3 v2)
+    {
+        v1.normalize();
+        v2.subtract(projectAndCreate(v2, v1));
+        v2.normalize();
+    }
+
+    public Vector3 subtract(Vector3 v)
+    {
+        x -= v.x;
+        y -= v.y;
+        z -= v.z;
+        return this;
     }
 }
