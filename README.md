@@ -1,15 +1,10 @@
-# 学习笔记
+# ARKitNote
 
-### 1. JNIDemo01
-学习JNI的Hello world
-
-
-### 2. Rajawali_zsx
-学习Rajawali
-
-2018-01-11晚22:56
+### 一、ARKit三个官方Demo
+- BuildingYourFirstARExperience
+- CreatingFace-BasedARExperiences
+- Handling3DInteractionandUIControlsinAugmentedReality
 
 
-无畏
-
-zsx
+### 二、UE4中使用ARKit插件的教学视频
+Getting_Started_With_ARKit_In_Unreal_Engine4.mp4
