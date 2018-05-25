@@ -14,4 +14,4 @@
 - 可以嵌套子```QSplitter```。
 - 可以使用```QSS```来设置```QSplitter```的样式，例如```Demo```中的分割线颜色的设置。
 
-![QSplitter](D:\WorkSpaces\ZSXGit\Learnings\Pics\QSplitter.png)
+![QSplitter](Pics\QSplitter.png)
