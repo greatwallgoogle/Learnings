@@ -15,4 +15,4 @@
 - 可以使用```QSS```来设置```QSplitter```的样式，例如```Demo```中的分割线颜色的设置。
 - 可以使用```void setOpaqueResize(bool opaque = true);```方法来设置是否在拖动分割线时实时改变大小。如果值为```false```，此时拖动分割线时，会额外显示一条线，当松开鼠标时，分割线才真正到所开鼠标的位置。
 
-![QSplitter](D:\WorkSpaces\ZSXGit\Learnings\Pics\QSplitter.png)
+![QSplitter](Pics\QSplitter.png)
