@@ -13,5 +13,7 @@
 - 可以通过```void setHandleWidth(int)```方法设置分割线的宽度。
 - 可以嵌套子```QSplitter```。
 - 可以使用```QSS```来设置```QSplitter```的样式，例如```Demo```中的分割线颜色的设置。
+- 当用hide()方法隐藏一个子类控件时，它的空间会被其它的部件占用。当重新调用show()方法展示这个部件的时候，又会恢复之前的布局。
+- 注意：不可以在QSplitter中添加一个QLayout，同样，也不可以将QSplitter添加到QLayout中去。
 
 ![](./Pics/QSplitter.png)
