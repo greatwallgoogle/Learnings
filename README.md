@@ -25,3 +25,11 @@
 
 StandardItemModel这个Demo展示了QStandardItemModel的基本用法，用来实现切换左侧列表元素同时更改右侧列表数据。
 ![QStandardItemModel](Pics/QStandardItemModel.gif)
+
+#### 3.QFileSystemModel的使用 
+
+效果：展开指定的节点，本例是展开某个叶子节点及所有父节点。
+
+**注意**：展开时需要将 QTreeView 的 setReadOnly 置为 true ，否则会出现无法展开父节点的现象。
+
+![QFileSystemModel](Pics/QFileSystemModel.png)
