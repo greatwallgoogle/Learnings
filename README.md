@@ -18,10 +18,10 @@
 - 当用hide()方法隐藏一个子类控件时，它的空间会被其它的部件占用。当重新调用show()方法展示这个部件的时候，又会恢复之前的布局。
 - 注意：不可以在QSplitter中添加一个QLayout，同样，也不可以将QSplitter添加到QLayout中去。
 
-![QSplitter](https://github.com/Calence/Learnings/tree/Qt/Pics/QSplitter.png)
+![QSplitter](Pics/QSplitter.png)
 
 
 #### 2. QStandardItemModel的使用
 
 StandardItemModel这个Demo展示了QStandardItemModel的基本用法，用来实现切换左侧列表元素同时更改右侧列表数据。
-![QStandardItemModel](https://github.com/Calence/Learnings/tree/Qt/Pics/QStandardItemModel.gif)
+![QStandardItemModel](Pics/QStandardItemModel.gif)
