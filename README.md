@@ -16,3 +16,11 @@
 - 可以使用```void setOpaqueResize(bool opaque = true);```方法来设置是否在拖动分割线时实时改变大小。如果值为```false```，此时拖动分割线时，会额外显示一条线，当松开鼠标时，分割线才真正到所开鼠标的位置。
 
 ![QSplitter](Pics\QSplitter.png)
+
+
+
+#### 2. QStandardItemModel的使用
+
+StandardItemModel这个Demo展示了QStandardItemModel的基本用法，用来实现切换左侧列表元素同时更改右侧列表数据。
+
+![QSplitter](Pics\QStandardItemModel.gif)
