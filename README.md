@@ -33,3 +33,9 @@ StandardItemModel这个Demo展示了QStandardItemModel的基本用法，用来�
 **注意**：展开时需要将 QTreeView 的 setReadOnly 置为 true ，否则会出现无法展开父节点的现象。
 
 ![QFileSystemModel](Pics/QFileSystemModel.png)
+
+#### 4. 查找框
+
+使用 ```QLindEdit```实现查找框效果。
+
+![QFileSystemModel](Pics/Search.gif)
