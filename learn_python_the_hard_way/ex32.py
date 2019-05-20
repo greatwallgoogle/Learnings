@@ -55,10 +55,19 @@ print("list1 :" ,list1)
 print("list index1 :" , list1[0])
 print("list index2 :" , list1[1])
 
+# 遍历每个元素值
 for x in list1:
 	print("x : " , x)
 	for y in x:
 		print("y : ",y)
 	print("================")
+
+
+# 通过索引循环
+for index in range(len(list1)):
+	print("current ele:", list1[index])
+	for index2 in range(len(list1[index])):
+		print("current ele 2:" , list1[index][index2])
+	print("**********************")
 
 
