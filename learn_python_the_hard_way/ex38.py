@@ -35,4 +35,4 @@ print("list2Var:",list2Var)
 # 2. listVar[index]：可以通过索引访问元素，索引值为-1，表示访问最后一个元素
 # 3. listVar.pop()：表示获取列表的最后一个元素，并将其从列表移除
 # 4. listVar[startIndex: endIndex]：表示获取索引值[startIndex,endIndex)对应的元素，注意区间是左闭右开
-# 5. listVar2 = strVar.join(list1Var) ：表示在list1Var的每个元素之间添加字符串strVar，并返回最新的列表
+# 5. listVar2 = strVar.join(list1Var) ：表示在list1Var的每个元素之间添加字符串strVar，并返回最新的字符串
