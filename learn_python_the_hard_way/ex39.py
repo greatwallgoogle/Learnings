@@ -80,3 +80,11 @@ if not state:
 
 city = cities.get('TX',"Does Not Exist.")
 print("The city for the state 'TX' is : %s" % city)
+
+list = ['a','b','c']
+for i,v in enumerate(list):
+	print(i,v)
+
+dic111 = {'fir':11,"sec":22}
+for i,kv in enumerate(dic111):
+	print(i,kv)
