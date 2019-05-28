@@ -1,7 +1,7 @@
 import hashmap
 
 states = hashmap.new()
-hashmap.set(states,"Oregon","OR")
+hashmap.set(states,'Oregon','OR')
 hashmap.set(states,"Florida","FL")
 hashmap.set(states,"California","CA")
 hashmap.set(states,"New York","NY")
@@ -11,8 +11,6 @@ cities = hashmap.new()
 hashmap.set(cities,"CA","San Francisco")
 hashmap.set(cities,"MI","Detroit")
 hashmap.set(cities,"FL","Jacksonville")
-
-
 hashmap.set(cities,"NY","New York")
 hashmap.set(cities,"OR","Portland")
 
@@ -21,17 +19,17 @@ print("NY state has:" , hashmap.get(cities,"NY"))
 print("OR state has:" , hashmap.get(cities,"OR"))
 
 print('-' * 50)
-print("Michigan's abbreviation is :" , hashmap.get(state,"Michigan"))
-print("Florida's abbreviation is :" ,hashmap.get(state,"Florida"))
+print("Michigan's abbreviation is :" , hashmap.get(states,"Michigan"))
+print("Florida's abbreviation is :" ,hashmap.get(states,"Florida"))
 
 
 print('-' * 50)
-print("Michigan has :" , hashmap.get(cities,hashmap.get(state,"Michigan")))
-print("Florida has  :" , hashmap.get(cities,hashmap.get(state,"Florida")))
+print("Michigan has :" , hashmap.get(cities,hashmap.get(states,"Michigan")))
+print("Florida has  :" , hashmap.get(cities,hashmap.get(states,"Florida")))
 
 
 print('-' * 50)
-hashmap.printList(state)
+hashmap.printList(states)
 
 print('-' * 50)
 hashmap.printList(cities)

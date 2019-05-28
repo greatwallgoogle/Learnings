@@ -1,12 +1,16 @@
 #定义自己的字典类
+# 1. enumerate(list):将一个可遍历的数据对象(如列表、元组或字符串)组合为一个索引序列,
+#    同时列出数据和数据下标，一般用在 for 循环当中。
+
+
 def new(num_buckets = 256):
 	"""Initializes a Map with the given number of buckets."""
 	aMap = []
 	for x in range(0,num_buckets):
-		aMap.append(x)
+		aMap.append([]) #!!!!!!
 	return aMap
 
-
+# 核心函数
 def hash_key(aMap,key):
 	"""Given a key this will create a number and then convert it 
 	to an index for the aMap's buckets."""
