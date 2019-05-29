@@ -1,6 +1,7 @@
 #定义自己的字典类
 # 1. enumerate(list):将一个可遍历的数据对象(如列表、元组或字符串)组合为一个索引序列,
 #    同时列出数据和数据下标，一般用在 for 循环当中。
+# 2. collections.OrderedDict：是个有序字典
 
 
 def new(num_buckets = 256):
@@ -20,6 +21,7 @@ def hash_key(aMap,key):
 def get_bucket(aMap,key):
 	"""Given a key,find the bucket where it would go."""
 	bucket_id = hash_key(aMap,key)
+#	print("get_bucket:",bucket_id)
 	return aMap[bucket_id]
 
 def get_slot(aMap,key,default = None):
