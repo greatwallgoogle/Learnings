@@ -50,7 +50,7 @@ class Scene(object):
 		pass
 		
 
-
+# 表示继承自Scene
 class Death(Scene):
 	"""docstring for Death"""
 	def __init__(self, arg):
@@ -61,7 +61,7 @@ class Death(Scene):
 	def enter(self):
 		pass
 
-
+# 表示继承自Scene
 class CenterlCorridor(Scene):
 	"""docstring for CenterlCorridor"""
 	def __init__(self, arg):
@@ -71,7 +71,7 @@ class CenterlCorridor(Scene):
 	def enter(self):
 		pass
 
-
+# 表示继承自Scene
 class LaserWeaponArmory(Scene):
 	"""docstring for LaserWeaponArmory"""
 	def __init__(self, arg):
@@ -81,7 +81,7 @@ class LaserWeaponArmory(Scene):
 	def enter(self):
 		pass
 
-
+# 表示继承自Scene
 class TheBridge(Scene):
 	"""docstring for TheBridge"""
 	def __init__(self, arg):
@@ -91,7 +91,7 @@ class TheBridge(Scene):
 	def enter(self):
 		pass
 
-
+# 表示继承自Scene
 class EscapePod(Scene):
 	"""docstring for EscapePod"""
 	def __init__(self, arg):
@@ -102,7 +102,7 @@ class EscapePod(Scene):
 		pass
 		
 		
-
+# 创建实例
 aMap = Map("CenterlCorridor")
 aGame = Engine(aMap)
 aGame.play()
