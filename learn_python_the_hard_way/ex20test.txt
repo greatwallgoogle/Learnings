@@ -1,3 +1,0 @@
-The first line 1;
-The sec line 2;
-The third line 3;
