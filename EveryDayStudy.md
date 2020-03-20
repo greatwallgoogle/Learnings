@@ -55,7 +55,78 @@
 
 ### 1.2.2 复制构造函数的构建操作
 
+#### 1.2.2.1 复制构造函数定义
 
+复制构造函数是一个构造函数，第一个参数的类型是当前类的类型，可以有多个参数，其第二参数及后继参数需提供一个默认值。
+
+#### 1.2.2.2 三种调用复制构造函数的情况
+
+- 类对象的赋值操作```X x1; X x2 = x1; ```
+
+- 当类对象作为参数传给函数时，```void func1(X tmp);```
+
+- 当类对象作为函数返回值时，
+
+  ```X func2(){```
+
+  ​    ```X xt;```
+
+  ​    ```return xt;```
+
+  ```}```
+
+#### 1.2.2.3 复制构造函数的实现方式
+
+定义class时，分为两种情况：
+
+- 开发人员明确声明复制构造函数及其成员变量的赋值。
+- 开发人员没有明确声明复制构造函数，由编译器自动合成，其内部是通过defualt memberwise initializaiton完成，即把每一个内建或派生的成员变量的值，从某个object拷贝一份到另一个object。但是它不会拷贝成员类对象，而是以递归的方式施行memberwise initializaiton。参考**《Inside the c++ object model》一书的P49**
+
+通过代码说明内建变量的拷贝：
+
+```c++
+class Test1
+{
+public:
+    Test1(){}
+    Test1(int tmp,std::string strTmp):m_nLen(tmp),m_strTmp(strTmp){}
+    //没有声明复制构造函数
+public:
+    int m_nLen;
+    std::string m_strTmp;
+};
+
+Test1 t1(5,"hello");
+Test1 t2 = t1;
+printf("test :%d  %s",t2.m_nLen,t2.m_strTmp.c_str()); //结果为>> test :5  hello
+
+//跟下面操作一致
+t2.m_nLen = t1.m_nLen;
+t2.m_strTmp = t1.m_strTmp;
+```
+
+
+
+将Test1对象作为Test2的成员变量，来说明非内建对象的拷贝：
+
+```c++
+class WordTmp
+{
+public:
+    int nVal;
+    Test1 t1;
+};
+
+WordTmp tTVal2;
+WordTmp.nVal = 2;
+WordTmp.t1 = t1;
+
+WordTmp tTVal3 = tTVal2;
+```
+
+如果将```tTVal2```赋值给```tTVal3```，```WordTmp```的```default memberwise initialization```会拷贝其内建的成员```nVal```，然后再对```Test1``` 类型的成员变量```t1```执行```default memberwise initialization```操作。
+
+#### 1.2.2.4 位逐次拷贝（Bitwise Copy Semantics）
 
 
 
