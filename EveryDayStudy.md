@@ -128,6 +128,42 @@ WordTmp tTVal3 = tTVal2;
 
 #### 1.2.2.4 位逐次拷贝（Bitwise Copy Semantics）
 
+没看明白。。。
+
+
+
+#### 1.2.2.5 虚函数表
+
+只要一个类声明了一个或多个虚函数，编译期间必然会执行的两个操作：
+
+- 增加一个虚函数表(vtbl)，内含每一个有作用的虚函数的地址。
+- 为类对象(或指针)分配一个指向虚函数表的指针(vptr)。
+
+**重要概念：切割（sliced）**
+
+```
+//这将会发生切割行为
+DerivedClass dObj1;
+BaseClass    bObj2 = dObj1;
+```
+
+此时bObj2会丢失属于DerivedClass的部分，bObj2本质上是BaseClass类型的对象。
+
+实际上是因为合成出来的基类复制构造函数会明确设定bObj2的虚函数指针（vptr）指向基类的虚函数表，而不是直接直接拷贝右手边派生类对象的vptr。
+
+#### 1.2.2.6 位逐次拷贝无效的情况
+
+1. 当class内含一个成员对象，而后者的class声明有一个复制构造函数时；
+2. 当class继承自一个基类，而后者存在有一个复制构造函数时（无论是被明确声明还是被合成）；
+3. 当class声明了一个或多个虚函数时；
+4. 当class派生自一个继承串链，其中有一个或多个虚基类时。
+   - 一个类对象如果以另一个对象作为初值，而后者有一个virtual base class subobject，那么会使“bitwise copy semantics”失效，换句话说，这个问题不发生在一个类对象以另一个同类的object作为初值，而是发生在 一个类对象以其派生类object作为初值时。
+   - ![virtual base class subobject](./pics/virtual_base_class_subobject.png)
+
+### 1.2.3 程序转化语意
+
+#### 1.2.3.1
+
 
 
 
