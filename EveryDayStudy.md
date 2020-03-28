@@ -284,6 +284,58 @@ private:
 
 
 
+变量初始化的次序：
+
+```
+class Word
+{
+public:
+	Word():m_nCount(0),m_strCont("hello"){}
+private:
+	std::string m_strCont;
+	int m_nCount;
+};
+```
+
+上述代码中，虽然在初始化列表中，```m_nCount```位于```m_strCont```之前，但实际上是先初始化```m_strCont```，因为这两个变量声明的次序是先声明```m_strCont```。
+
+**类成员变量的初始化顺序由其声明顺序决定，而不是在初始化列表中的排序。**
+
+编译器会对初始化列表一一处理并可能重新排序，以反映出成员的声明次序，同时它会在构造函数内插入一些代码。
+
+
+
+思考问题：
+
+```
+class X{ };
+class Y : public virtual X{ };
+class Z : public virtual X{ };
+class A : public Y, public Z { };
+
+int main()
+{
+    printf("X:%ld Y:%ld Z:%ld A:%ld \n",sizeof(X),sizeof(Y),sizeof(Z),sizeof(A));
+    return 0;
+}
+```
+
+在VS Code中打印出的结果为：```X:1 Y:8 Z:8 A:16 ```。
+
+一个空的class X，其sizeof的值为1，是因为它有一个隐含的1``byte``，是被编译器插入进去的一个```char```，这使得这个类的两个对象得以在内存中拥有独一无二的地址：
+
+````
+X a,b;
+if(&a == &b) 
+	printf("ok \n");
+elses
+	printf("no \n");//结果为no
+````
+
+
+
+
+
 # 二、数据结构与算法
 
 ## 2.1 动态规划算法
