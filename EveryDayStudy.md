@@ -334,6 +334,228 @@ elses
 
 
 
+### 1.2.5 类内变量的布局
+
+类的非静态变量在类对象中的排列顺序与其被声明的顺序相同，任何中间插入的静态数据变量都不会被放进类对象的布局之中。
+
+以代码为例：
+
+```
+class Point3D
+{
+private:
+	float x;
+	static List<Point3D*>* freeList;
+	float y;
+	static const int chunkSize = 200;
+	float z;
+};
+```
+
+每一个Point3D对象都是由三个float变量组成，次序是```x,y,z```。静态变量```freeList / chunkSize```都不会被放进Point3D对象的布局之中，而是存在于程序的```data segment```中。
+
+```C++ Standard```要求在同一个访问区段（即```private/public/protected```）中，变量的排序只需符合“较晚出现的变量在类对象中有较高的地址”这一个条件即可。
+
+
+
+编译器还可能会合成一些内部使用的成员变量，如```vptr```，即虚函数指针，当前所有的编译器都把它安插在每一个“内含虚函数的类”的对象中。传统上，vptr会被放置在所有明确声明的成员变量之后，不过也有一些编译器把vptr放在一个类对象的最前端。
+
+
+
+```C++ Standard```允许编译器将多个访问区段的变量自由排列，不必在乎它们出现在类声明中的次序。
+
+```
+class Point3D
+{
+private:
+	float x;
+	static List<Point3D*>* freeList;
+private:
+	float y;
+	static const int chunkSize = 200;
+private:
+	float z;
+};
+```
+
+上述代码中，Point3D 类对象的**大小和组成**与先前声明的那个相同，但是成员变量的排列次序则由编译器而定。
+
+### 1.2.6 类内变量的存取
+
+```
+Point3D origin, *pt = &origin;
+origin.x = 10;
+pt->x = 10;
+```
+
+思考：上述对于x存取的两种方式有什么重大差异吗？
+
+#### 1.2.6.1 静态类型
+
+静态变量只有一个实体，并不在类对象中，而是存放在程序的data segment之中。
+
+```
+origin.chunkSize = 250;
+pt->chunkSize = 250;
+Point3D::chunkSize = 250;
+```
+
+上述三种方式的调用结果完全相同，只是```.```和```->```只是语法上的一种方便访问的方式。
+
+#### 1.2.6.2 非静态类型
+
+非静态变量直接存放在每个类对象之中。想要对一个非静态变量进行存取操作，编译器需要把类对象的起始地址加上变量的偏移量(offset)。举例说明：
+
+```
+origin.y = 0;
+```
+
+则地址&origin.y将等于：
+
+```
+&origin + (&Point3D::y - 1);
+```
+
+> 注意其中的-1操作。指向成员变量的指针，其偏移量总是被加上1，这样可以使编译器区分出“一个指向成员变量的指针，用以指出类的第一个成员”和“一个指向成员变量的指针，没有指出任何成员”两种情况。
+
+没看明白引用的这段话。。。
+
+每一个非静态成员变量的偏移量在编译时期即可获知，即便成员变量属于基类也是如此。
+
+
+
+**非静态变量在虚继承中的存取效率**
+
+```
+Point3D* pt3d;
+pt3d->x = 0;
+```
+
+其执行效率在x是一个结构体变量、类成员变量、单一继承、多重继承的情况下完全相同。但如果x是一个虚基类的成员变量，则存取速度会慢一点。
+
+
+
+现在回想本节最开始的问题，通过对象和指针存取成员有什么重大差异？
+
+```
+Point3D origin, *pt = &origin;
+origin.x = 10;
+pt->x = 10;
+```
+
+答案为：当```Point3D```是一个派生类，并且被存取的成员变量(如x)是从虚基类中继承而来时，就会存在重大的差异。因为pt的具体类型在执行期才能明确，经由一个额外的间接导引才能解决。但如果使用origin，其类型确定为``Point3D``，即便它继承自虚基类，成员变量的偏移量也在编译时期就固定了。
+
+
+
+### 1.2.7 继承与成员变量
+
+分为四种情况介绍：单一继承且不含虚函数、单一继承并含虚函数、多重继承、虚继承。
+
+#### 1.2.7.1 只要继承不要多态
+
+定义没有继承关系的```Point2D```和```Point3D```两个类：
+
+```
+class Point2d
+{
+public:
+	float x;
+	float y;
+};
+
+class Point3d
+{
+public:
+	float x;
+	float y;
+	float z;
+};
+```
+
+这两个类没有虚函数，它们的布局与结构体完全一样。
+
+![point2d_3d](./pics/point2d_3d.png)
+
+这种方式下，对于x和y的操作需要分别在```Point2D```和```Point3D```两个类中实现，从设计模式上来讲，这种设计是不优雅的，一般通过继承方式。
+
+```
+class Point2d
+{
+public:
+	Point2d(float nX = 0,float nY = 0):_x(nX),_y(nY){}
+	float getX(){return _x;}
+	void  setX(float nT){_x = nT;}
+	float getY(){return _y;}
+	void  setY(float nY){_y = nY;}
+protected:
+	float _x;
+	float _y;
+};
+
+class Point3d : public Point2d
+{
+public:
+	Point3d(float nX = 0,float nY = 0,float nZ = 0)
+		:Point2d(nX,nY),_z(nZ){ }
+	float getZ(){return _z;}
+	void  setZ(float nZ){_z = nZ;}
+protected:
+	float _z;
+};
+```
+
+单一继承且没有虚函数时的布局为：
+
+![extend_2d_3d](./pics/extend_2d_3d.png)
+
+
+
+#### 1.2.7.2 加上多态
+
+加上多态，也就是应用虚函数。代码如下：
+
+```
+class Point2d
+{
+public:
+	Point2d(float nX = 0,float nY = 0):_x(nX),_y(nY){}
+	float getX(){return _x;}
+	void  setX(float nT){_x = nT;}
+	float getY(){return _y;}
+	void  setY(float nY){_y = nY;}
+	
+    virtual void setZ(float nZ){}//虚函数
+    virtual float getZ(){return 0;}//虚函数
+protected:
+	float _x;
+	float _y;
+};
+
+class Point3d : public Point2d
+{
+public:
+	Point3d(float nX = 0,float nY = 0,float nZ = 0)
+		:Point2d(nX,nY),_z(nZ){ }
+	float getZ(){return _z;}
+	void  setZ(float nZ){_z = nZ;}
+protected:
+	float _z;
+};
+```
+
+添加了虚函数之后：
+
+- 每一个```Point2d```的类都会导入一个虚函数表，此表用于存放类中所声明的每一个虚函数的地址。
+- 每一个```Point2d```和```Point3d```的类对象都会导入一个虚函数指针(vptr)，提供执行期的链接，使每一个对象都能找到对应的虚函数表，这就是多态的本质。
+
+ 
+
+```Point2d```和```Point3d```是单一继承关系，加上了虚函数之后的继承布局为：**（此图是把vptr指针放在基类的尾端，现在的编译器一般是放在基类的头部）**
+
+![](./pics/virtual_func.png)
+
+疑问：为什么```Point3d```
+
 
 
 # 二、数据结构与算法
