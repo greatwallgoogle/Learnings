@@ -716,9 +716,56 @@ ptr->normalize();
 
 #### 1.2.8.1 非静态成员函数
 
+C++ 标准的设计准则之一就是：非静态成员函数至少必须和一般的非成员函数有相同的效率。即选择调用成员函数不应该带来额外负担，编译器内部会将成员函数转化为对等的非成员函数。
+
+```
+float magnitude(const Point3d* _this){}
+float Point3d::magnitude() const  { }
+```
+
+转化步骤为：
+
+1. 改写函数原型：增加一个额外的参数，该额外参数被称为this指针。
+
+   ```
+   //非const 非静态成员函数
+   Point3d Point3d::magnitude(Point3d* const this)
+   
+   //const 非静态成员函数
+   Point3d Point3d::magnitude(const Point3d* const this)
+   ```
+
+2. 将每一个 对非静态成员变量的存取操作 改为经由 ```this```指针来存取：
+
+   ```
+   {
+       return sqrt(this->x * this->x + this->y * this->y + this->z * this->z);
+   }
+   ```
+
+3. 将成员函数重新写成一个外部函数，对函数名称进行“```mangling```”处理，使其独一无二的存在在程序中。
+
+   ```
+   extern magnitude_7Point3dFv(register Point3d* const this);
+   ```
+
+经过上述三步就转换结束，其每一个调用操作也都必须转换：
+
+```
+//原来的调用
+obj.magnitude();
+//变成
+magnitude_7Point3dFv(&obj);
+
+//而原来的指针调用
+ptr->magnitude();
+//变成了
+magnitude_7Point3dFv(ptr);
+```
 
 
-###  
+
+
 
 
 
