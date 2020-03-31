@@ -420,7 +420,7 @@ origin.y = 0;
 
 没看明白引用的这段话。。。
 
-每一个非静态成员变量的偏移量在编译时期即可获知，即便成员变量属于基类也是如此。
+**每一个非静态成员变量的偏移量在编译时期即可获知，即便成员变量属于基类也是如此。**
 
 
 
@@ -508,7 +508,14 @@ protected:
 
 ![extend_2d_3d](./pics/extend_2d_3d.png)
 
+访问类的sizeof:
 
+```
+printf("Point2d: %ld Point3d: %ld\n",sizeof(Point2d), sizeof(Point3d));
+//结果为 Point2d: 8 Point3d: 12
+//Point2d : 4 + 4
+//Point3d : 4 + 4 + 4
+```
 
 #### 1.2.7.2 加上多态
 
@@ -554,7 +561,164 @@ protected:
 
 ![](./pics/virtual_func.png)
 
-疑问：为什么```Point3d```
+访问类的sizeof（没想明白。。）：
+
+```
+printf("Point2d: %ld Point3d: %ld\n",sizeof(Point2d),sizeof(Point3d));
+//结果为 Point2d: 16 Point3d: 24
+```
+
+疑问：为什么```Point3d```没有所属的虚函数指针，用的却是```Point2d```的虚函数指针。难道是因为```Point3d```类中没有虚函数吗？
+
+
+
+#### 1.2.7.3 多重继承
+
+单一继承提供了一种“自然多态”的形式，是关于类体系中的基类和子类之间的转换。
+
+以代码展示多继承体系：
+
+```
+
+class Point2d
+{
+public:
+	//有虚函数，所以Point2d对象中会有vptr
+protected:
+	float _x;
+	float _y;
+};
+
+class Point3d : public Point2d
+{
+public:
+	//...
+protected:
+	float _z;
+};
+
+class Vertex
+{
+public:
+    //有虚函数，所以Vertex对象有vptr
+protected:
+    Vertex* next;
+};
+
+class Vertex3d:public Point3d, public Vertex
+{
+public:
+    //...
+protected:
+    float mumble;
+};
+```
+
+继承关系为：
+
+![](./pics/mult_extend.png)
+
+对于多重派生对象，将其地址指定给“最左端（也就是第一个）基类的指针”，情况与单一继承时相同，二者都有相同的起始地址。至于第二个或后继的基类的地址指定操作，则需要需改：加上（或减去，如果downcast）介于中间的 ```base class subobjects```的大小。
+
+
+
+声明下面四个变量：
+
+```
+Vertex3d v3d;
+Vertex*  pv;
+Point2d* p2d;
+Point3d* p3d;
+```
+
+当执行下面的操作时（```Vertex```是```Vertex3d```的第二个基类）：
+
+```
+pv = &v3d;
+//需要进行的内部转化为：
+//虚拟C++码
+pv = (Vertex*)( ((char*)&v3d) + sizeof(Vertex3d) );
+```
+
+而下面的指定操作，都需要简单地拷贝其地址就行了。
+
+```
+p2d = &v3d;
+p3d = &v3d;
+```
+
+如果有两个指针执行如下的操作：
+
+````
+Vertex3d* pv3d;
+Vertex*   pv;
+pv = pv3d;
+````
+
+内部不能够只是简单地被转化为：
+
+```
+//虚拟C++代码
+pv = (Vertex*)((char*)pv3d) + sizeof(Vertex3d);
+```
+
+因为当```pv3d```为0时，```pv```将获取```sizeof(Vertex3d)```的值，这是错误的！，因此对于指针，内部转换操作需要有一个条件判断：
+
+```
+//虚拟C++代码
+pv = pv3d ? (Vertex*)((char*)pv3d) + sizeof(Vertex3d) : 0;
+```
+
+至于引用，则不需要针对可能为0值做处理，因为引用不可能为空。
+
+
+
+此处多重继承的布局为：
+
+![](./pics/mult_extend_layout.png)
+
+#### 1.2.7.4 虚继承
+
+没看明白。。
+
+
+
+### 1.2.8  函数的各种调用方式
+
+C++支持三种类型的成员函数：静态、非静态和虚函数，每一种类型被调用的方式都不同。
+
+以下列代码为例：
+
+```
+Point3d Point3d::normalize() const
+{
+    Point3d res;
+    float length = magnitude();
+    res.x = x/length;
+    res.y = y/length;
+    res.z = z/length;
+    
+    return res;
+}
+
+float Point3d::magnitude() const
+{
+    return sqrt(x * x + y * y + z * z);
+}
+
+Point3d obj;
+Point3d* ptr;
+obj.normalize();
+ptr->normalize();
+```
+
+
+
+#### 1.2.8.1 非静态成员函数
+
+
+
+###  
 
 
 
