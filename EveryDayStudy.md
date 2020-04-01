@@ -763,7 +763,119 @@ ptr->magnitude();
 magnitude_7Point3dFv(ptr);
 ```
 
+而上面声明的normalize函数将被改写为：
 
+```
+void normalize_7Point3dFv(const Point3d* const this, Point3d& __result){}
+```
+
+#### 1.2.8.2 虚拟成员函数
+
+如果```normalize```是虚拟成员函数，则下面的调用：
+
+```
+ptr->normalize();
+```
+
+将会转化为：
+
+```
+(*ptr->vptr[1])(ptr);
+```
+
+- vptr是指向虚函数表的指针，每个包含虚函数的类对象都有虚函数指针。
+- 其中1是```virtual table slot```的索引值，关联到```normalize```函数。
+- 第二个ptr表示this指针。
+
+**在C++中，多态表示“以一个基类的指针(或引用)，寻址出一个派生类对象“的意思。**
+
+识别一个类是否支持多态，唯一适当的方法就是看看它是否有虚函数。
+
+**虚函数地址如何被构建起来？**
+
+在C++中，虚函数可以在编译期获知，并且这一组地址是固定不变的，执行期不可能新增或替换之。
+
+- 为了找到表格，每一个类对象都会包含一个由编译器内部产生的指针，指向该表格。
+- 为了找到函数地址，每一个虚函数被指派一个固定的索引值。
+
+这些工作都由编译器完成，执行期要做的只是在特定的 ```virtual table slot```(记录着虚函数的地址)中激活虚函数。
+
+一个类只有一个虚表，每一个表内含其对应的类对象中所有```active```虚函数实体的地址。
+
+```active```虚函数包括：
+
+- 类所定义的函数实体。它会重写一个可能存在的基类虚函数的函数实体。
+- 继承自基类的函数实体。当派生类不重写虚函数时才会出现的情况。
+- 一个```pure_virtual_called()```函数实体，也就是纯虚函数。
+
+**虚函数表中只记录虚函数、纯虚函数的地址。**
+
+声明```Point/Point2d/Point3d```三个类，说明单一继承体系下虚函数表中的内容。
+
+```
+class Point
+{
+public:
+	virtual ~Point(){}
+    virtual Point& mult(float factor) = 0;
+    float x()const {return _x;}
+    virtual float y(){return 0;}
+    virtual float z(){return 0;}
+protected:
+    Point(float x = 0){_x = x;}
+    float _x;
+};
+class Point2d:public Point
+{
+public:
+    Point2d(float x = 0,float y = 0):Point(x),_y(y){}
+    ~Point2d(){}
+
+    Point2d& mult(float factor);
+    float y() const {return _y;}
+
+protected:
+    float _y;
+};
+class Point3d:public Point2d
+{
+public:
+    Point3d(float x = 0,float y = 0,float z = 0):Point2d(x,y),_z(z){}
+    ~Point3d(){}
+
+    Point3d& mult(float factor);
+    float z() const {return _z;}
+
+protected:
+    float _z;
+};
+```
+
+![](./pics/virtual_table.png)
+
+
+
+#### 1.2.8.3 静态成员函数
+
+如果```Point3d::normalize()```是一个静态成员函数，以下的两个调用将会被转化为非成员函数调用：
+
+```
+//obj.normalize();
+normalize_7Point3dSFV();
+    
+//ptr->normalize();
+normalize_7Point3dSFV();
+```
+
+**静态成员函数的主要特性是它没有```this```指针。**
+
+次要特性是：
+
+- 它不能直接存取其所在类的非静态成员变量。
+- 它不能被声明为```const```、```virtual```和```volatile```。
+- 它不需要经由类对象调用。
+
+> C++ 中 volatile关键字和const对应。<https://zhuanlan.zhihu.com/p/33074506>
 
 
 
