@@ -2,9 +2,30 @@
 
 ## 1.1 C++基础
 
-### 1.1.1 vector
+### 1.1.1 public/private/protected
 
+#### 1.1.1.1 三种标号的访问范围
 
+- private声明的属性，只能被以下情况访问：
+  - 所属类中的函数
+  - 其友元函数访问
+- protected声明的属性，只能被下列情况访问：
+  - 所属类中的函数
+  - 子类的函数
+  - 其友元函数
+- public 声明的属性，只能被下列情况访问：
+  - 所属类中的函数
+  - 子类的函数
+  - 其友元函数
+  - 该类的对象
+
+#### 1.1.1.2 三种标号的继承
+
+**private属性(成员变量和成员函数)不能被继承。**
+
+- private继承：父类的protected和public属性(成员变量和成员函数)在子类中都会变为private。
+- protected继承：父类的protected和public属性(成员变量和成员函数)在子类中都会变为protected。
+- public继承：父类的protected和public属性(成员变量和成员函数)不发生变化。
 
 
 
@@ -787,6 +808,34 @@ ptr->normalize();
 - 其中1是```virtual table slot```的索引值，关联到```normalize```函数。
 - 第二个ptr表示this指针。
 
+#### 1.2.8.3 静态成员函数
+
+如果```Point3d::normalize()```是一个静态成员函数，以下的两个调用将会被转化为非成员函数调用：
+
+```
+//obj.normalize();
+normalize_7Point3dSFV();
+    
+//ptr->normalize();
+normalize_7Point3dSFV();
+```
+
+**静态成员函数的主要特性是它没有```this```指针。**
+
+次要特性是：
+
+- 它不能直接存取其所在类的非静态成员变量。
+- 它不能被声明为```const```、```virtual```和```volatile```。
+- 它不需要经由类对象调用。
+
+> C++ 中 volatile关键字和const对应。<https://zhuanlan.zhihu.com/p/33074506>
+
+
+
+
+
+#### 1.2.8.4 多态与虚函数
+
 **在C++中，多态表示“以一个基类的指针(或引用)，寻址出一个派生类对象“的意思。**
 
 识别一个类是否支持多态，唯一适当的方法就是看看它是否有虚函数。
@@ -800,15 +849,11 @@ ptr->normalize();
 
 这些工作都由编译器完成，执行期要做的只是在特定的 ```virtual table slot```(记录着虚函数的地址)中激活虚函数。
 
-一个类只有一个虚表，每一个表内含其对应的类对象中所有```active```虚函数实体的地址。
-
-```active```虚函数包括：
-
-- 类所定义的函数实体。它会重写一个可能存在的基类虚函数的函数实体。
-- 继承自基类的函数实体。当派生类不重写虚函数时才会出现的情况。
-- 一个```pure_virtual_called()```函数实体，也就是纯虚函数。
+一个类只有一个虚表，每一个表内含其对应的类对象中所有```active```虚函数实体的地址，关于激活的虚函数下面进行详细的介绍。
 
 **虚函数表中只记录虚函数、纯虚函数的地址。**
+
+#### 1.2.8.5 单继承下的虚成员函数
 
 声明```Point/Point2d/Point3d```三个类，说明单一继承体系下虚函数表中的内容。
 
@@ -851,33 +896,78 @@ protected:
 };
 ```
 
-![](./pics/virtual_table.png)
+布局方式：![](/Users/momo/Documents/workspace_script/Learnings/pics/virtual_table.png)
 
+虚函数表中的函数类型包括：
 
+- 继承自基类所声明的虚函数的函数体。基类中该函数实体的地址会被拷贝到派生类虚函数相对应的slot中。
+- 派生类使用自己的函数实体。这表示它自己的函数实体地址必须放在对应的slot之中。
+- 派生类可以加入一个新的虚函数。此时派生类的虚函数表的尺寸会增加一个slot，新的函数实体地址会被放进该slot之中。
+- 一个```pure_virtual_called()```函数实体，即纯虚函数地址。
 
-#### 1.2.8.3 静态成员函数
+#### 1.2.8.6 多重继承下的虚函数
 
-如果```Point3d::normalize()```是一个静态成员函数，以下的两个调用将会被转化为非成员函数调用：
+在多重继承中支持虚函数，其复杂度围绕着第二个及后继的基类身上，以及”必须在执行期调整this指针“这一点上。
+
+举例：
 
 ```
-//obj.normalize();
-normalize_7Point3dSFV();
-    
-//ptr->normalize();
-normalize_7Point3dSFV();
+class Base1
+{
+public:
+    Base1();
+    virtual ~Base1();
+    virtual void speakClearly();
+protected:
+    float data_base1;
+};
+
+class Base2
+{
+public:
+    Base2();
+    virtual ~Base2();
+    virtual void mumber();
+protected:
+    float data_base2;
+};
+
+class Derived:public Base1,public Base2
+{
+public:
+    Derived();
+    virtual ~Derived();
+protected:
+    float data_derived;
+};
 ```
 
-**静态成员函数的主要特性是它没有```this```指针。**
+在多重继承下，一个派生类内含```n-1```个额外的虚表，```n```表示其上一层基类的个数（单一继承将不会有额外的虚表）。
 
-次要特性是：
+对于本例的派生类，会有两个虚表被编译器产生：
 
-- 它不能直接存取其所在类的非静态成员变量。
-- 它不能被声明为```const```、```virtual```和```volatile```。
-- 它不需要经由类对象调用。
+1. 一个主要实体，与Base1（最左端的基类）共享。
+2. 一个次要实体，与Base2（第二个基类）有关。
 
-> C++ 中 volatile关键字和const对应。<https://zhuanlan.zhihu.com/p/33074506>
+针对每一个虚表，派生类对象中会有对应的```vptr```（虚函数指针）。用以支持”一个类拥有多个虚表“的传统方法是：将每一个表以外部对象的形式产生出来，并给予独一无二的名称。
+
+例如```Derived```所关联的两个表的名称可能是：
+
+```
+vtbl_Derived
+vtbl_Base2_Derived
+```
+
+- 当将一个```Derived```对象的地址指定给一个```Base1```指针或```Derived```指针时，被处理的虚表是主要表格```vtbl_Derived```。
+- 当将一个```Derived```对象的地址指定一个```Base2```指针时，被处理的虚表是次要表格```vtbl_Base2_Derived```。
+
+多重继承下的布局：
+
+![](/Users/momo/Documents/workspace_script/Learnings/pics/mult_extend_layout2.png)
 
 
+
+#### 1.2.8.7 虚继承下的虚函数
 
 
 
