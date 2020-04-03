@@ -737,7 +737,7 @@ ptr->normalize();
 
 #### 1.2.8.1 非静态成员函数
 
-C++ 标准的设计准则之一就是：非静态成员函数至少必须和一般的非成员函数有相同的效率。即选择调用成员函数不应该带来额外负担，编译器内部会将成员函数转化为对等的非成员函数。
+C++ 标准的设计准则之一就是：**非静态成员函数至少必须和一般的非成员函数有相同的效率**。**即选择调用成员函数不应该带来额外负担，编译器内部会将成员函数转化为对等的非成员函数。**
 
 ```
 float magnitude(const Point3d* _this){}
@@ -820,7 +820,7 @@ normalize_7Point3dSFV();
 normalize_7Point3dSFV();
 ```
 
-**静态成员函数的主要特性是它没有```this```指针。**
+**静态成员函数的主要特性是它没有```this```指针。静态成员函数在调用过程中也会被转化为非成员函数调用。**
 
 次要特性是：
 
@@ -918,6 +918,7 @@ public:
     Base1();
     virtual ~Base1();
     virtual void speakClearly();
+    virtual Base1* clone()const;
 protected:
     float data_base1;
 };
@@ -927,7 +928,8 @@ class Base2
 public:
     Base2();
     virtual ~Base2();
-    virtual void mumber();
+    virtual void mumble();
+    virtual Base2* clone()const;
 protected:
     float data_base2;
 };
@@ -937,6 +939,7 @@ class Derived:public Base1,public Base2
 public:
     Derived();
     virtual ~Derived();
+    virtual Derived* clone()const;
 protected:
     float data_derived;
 };
@@ -967,7 +970,101 @@ vtbl_Base2_Derived
 
 
 
+**第二或后继的基类会影响对虚函数支持的三种情况：**
+
+- 1. 通过一个指向第二基类的指针，调用派生类的虚函数。如：
+
+  ```
+  Base2* ptr = new Derived();
+  
+  //调用Derived::~Derived
+  //ptr必须向后调整sizeof(Base1)个bytes ? 向后还是向前？？？？应该是向前吧！！
+  delete ptr;
+  ```
+
+- 2. 通过一个指向派生类的指针，调用从第二基类中继承而来的虚函数。如：
+
+  ```
+  Derived* pder = new Derived();
+  
+  //调用Base2::mumble()
+  //pder必须向前调整sizeof(Base1)个bytes ? 向前还是向后？？应该是向后吧！！！
+  pder->mumble();
+  ```
+
+- 3. 发生于语言扩充性质之下：允许一个虚函数的返回值类型有所变化，可能是基类类型，也可能是派生类类型。如```clone```函数的使用：
+
+  ```
+  //clone函数的派生类版本会传回一个Derived类型指针，默默地改写了它两个基类的函数实体。
+  //当通过”指向第二基类“的指针来调用clone()时，this指针的offset问题就会产生：
+  Base2* pb1 = new Derived();
+  
+  //调用Derived::clone()
+  //返回值必须被调整，以指向Base2 subobject
+  Base2* pb2 = pb1->clone();
+  ```
+
 #### 1.2.8.7 虚继承下的虚函数
+
+太复杂了，没搞懂。
+
+#### 1.2.8.8 函数效能
+
+下面总结出非成员友元函数、成员函数、以及虚成员函数的执行性能：
+
+内联函数 > 非成员函数 = 静态函数 = 非静态成员函数 > 单一继承下的虚函数 > 多重继承下的虚函数 >= 虚继承下的虚函数。
+
+前面已经讲到：非静态成员函数和静态函数，在被调用时都会被编译器转化为非成员函数，因此三者的执行效率一样。
+
+#### 1.2.8.9 函数指针
+
+函数指针本质上是一个指针，不过这个指针比较特殊，其指向的是函数的地址，该指针可以看做是函数名。
+
+**函数指针声明**：
+
+格式为：```返回值类型 (*函数指针名称)(参数列表)```
+
+```
+int (*pFunc)(int a,int b);
+```
+
+- pFunc是一个指针，指向一个函数，该函数有两个int型形参，返回值类型为Int。
+- pFunc两边的括号不能省略，括号的优先级要比```*```高。
+
+区分这两种情况：
+
+```
+int (*pFunc)(int a,int b);//pFunc是个指向函数的指针，返回值为int
+int  *pFunc(int a,int b);//pFunc是个函数，返回值为int*
+```
+
+**函数指针的调用：**
+
+```
+int (*pFunc)(int val1,int val2);
+int getSum(int n1,int n2)
+{
+    return n1 + n2;
+}
+int main()
+{
+    pFunc = getSum;
+    int res = pFunc(3,5);
+    printf("res:%d \n",res);
+    return 0;
+}
+//结果为res:8 
+```
+
+
+
+#### 1.2.8.10 类函数指针
+
+
+
+
+
+
 
 
 
