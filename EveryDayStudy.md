@@ -27,7 +27,172 @@
 - protected继承：父类的protected和public属性(成员变量和成员函数)在子类中都会变为protected。
 - public继承：父类的protected和public属性(成员变量和成员函数)不发生变化。
 
+### 1.1.2 函数指针
 
+函数指针本质上是一个指针，不过这个指针比较特殊，其指向的是函数的地址，该指针可以看做是函数名。
+
+另外，不同类型的函数指针之间不能转换。
+
+#### 1.1.2.1 **函数指针声明**
+
+格式为：```返回值类型 (*函数指针名称)(参数列表)```
+
+例如：
+
+```
+int (*pFunc)(int a,int b);
+```
+
+- pFunc是一个指针，指向一个函数，该函数有两个int型形参，返回值类型为Int。
+- pFunc两边的括号不能省略，括号的优先级要比```*```高。
+
+区分这两种情况：
+
+```
+int (*pFunc)(int a,int b);//pFunc是个指向函数的指针，返回值为int
+int  *pFunc(int a,int b);//pFunc是个函数，返回值为int*
+```
+
+#### 1.1.2.2. 函数指针赋值与调用
+
+给函数指针赋值时，只需给出函数名，不必给出参数。
+
+```
+int (*pFunc)(int val1,int val2);
+int getSum(int n1,int n2)
+{
+    return n1 + n2;
+}
+
+pFunc = getSum;//赋值
+int res = pFunc(3,5);
+printf("res:%d \n",res);//结果为res:8 
+```
+
+#### 1.1.2.3 typedef简化函数指针
+
+函数指针可以作为函数形参、函数返回值使用，如果其本身定义的非常复杂，可通过```typedef```简化。
+
+```
+typedef int (*FuncCall1)(int n, int m);//定义函数指针类型
+int compareNum(int a,int b)
+{
+    if (a > b) return 1;
+    if (a < b) return -1;
+    return 0;
+}
+FuncCall1 cf;//声明一个函数指针
+cf = compareNum;//赋值
+int res = cf(4,3);//调用
+printf("res:%d \n",res);//1
+```
+
+#### 1.1.2.4 函数指针作为形参
+
+函数指针作为形参：
+
+```
+//第三个参数为函数指针
+int funcTemp(int a, int b,int(*Func)(const int a, const int b))
+{
+    return Func(a,b);
+}
+
+int res = funcTemp(4,5,getSum);
+printf("res:%d \n",res);//res: 9
+
+int res2 = funcTemp(4,5,compareNum);
+printf("res:%d \n",res2);//res: -1
+```
+
+也可以将形参通过```typedef```简化：
+
+```
+int funcTemp2(int a, int b,FuncCall1 fc)
+{
+    return fc(a,b);
+}
+
+int res2 = funcTemp2(4,7,getSum);
+printf("res:%d \n",res2);//res: 11
+```
+
+#### 1.1.2.5 函数指针作为返回值
+
+函数指针作为返回值时，理解稍微复杂，举例说明：
+
+```
+int (*ff(int))(int*,int);
+```
+
+此函数的返回值为：
+
+```
+int (*)(int* int)
+```
+
+函数名定义：
+
+```ff(int)
+ff(int)
+```
+
+简化为：
+
+```
+typedef int(*PF)(int*,int);
+PF ff(int);
+```
+
+### 1.1.3 重载函数
+
+#### 1.1.3.1 重载函数定义
+
+出现在相同作用域内的函数，如果其函数名相同，而形参列表不同，则称之为重载函数。
+
+**形参列表不同的含义为：**形参个数不同或形参类型不同，函数不能基于返回值类型不同实现重载。
+
+**函数重载与重复声明的区别：**
+
+- 如果两个函数返回值类型和形参列表相同，则第二个函数视为重复声明。
+- 如果两个函数的形参列表完全相同，而返回值不同，则第二个函数声明是错误的。
+
+#### 1.1.3.2 函数重载与const 形参
+
+函数重载是基于形参列表的不同而实现的，但是```const```形参与非```const```形参有些情况下不能实现函数重载。
+
+看以下代码：
+
+```
+void lookup(Phone tm);
+void lookup(const Phone tm);//重定义
+
+void lookup2(Phone& ph);
+void lookup2(const Phone& ph);//重载
+
+void lookup3(Phone* ptr);
+void lookup3(const Phone* ptr);//重载
+
+void lookup4(Phone* ptr);
+void lookup4(Phone* const ptr);//重定义
+```
+
+形参与const形参的等价性仅适用于非引用形参，也就说对于引用和指针来讲，const形参与非const形参可用于实现函数重载。
+
+- 有const引用形参的函数与有非const引用形参的函数是不同的。
+- 有指向const类型的指针形参的函数，与带有指向相同类型的非const对象的指针形参的函数不同。
+- 不能基于指针本身是否为const来实现函数重载。因为const修饰指针本身，而不是修饰指针所指向的类型。
+
+注意区分**指针常量和常量指针**的区别。
+
+```
+const int* ptr;//常量指针
+int const* ptr2;//常量指针
+int* const ptr3 = NULL;//指针常量
+```
+
+- 常量指针：指针所指向的对象为常量，不允许修改。
+- 指针常量：指针本身为常量，指针的值不允许修改。
 
 
 
@@ -1016,49 +1181,7 @@ vtbl_Base2_Derived
 
 前面已经讲到：非静态成员函数和静态函数，在被调用时都会被编译器转化为非成员函数，因此三者的执行效率一样。
 
-#### 1.2.8.9 函数指针
-
-函数指针本质上是一个指针，不过这个指针比较特殊，其指向的是函数的地址，该指针可以看做是函数名。
-
-**函数指针声明**：
-
-格式为：```返回值类型 (*函数指针名称)(参数列表)```
-
-```
-int (*pFunc)(int a,int b);
-```
-
-- pFunc是一个指针，指向一个函数，该函数有两个int型形参，返回值类型为Int。
-- pFunc两边的括号不能省略，括号的优先级要比```*```高。
-
-区分这两种情况：
-
-```
-int (*pFunc)(int a,int b);//pFunc是个指向函数的指针，返回值为int
-int  *pFunc(int a,int b);//pFunc是个函数，返回值为int*
-```
-
-**函数指针的调用：**
-
-```
-int (*pFunc)(int val1,int val2);
-int getSum(int n1,int n2)
-{
-    return n1 + n2;
-}
-int main()
-{
-    pFunc = getSum;
-    int res = pFunc(3,5);
-    printf("res:%d \n",res);
-    return 0;
-}
-//结果为res:8 
-```
-
-
-
-#### 1.2.8.10 类函数指针
+#### 1.2.8.9 指向虚函数的函数指针
 
 
 
