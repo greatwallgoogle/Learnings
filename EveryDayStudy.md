@@ -144,6 +144,47 @@ typedef int(*PF)(int*,int);
 PF ff(int);
 ```
 
+#### 1.1.2.6 指向类成员函数的指针
+
+指向类成员函数的指针比普通的函数指针相比，多了一个类的限定。
+
+声明：
+
+```
+class A
+{
+public:
+    void Speak(){
+        printf("A::Speak.....\n");
+    }
+};
+
+//声明指向类成员函数的指针
+void (A::*pFunc1)();
+```
+
+赋值：
+
+```
+pFunc1 = &A::Speak;
+```
+
+调用：
+
+```
+A a1;
+(a1.*pFunc1)();//A::Speak.....
+```
+
+**也可以通过```typedef```简化声明**:
+
+```
+typedef void (A::*Func2)();//声明函数指针类型
+Func2 ptr2 = &A::Speak;//声明变量并赋值
+A a2;
+(a2.*ptr2)();//调用
+```
+
 ### 1.1.3 重载函数
 
 #### 1.1.3.1 重载函数定义
@@ -193,6 +234,159 @@ int* const ptr3 = NULL;//指针常量
 
 - 常量指针：指针所指向的对象为常量，不允许修改。
 - 指针常量：指针本身为常量，指针的值不允许修改。
+
+### 1.1.4 多态与析构函数
+
+为了防止内存泄漏，含有虚函数的类应该将其析构函数设为虚函数。
+
+例如：
+
+```
+class Base1
+{
+public:
+    Base1(){}
+    virtual ~Base1(){printf("Base1::~Base1  \n");}
+};
+class Derived:public Base1
+{
+public:
+    Derived(){}
+    virtual ~Derived(){printf("Derived::~Derived  \n");}
+};
+
+int main()
+{
+    Base1* ptr = new Derived();
+    delete ptr;
+    return 0;
+}
+```
+
+如果基类```Base1```的析构函数为非虚函数时，打印的日志为：
+
+```
+Base1::~Base1  
+```
+
+丢掉了派生类析构函数的调用，可能会产生泄漏。如果将父类的析构函数改为虚函数，则结果为：
+
+```
+Derived::~Derived  
+Base1::~Base1
+```
+
+### 1.1.5 继承与友元
+
+#### 1.1.5.1 友元类
+
+一个类A可以将类B声明为自己的友元，则类B中所有的成员函数都可以访问类A的```private```和```protected```成员。
+
+```
+class CCar
+{
+private:
+    int price;
+    friend class CDriver;  //声明 CDriver 为友元类
+};
+class CDriver
+{
+public:
+    void ModifyCar(CCar myCar) 
+    {
+        myCar.price += 1000;  //因CDriver是CCar的友元类，故此处可以访问其私有成员
+    }
+};
+```
+
+#### 1.1.5.2 友元函数
+
+在类中，可以将**全局函数或其他类的非私有成员函数**声明为友元函数，在友元函数内部可以访问类的私有成员。
+
+**将全部函数函数声明为友元函数的格式：**
+
+```
+friend 返回值类型 函数名(参数列表)
+```
+
+**将其他类的非私有函数声明为友元函数的格式：**
+
+```
+friend 返回值类型 类名::函数名(参数列表)
+```
+
+```
+class CDriver;  //前向声明：提前声明CDriver类
+class CCar
+{
+private:
+    int price;
+    friend void CDriver::ModifyCar(CCar myCar);  //声明友元函数
+    friend int  GetExpensiveCar(CCar cars[], int total);//声明友元函数
+};
+
+class CDriver
+{
+public:
+    void ModifyCar(CCar myCar)  //改装汽车
+    {
+        myCar.price += 1000;  //因CDriver是CCar的友元类，故此处可以访问其私有成员
+    }
+};
+
+int GetExpensiveCar(CCar cars[], int total)
+{
+    int tmpMax = -1;
+    for (int i = 0; i<total; ++i)
+        if (cars[i].price > tmpMax)
+            tmpMax = cars[i].price;
+    return tmpMax;
+}
+```
+
+#### 1.1.5.3 继承与友元
+
+友元关系不能被继承。
+
+- 基类中的友元类、友元函数不能被子类继承，即友元类对派生类的成员没有特殊访问权限。
+- 基类被授予友元关系，
+
+```
+class CCar
+{
+private:
+    int price;
+    friend class CDriver;  //声明 CDriver 为友元类
+};
+class CMinCar:public CCar
+{
+private:
+	int num;
+};
+
+class CDriver
+{
+public:
+    virtual void ModifyCar(CCar myCar) {
+        myCar.price += 1000;  //ok
+    }
+    virtual void ModifyCar(CMinCar myMinCar){
+        myMinCar.num += 1;//error
+    }
+};
+
+class CDriver2:public CDriver
+{
+public:
+    virtual void ModifyCar(CCar myCar)  {
+        myCar.price += 1000;  //error
+    }
+    virtual void ModifyCar(CMinCar myMinCar) {
+        myMinCar.num += 1;//error
+    }
+};
+
+```
 
 
 
@@ -1183,7 +1377,38 @@ vtbl_Base2_Derived
 
 #### 1.2.8.9 指向虚函数的函数指针
 
+C++多态仍然能够在使用”指向类成员函数的指针“情况下运行。
 
+```
+class Base1
+{
+public:
+    Base1(){}
+    virtual ~Base1(){printf("Base1::~Base1  \n");}
+    virtual void speakClearly(){printf("Base1::speakClearly  \n");}
+};
+
+class Derived:public Base1
+{
+public:
+    Derived(){}
+    virtual ~Derived(){printf("Derived::~Derived  \n");}
+    virtual void speakClearly(){printf("Derived::speakClearly  \n");}
+};
+
+int main()
+{
+    void (Base1::*pmf)() = &Base1::speakClearly;
+    Base1 ba;
+    (ba.*pmf)();	//Base1::speakClearly
+
+    Base1* ptr = new Derived();
+    (ptr->*pmf)();	//Derived::speakClearly
+    return 0;
+}
+```
+
+### 1.2.9 构造、析构和拷贝
 
 
 
