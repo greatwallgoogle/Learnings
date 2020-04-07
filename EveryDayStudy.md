@@ -388,6 +388,16 @@ public:
 
 ```
 
+### 1.1.6 static函数
+
+- static 成员函数没有this指针。
+- static 成员函数不能声明为 const。
+- static 成员函数不能被声明为虚函数。
+- static数据成员不同于普通数据成员，不是通过类的构造函数初始化，而是应该在定义时初始化。
+- 如果基类中定义了static成员，则整个继承体系中就只有一个这样的成员。
+
+
+
 
 
 ## 1.2 C++进阶
@@ -1408,9 +1418,82 @@ int main()
 }
 ```
 
-### 1.2.9 构造、析构和拷贝
+### 1.2.9 继承体系下的对象构造
+
+类的构造函数会被编译器扩充而产生大量的扩充码，扩充程度由类的继承体系确定。扩充码必须附加在基类构造函数执行之后，程序员提供的代码之前。
+
+编译器扩充的操作顺序一般为：
+
+1. 调用所有基类的构造函数，以基类的声明顺序为调用顺序，不是初始化列表中的顺序。
+2. 所有虚基类的构造函数必须由左到右的被调用。
+3. 如果类对象有虚表指针，则初始化虚表指针，将其指向正确的虚表。
+4. 记录在初始化列表中的成员变量将被放进构造函数体内，并以成员变量声明的顺序为调用顺序，而不是初始化列表中的顺序。
+5. 如果有一个成员并没有出现在初始化列表中，但是它有默认构造函数，则其默认构造函数也会被调用。
 
 
+
+**合成析构函数、拷贝构造函数、复制操作符**
+
+```
+class Point
+{
+public:
+    Point(float x = 0,float y = 0);
+    Point(const Point&);//拷贝构造函数
+    Point& operator=(const Point&); //复制操作符
+    virtual ~Point();//虚析构函数
+};
+
+class Line
+{
+public:
+    Line(const Point& begin,const Point& end)
+    :_end(end),_begin(begin){}
+private:
+    Point _begin,_end;
+};
+```
+
+Line只明确声明了含参构造函数，无拷贝构造函数，无赋值操作符。
+
+Line构造函数会被编译器扩充，扩充码如下：
+
+```
+Line* Line::Line(Line* this,const Point& begin,const Point& end)
+{
+    this->_begin.Point::Point(begin);
+    this->_endn.Point::Point(end);
+    return this;
+}
+```
+
+当声明Line变量时：
+
+```
+Line a;
+```
+
+Line类的析构函数会被自动合成，如下：**与构造函数的执行顺序相反**
+
+```
+void Line::Line(Line* this)
+{
+	this->_endn.Point::~Point();
+    this->_begin.Point::~Point();
+}
+```
+
+当写出下面的代码时，Line类的拷贝构造函数会自动合成。
+
+```
+Line b = a;
+```
+
+当写出下面代码时，Line类的赋值操作符将被自动合成。
+
+```
+a = b;
+```
 
 
 
