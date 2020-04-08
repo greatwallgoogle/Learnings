@@ -1495,7 +1495,144 @@ Line b = a;
 a = b;
 ```
 
+#### 1.2.9.1 虚继承下的对象构造
 
+我们都知道使用虚继承是为了避免菱形集继承而产生歧义，那么虚继承情况下，构造对象时，其子类构造函数会如何被扩充呢？
+
+以上面```1.2.9提到的Point```为基类，创建如下的类体系：
+
+![](./pics/virtual_extend_2.png)
+
+```
+class Point
+{
+public:
+	//虚析构函数
+	//虚成员函数
+}
+
+class Point3d : public virtual Point 
+{
+public:
+	Point3d(float x = 0,float y = 0,float z = 0)
+		:Point(x,y) , _z(z){}
+	//...
+}
+class Vertex : public virtual Point{}
+class Vertex3d : public Point3d,public Vertex {}
+class PVertex : public Vertex3d {}
+```
+
+程序员在定义```Point3d```和```Vertex```类的构造函数时，都会在其初始化列表中调用虚基类```Point```对应的构造函数，那为什么当定义```Vertex3d```的构造函数，并在其初始化列表分别调用```Point3d```和```Vertex```类的构造函数不会出错呢？
+
+原因就在于编译器会对构造函数进行扩充，当```Point3d```采用虚继承时，其构造函数会被扩充为如下的伪代码：
+
+```
+Point3d* Point3d::Point3d(Point3d* this, bool __most_derived, float x, float y, float z)
+{
+    if(__most_derived != false)
+    {
+       this->Point::Point(x, y, z);
+    }
+    this->__vptr_Point3d = __vtbl_Point3d;
+    this->__vptr_Point3d_Point = __vtbl_Point3d_Point;//这个不明白
+    this->_z = z;
+    return this;
+}
+```
+
+当```Point3d```和```Verte```的构造函数被直接子类调用时，其中```__most_derived```被设为```false```。如```Vertex3d```：
+
+```
+Vertex3d* Vertex3d::Vertex3d(Vertex3d* this, bool __most_derived, float x, float y, float z)
+{
+    if(__most_derived != false)
+    {
+       this->Point::Point(x, y, z);
+    }
+    
+    //调用上一层基类的构造函数
+    this->Point3d::Point3d(false, x, y, z);
+    this->Vertex::Vertex(false, x, y);
+    
+    //设置__vptr指针
+    //设置程序员给定的代码
+    return this;
+}
+```
+
+当我们如下声明变量时：
+
+```
+Point3d origin;
+Vertex3d cv;
+```
+
+- 当声明```origin```时，Point3d的构造函数可以正确调用虚基类的构造函数。
+- 当声明```cv```时，Vertex3d的构造函数会调用Point的构造函数，而Point3d和Vertex的构造函数中会剔除对Point构造函数的调用，其他部分正常执行。
+
+#### 1.2.9.2 在构造函数中调用虚函数
+
+C++语言规定：在某个类的构造函数（或析构函数）中调用虚函数，执行的是当前构造函数（或析构函数）所属类的虚函数的函数体。
+
+以下列代码为例：
+
+```
+class Point
+{
+public:
+    Point(float x = 0,float y = 0)
+    {
+        printf("Point::Point() \n");
+        size();
+    }
+    virtual void size(){printf("Point::size \n");}
+};
+
+class Point3d : public Point
+{
+public:
+    Point3d(float x = 0,float y = 0,float z = 0)
+        :Point(x,y)
+        {
+            printf("Point3d::Point3d() \n");
+            size();
+        }
+    virtual void size(){printf("Point3d::size \n");}
+};
+```
+
+当声明如下变量时：
+
+```
+Point3d vd;
+```
+
+打印的结果为:
+
+```
+Point::Point() 
+Point::size 
+Point3d::Point3d() 
+Point3d::size 
+```
+
+当子类```Point3d```的构造函数调用基类```Point```的构造函数时，在基类构造函数内访问虚函数```void size()```，实际上执行的是基类中对应的函数体```Point::size()```，而在子类```Point3d```中访问虚函数```size()```时，实际上执行的是子类中对应的函数体```Point3d::size()```
+
+#### 1.2.9.3 vptr的初始化
+
+```vptr```是虚函数指针，指向类的虚函数表。通过vptr找到虚函数表中对应的虚函数，这是C++多态的本质。
+
+**vptr初始化的时机：基类构造函数执行之后，程序员提供的代码或构造函数中初始化列表初始化之前。**所以才会出现 ```1.2.9.2```中的情况。
+
+
+
+最后总结构造函数的执行顺序：
+
+1. 在派生类的构造函数中，所有的虚基类及基类的构造函数都会被执行。
+2. 对象的虚表指针（一个或多个）被初始化，分别指向对应的虚函数表。
+3. 如果有初始化列表，将在构造函数内扩展开来。这一步是在虚表指针初始化之后执行。
+4. 执行程序员所提供的代码。
 
 
 
