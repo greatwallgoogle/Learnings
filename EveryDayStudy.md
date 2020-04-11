@@ -396,6 +396,98 @@ public:
 - static数据成员不同于普通数据成员，不是通过类的构造函数初始化，而是应该在定义时初始化。
 - 如果基类中定义了static成员，则整个继承体系中就只有一个这样的成员。
 
+### 1.1.7 C++模板
+
+#### 1.1.7.1 模板函数
+
+先看如下代码：
+
+```
+template <class T>
+int compare(const T& v1, const T& v2)
+{
+    if (v1 > v2)
+        return 1;
+    if (v1 < v2)
+        return -1;
+    return 0;
+}
+```
+
+模板函数的声明要点：
+
+- 模板函数是一个特殊的函数，以关键词```template```开头。
+- ```template```之后紧跟模板形参表，模板形参表由一个或多个模板形参组成，模板形参之间以逗号分隔。
+- 模板形参跟在```class```或```typename```关键词之后定义，声明模板形参类型时，这两个关键词作用完全相同。
+- 模板形参列表不能为空。
+- 模板形参的名称没有本质含义，可以随意命名。
+
+使用模板函数的目的是为了抽象出一套通用的函数的模板，根据模板形参的类型，**实例化**不同的函数实例。
+
+比如下面函数的调用：
+
+```
+int res = compare(1,2);
+```
+
+编译器会实例化出形参表为```int,int```的函数：
+
+```
+int compare(const int& v1, const int& v2);
+```
+
+#### 1.1.7.2 inline函数模板
+
+模板函数跟普通函数一样，可以通过```inline```关键词声明为内联函数。
+
+**声明内联函数模板的要点：inline关键词必须在模板形参列表之后，函数返回值之前 ，不能在template关键词之前。**
+
+举例说明：
+
+```
+template<class T>
+inline int min(const T& v1, const T& v2)
+{
+    if(v1 < v2)
+        return v1;
+    return v2;
+}
+```
+
+#### 1.1.7.3 模板类
+
+模板类与模板函数一样，都是以·```template```开始，紧跟模板形参列表。
+
+```
+template <class T>
+class Queue
+{
+public:
+    void Push(const T& val);
+    const T& Front();
+};
+```
+
+#### 1.1.7.4 在模板内部定义类型
+
+**在模板中定义内部类型时，必须使用typename关键词。**例如：
+
+```
+template<class Parm, class U>
+void fcn(Parm* array,U val)
+{
+    typename Parm::size_type* ptr;
+}
+```
+
+此时```size_type```就是模板类型```Parm```的一个内部成员类型，而不是成员变量，也不是成员函数。
+
+#### 1.1.7.5 非类型的模板形参
+
+模板形参不一定都是类型，也可以是值。
+
+在调用函数时，非类型形参将用值代替，值的类型在模板形参列表中指定。
+
 
 
 
