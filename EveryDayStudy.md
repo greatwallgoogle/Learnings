@@ -57,7 +57,7 @@ int  *pFunc(int a,int b);//pFunc是个函数，返回值为int*
 
 给函数指针赋值时，只需给出函数名，不必给出参数。
 
-```
+```C++
 int (*pFunc)(int val1,int val2);
 int getSum(int n1,int n2)
 {
@@ -73,7 +73,7 @@ printf("res:%d \n",res);//结果为res:8
 
 函数指针可以作为函数形参、函数返回值使用，如果其本身定义的非常复杂，可通过```typedef```简化。
 
-```
+```C++
 typedef int (*FuncCall1)(int n, int m);//定义函数指针类型
 int compareNum(int a,int b)
 {
@@ -91,7 +91,7 @@ printf("res:%d \n",res);//1
 
 函数指针作为形参：
 
-```
+```C++
 //第三个参数为函数指针
 int funcTemp(int a, int b,int(*Func)(const int a, const int b))
 {
@@ -107,7 +107,7 @@ printf("res:%d \n",res2);//res: -1
 
 也可以将形参通过```typedef```简化：
 
-```
+```C++
 int funcTemp2(int a, int b,FuncCall1 fc)
 {
     return fc(a,b);
@@ -150,7 +150,7 @@ PF ff(int);
 
 声明：
 
-```
+```C++
 class A
 {
 public:
@@ -204,7 +204,7 @@ A a2;
 
 看以下代码：
 
-```
+```C++
 void lookup(Phone tm);
 void lookup(const Phone tm);//重定义
 
@@ -241,7 +241,7 @@ int* const ptr3 = NULL;//指针常量
 
 例如：
 
-```
+```C++
 class Base1
 {
 public:
@@ -282,7 +282,7 @@ Base1::~Base1
 
 一个类A可以将类B声明为自己的友元，则类B中所有的成员函数都可以访问类A的```private```和```protected```成员。
 
-```
+```C++
 class CCar
 {
 private:
@@ -315,7 +315,7 @@ friend 返回值类型 函数名(参数列表)
 friend 返回值类型 类名::函数名(参数列表)
 ```
 
-```
+```C++
 class CDriver;  //前向声明：提前声明CDriver类
 class CCar
 {
@@ -351,7 +351,7 @@ int GetExpensiveCar(CCar cars[], int total)
 - 基类中的友元类、友元函数不能被子类继承，即友元类对派生类的成员没有特殊访问权限。
 - 基类被授予友元关系，
 
-```
+```C++
 class CCar
 {
 private:
@@ -402,7 +402,7 @@ public:
 
 先看如下代码：
 
-```
+```C++
 template <class T>
 int compare(const T& v1, const T& v2)
 {
@@ -444,7 +444,7 @@ int compare(const int& v1, const int& v2);
 
 举例说明：
 
-```
+```C++
 template<class T>
 inline int min(const T& v1, const T& v2)
 {
@@ -458,7 +458,7 @@ inline int min(const T& v1, const T& v2)
 
 模板类与模板函数一样，都是以·```template```开始，紧跟模板形参列表。
 
-```
+```C++
 template <class T>
 class Queue
 {
@@ -490,7 +490,7 @@ void fcn(Parm* array,U val)
 
 例如：
 
-```
+```C++
 template<class T, size_t N>
 void arrayInit(T (&param)[N])
 {
@@ -680,7 +680,7 @@ X temp = arg;
 
 **即编译器调用复制构造函数时定义一个临时对象，然后将临时对象传给函数，或作为返回值返回。**
 
-```
+```C++
 X xx;
 foo(xx);
 
@@ -696,7 +696,7 @@ foo(__temp0);
 
 以下面这段代码为例，说明函数执行过程：
 
-```
+```C++
 X foo()
 {
     X x1;
@@ -717,7 +717,7 @@ x1作为函数返回值返回实际上有一个双阶段转化过程：
 
 foo() 函数的转化如下：
 
-```
+```C++
 void foo(X& __res)
 {
     X x1;
@@ -763,7 +763,7 @@ __temp.X::~X();//临时对象调用析构函数
 
 初始化列表位于类的构造函数中，以冒号开头，以分号分隔多个初始化字段。
 
-```
+```C++
 class Apple
 {
 public:
@@ -785,7 +785,7 @@ private:
 
 变量初始化的次序：
 
-```
+```C++
 class Word
 {
 public:
@@ -806,7 +806,7 @@ private:
 
 思考问题：
 
-```
+```C++
 class X{ };
 class Y : public virtual X{ };
 class Z : public virtual X{ };
@@ -839,7 +839,7 @@ elses
 
 以代码为例：
 
-```
+```C++
 class Point3D
 {
 private:
@@ -863,7 +863,7 @@ private:
 
 ```C++ Standard```允许编译器将多个访问区段的变量自由排列，不必在乎它们出现在类声明中的次序。
 
-```
+```C++
 class Point3D
 {
 private:
@@ -954,7 +954,7 @@ pt->x = 10;
 
 定义没有继承关系的```Point2D```和```Point3D```两个类：
 
-```
+```C++
 class Point2d
 {
 public:
@@ -977,7 +977,7 @@ public:
 
 这种方式下，对于x和y的操作需要分别在```Point2D```和```Point3D```两个类中实现，从设计模式上来讲，这种设计是不优雅的，一般通过继承方式。
 
-```
+```C++
 class Point2d
 {
 public:
@@ -1020,7 +1020,7 @@ printf("Point2d: %ld Point3d: %ld\n",sizeof(Point2d), sizeof(Point3d));
 
 加上多态，也就是应用虚函数。代码如下：
 
-```
+```C++
 class Point2d
 {
 public:
@@ -1077,7 +1077,7 @@ printf("Point2d: %ld Point3d: %ld\n",sizeof(Point2d),sizeof(Point3d));
 
 以代码展示多继承体系：
 
-```
+```C++
 
 class Point2d
 {
@@ -1188,7 +1188,7 @@ C++支持三种类型的成员函数：静态、非静态和虚函数，每一�
 
 以下列代码为例：
 
-```
+```C++
 Point3d Point3d::normalize() const
 {
     Point3d res;
@@ -1250,7 +1250,7 @@ float Point3d::magnitude() const  { }
 
 经过上述三步就转换结束，其每一个调用操作也都必须转换：
 
-```
+```C++
 //原来的调用
 obj.magnitude();
 //变成
@@ -1335,7 +1335,7 @@ normalize_7Point3dSFV();
 
 声明```Point/Point2d/Point3d```三个类，说明单一继承体系下虚函数表中的内容。
 
-```
+```C++
 class Point
 {
 public:
@@ -1389,7 +1389,7 @@ protected:
 
 举例：
 
-```
+```C++
 class Base1
 {
 public:
@@ -1498,7 +1498,7 @@ vtbl_Base2_Derived
 
 C++多态仍然能够在使用”指向类成员函数的指针“情况下运行。
 
-```
+```C++
 class Base1
 {
 public:
@@ -1543,7 +1543,7 @@ int main()
 
 **合成析构函数、拷贝构造函数、复制操作符**
 
-```
+```C++
 class Point
 {
 public:
@@ -1612,7 +1612,7 @@ a = b;
 
 ![](./pics/virtual_extend_2.png)
 
-```
+```C++
 class Point
 {
 public:
@@ -1636,7 +1636,7 @@ class PVertex : public Vertex3d {}
 
 原因就在于编译器会对构造函数进行扩充，当```Point3d```采用虚继承时，其构造函数会被扩充为如下的伪代码：
 
-```
+```C++
 Point3d* Point3d::Point3d(Point3d* this, bool __most_derived, float x, float y, float z)
 {
     if(__most_derived != false)
@@ -1652,7 +1652,7 @@ Point3d* Point3d::Point3d(Point3d* this, bool __most_derived, float x, float y, 
 
 当```Point3d```和```Verte```的构造函数被直接子类调用时，其中```__most_derived```被设为```false```。如```Vertex3d```：
 
-```
+```C++
 Vertex3d* Vertex3d::Vertex3d(Vertex3d* this, bool __most_derived, float x, float y, float z)
 {
     if(__most_derived != false)
@@ -1686,7 +1686,7 @@ C++语言规定：在某个类的构造函数（或析构函数）中调用虚�
 
 以下列代码为例：
 
-```
+```C++
 class Point
 {
 public:
@@ -1918,33 +1918,189 @@ Point<float>* ptr = new Point<float>();
 
 
 
-# 二、数据结构与算法
+# 二、数据结构
 
-## 2.1 动态规划算法
+## 2.1 链表
 
 ### 2.1.1 定义
 
+链表是一种在物理上非连续、非顺序的数据结构，由若干个节点组成。
+
+链表分为单链表和双向链表，单链表的每个节点都包含两部分，一部分是存放数据的变量data，另一部分是保存下一个节点的next指针。双向链表的每个节点都包含三部分，除了单链表节点的两部分之外，还包含一个指向前一节点的pre指针。
+
+如果不考虑查找元素过程，只考虑纯粹的插入和删除操作，其时间复杂度为$O(1)$。
+
+### 2.1.2 链表与数组的比较
+
+数组是有限个相同类型的变量所组成的有序集合，在内存中顺序存储的线程表。
+
+|      | 查找   | 插入     | 删除     |
+| ---- | ------ | -------- | -------- |
+| 数组 | $O(1)$ | $O(n)$   | $O( n )$ |
+| 链表 | $O(n)$ | $O( 1 )$ | $O( 1 )$ |
+
+### 2.1.3 关于链表的算法题
+
+- [反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
+- 如何判断链表是否有环？
+- 
+
+## 2.2 栈
+
+#### 2.2.1 基本知识
+
+栈是一种逻辑结构，物理上可以基于数组实现，也可以基于链表实现。
+
+特点是先入后出，最早进入的元素称为栈底，最后进入的元素称为栈顶。
+
+基本操作为入栈和出栈。
+
+入栈和出栈的复杂度：$O( 1 )$。因为入栈和出栈只涉及到栈顶元素，不存在其他元素的整体移动，无论是基于数组实现还是链表实现，其复杂度均为$O( 1 )$。
+
+#### 2.2.2 关于栈的算法题
+
+
+
+## 2.3 队列
+
+#### 2.3.1 基本知识
+
+队列同栈一样，也是一种既可以基于数组实现，也可以基于链表实现的逻辑结构。
+
+特点是先入先出，队列的出口端成为队头，入口端称为队尾。
+
+入队和出队的复杂度：$O( 1 )$。
+
+#### 2.3.2 关于队列的算法题
+
+
+
+## 2.4 散列表
+
+#### 2.4.1 基本知识
+
+散列表又称哈希表，是以键值对的方式成对存储，根据键可以高效的获取值，时间复杂度接近于$O( 1 )$。
+
+哈希表本质上也是一个数组。
+
+
+
+
+
+## 2. 数据结构的遍历
+
+### 2.1 数组
+
+```C++
+int arr1[] = {4,3,5,1};
+int num = sizeof(arr1)/sizeof(int);
+for (int i = 0; i < num; i++)
+{
+    printf("%d ",arr1[i]);
+}
+```
+
+## 2.2 单链表
+
+```C++
+struct LinkNode
+{
+    int nData;
+    LinkNode* pNext;
+};
+
+void traverse(LinkNode* pHead)
+{
+    //迭代访问
+    for (LinkNode* current = pHead; current != nullptr; current = current->pNext)
+    {
+        /* code */
+    }
+
+    //递归访问
+    traverse(pHead->pNext);
+}
+```
+
+## 2.3 二叉树
+
+```C++
+truct TreeNode
+{
+    int nData;
+    TreeNode* pLeft;
+    TreeNode* pRight;
+};
+
+void traverse(TreeNode* pHead)
+{
+    //递归迭代
+    traverse(pHead->pLeft);
+    traverse(pHead->pRight);
+}
+```
+
+与单链表的递归访问相似，因此可以抽象出N叉树的遍历。
+
+## 2.4 N叉树
+
+```c++
+struct NTreeNode
+{
+    int nData;
+    std::vector<NTreeNode*> aChildNodes;
+};
+
+void traverse(NTreeNode* pHead)
+{
+    if(pHead == nullptr) return;
+    for (size_t i = 0; i < pHead->aChildNodes.size(); i++)
+    {
+        /* code */
+    }
+}
+```
+
+N叉树的遍历又可以扩展为图，因为图就是多个N叉树的组合。
+
+
+
+
+
+##2.NN 其他算法题
+
+1. 二叉平衡树如何用一维数组存储？
+2. 二分查找
+3. 树的中序遍历
+4. [寻找两个有序数组的中位数](https://leetcode-cn.com/problems/median-of-two-sorted-arrays/)：用到二分查找
+
+# 三、算法
+
+## 3.1 动态规划算法
+
+### 3.1.1 定义
+
 动态规划算法是通过拆分问题，定义问题状态和状态之间的关系，使得问题能够以递推（或分治）的方式去解决。
 
-### 2.1.2 基本思想
+### 3.1.2 基本思想
 
 由于动态规划解决的问题多数有重叠子问题的特点，为减少重复计算，对每一个子问题只求解一次，将其不同阶段的不同状态保存在一个二维数组中。
 
-### 2.1.3 原理
+### 3.1.3 原理
 
 动态规划的使用条件：**可分解为多个相关子问题，子问题的解被重复使用**。
 
 动态规划的特点：整个问题的最优解取决于子问题的最优解，将子问题称为状态，最终状态的求解归结为其他状态的求解。
 
-### 2.1.4 应用场景
+### 3.1.4 应用场景
 
 - 计算最大/最小值
 - 求可行或不可行
 - 求方案总数，若求所有可行的方案，则肯定不能使用动态规划。
 
-### 2.1.5 关于动归的算法题
+### 3.1.5 关于动归的算法题
 
--  [查找字符串的最长回文子串](https://leetcode-cn.com/problems/longest-palindromic-substring/)
+- [查找字符串的最长回文子串](https://leetcode-cn.com/problems/longest-palindromic-substring/)
 - [无重复字符的最长子串](https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/)
 
 动态规划算法的分类：
@@ -1956,95 +2112,13 @@ Point<float>* ptr = new Point<float>();
 
 [参考资料](https://www.cnblogs.com/mini-coconut/p/9075277.html)
 
-## 2.2 链表
-
-### 2.2.1 定义
-
-链表是一种在物理上非连续、非顺序的数据结构，由若干个节点组成。
-
-链表分为单链表和双向链表，单链表的每个节点都包含两部分，一部分是存放数据的变量data，另一部分是保存下一个节点的next指针。双向链表的每个节点都包含三部分，除了单链表节点的两部分之外，还包含一个指向前一节点的pre指针。
-
-如果不考虑查找元素过程，只考虑纯粹的插入和删除操作，其时间复杂度为$O(1)$。
-
-### 2.2.2 链表与数组的比较
-
-数组是有限个相同类型的变量所组成的有序集合，在内存中顺序存储的线程表。
-
-|      | 查找   | 插入     | 删除     |
-| ---- | ------ | -------- | -------- |
-| 数组 | $O(1)$ | $O(n)$   | $O( n )$ |
-| 链表 | $O(n)$ | $O( 1 )$ | $O( 1 )$ |
-
-### 2.2.3 关于链表的算法题
-
-- [反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
-- 如何判断链表是否有环？
-- 
-
-### 2.3 栈
-
-#### 2.3.1 基本知识
-
-栈是一种逻辑结构，物理上可以基于数组实现，也可以基于链表实现。
-
-特点是先入后出，最早进入的元素称为栈底，最后进入的元素称为栈顶。
-
-基本操作为入栈和出栈。
-
-入栈和出栈的复杂度：$O( 1 )$。因为入栈和出栈只涉及到栈顶元素，不存在其他元素的整体移动，无论是基于数组实现还是链表实现，其复杂度均为$O( 1 )$。
-
-#### 2.3.2 关于栈的算法题
+## 3.2 排序算法
 
 
 
-### 2.4 队列
-
-#### 2.4.1 基本知识
-
-队列同栈一样，也是一种既可以基于数组实现，也可以基于链表实现的逻辑结构。
-
-特点是先入先出，队列的出口端成为队头，入口端称为队尾。
-
-入队和出队的复杂度：$O( 1 )$。
-
-#### 2.4.2 关于队列的算法题
 
 
-
-### 2.5 散列表
-
-#### 2.5.1 基本知识
-
-散列表又称哈希表，是以键值对的方式成对存储，根据键可以高效的获取值，时间复杂度接近于$O( 1 )$。
-
-哈希表本质上也是一个数组。
-
-## 2.NN 排序算法
-
-
-
-### 排序算法复杂度比较
-
-| 排序算法 | 平均时间复杂度 | 最好情况 | 最坏情况 |
-| -------- | -------------- | -------- | -------- |
-| 冒泡排序 |                |          | O()      |
-|          |                |          |          |
-|          |                |          |          |
-
-
-
-## 2.NN 查找算法
-
-
-
-##2.NN 其他算法题
-
-1. 二叉平衡树如何用一维数组存储？
-2. 二分查找
-3. 树的中序遍历
-4. [寻找两个有序数组的中位数](https://leetcode-cn.com/problems/median-of-two-sorted-arrays/)：用到二分查找
-
-# 三、设计模式
+## 3.3  查找算法
 
 
 
@@ -2060,7 +2134,7 @@ Point<float>* ptr = new Point<float>();
 
 
 
-# 六、lua
+# 六、设计模式
 
 
 
