@@ -2146,17 +2146,106 @@ N叉树的遍历又可以扩展为图，因为图就是多个N叉树的组合。
 
 
 
-
-
 ## 3.3 查找算法
 
+### 3.3.1 顺序查找
 
+顺序查找就是遍历数组，从头开始查找是否有匹配的值。
+
+时间复杂度为：```O(n)```。
+
+```C++
+int TraverseFind(const vector<int>& values,int target)
+{
+    for(int i = 0;i < values.size();i++)
+    {
+        if(values[i] ==target )
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+```
+
+### 3.3.2 二分查找
+
+二分查找也称折半查找，每次查找的区间范围为上一次查找的一半。
+
+时间复杂度为：```O(logn)```。
+
+递归查找：
+
+```C++
+int BinaryFindRecurveImpl(const vector<int>& values,int target,int start,int end)
+{
+    if(start > end)
+    {
+        return -1;
+    }
+
+    int middle = (start + end) / 2;
+    if(values[middle] == target)
+    {
+        return middle;
+    }
+    else if(values[middle] > target)
+    {
+        return BinaryFindRecurveImpl(values,target,start,middle - 1);
+    }
+    return BinaryFindRecurveImpl(values,target,middle + 1,end);
+}
+
+int BinaryFindRecurve(const vector<int>& values,int target)
+{
+    int start = 0;
+    int end = values.size() - 1;
+    return BinaryFindRecurveImpl(values,target,start,end);
+}
+```
+
+非递归查找：
+
+```C++
+int BinaryFind(const vector<int>& values,int target)
+{
+    int start = 0;
+    int end = values.size() - 1;
+    while(start <= end)
+    {
+        int middle = (start + end) / 2;
+        if(values[middle] == target)
+        {
+            return middle;
+        }
+        else if(values[middle] > target)
+        {
+            end = middle - 1;
+        }
+        else
+        {
+            start = middle + 1;
+        }
+    }
+    return -1;
+}
+```
 
 
 
 # 四、图形学
 
+渲染管线
 
+FBO
+
+延迟渲染
+
+阴影
+
+MASS
+
+3d跟2d的区别
 
 
 
