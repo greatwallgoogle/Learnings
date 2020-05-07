@@ -527,7 +527,133 @@ arrayInit(arr1);//对应arrayInit(int(&)[10])
 
 
 
-## 1.2 C++进阶
+### 1.2.9 复制构造函数考察
+
+```C++
+class A
+{
+public:
+    A(int val){value = val;}
+    A(A other){ value = other.value; }
+    void Print()
+    {
+        std::cout<<"A::Print:"<<value<<std::endl;
+    }
+private:
+    int value;
+};
+
+int main()
+{
+    A a = 10;
+    a.Print();
+
+    A b = a;//调用复制构造函数
+    
+    A c;
+    c = a;//调用复制操作符
+    b.Print();
+    return 0;
+}
+```
+
+一张有上述代码的 A4 打印纸要求分析编译运行的结果，并提供3个选项：
+
+- A.编译错误；
+
+- B.编译成功，运行时程序崩溃；
+
+- C.编译运行正常，输出10。
+
+结果为A，第19行出错，原因是类的复制构造函数的参数必须为引用。
+
+
+
+### 1.2.10 赋值操作符考察
+
+#### 1.2.10.1 定义
+
+- 赋值操作符接受单个形参，且该形参为同一类类型的引用，一般为const引用。
+- 赋值操作符的返回值也是同一类类型的引用，即```*this```。
+- 判断形参与当前this是否为同一个实例，如果是同一个实例，无需进行赋值操作，直接返回即可。
+- 判断是否需要自身已有的内存，否则可能出现内存泄漏。
+
+#### 1.2.10.2 调用时机
+
+```C++
+MyString c1;
+MyString c2 = c1;//拷贝构造
+MyString c3(c1);//拷贝构造
+MyString c4;
+c4 = c1;//先调用赋值操作符，在调动拷贝构造，在VS Code中测试的结果
+```
+
+
+
+#### 1.2.10.3 面试题
+
+如下为类型CMyString的声明，请为该类型添加赋值运算符函数。
+
+```C++
+class MyString
+{
+public:
+    MyString(char* pData = NULL);
+    MyString(const MyString& rh);
+    ~MyString();
+private:
+    char* m_pData;
+};
+```
+
+考虑上面四个方面，至少应该给出的答案为（初级程序员）：
+
+```C++
+MyString& operator= (const MyString& rf)
+{
+    if(this == &rf)
+    {
+        return *this;
+    }
+
+    delete[] m_pData;
+    m_pData = NULL;
+    m_pData = new char[strlen(rf.m_pData) + 1];
+    strcpy(m_pData,rf.m_pData);
+    return *this;
+}
+```
+
+高级程序员需要考虑异常安全性问题：
+
+上述代码，若通过new创建内存时抛出异常，而```MyString```的data数据已被释放，会很容易导致异常崩溃。更好的方法如下：
+
+```C++
+MyString& operator= (const MyString& rf)
+{
+    if(this != &rf)
+    {
+        MyString temp(rf);
+        char* pTemp = temp.m_pData;
+        temp.m_pData = m_pData;
+        m_pData = pTemp;
+    }
+    return *this;
+}
+```
+
+先创建一个临时实例 strTemp，接着把strTemp.m_pData和实例自身的m_pData做交换。由于strTemp是一个局部变量，当程序运行到 if 的外面时也就出了该变量的作用域，就会自动调用strTemp 的析构函数，把 strTemp.m_pData 所指向的内存释放掉。因为strTemp.m_pData与当前实例的m_pData交换，实际上是释放了自身实例之前的内存空间。
+
+在新的代码中，我们在CMyString的构造函数里用new分配内存。如果由于内存不足抛出诸如bad_alloc等异常，我们还没有修改原来实例的状态，因此实例的状态还是有效的，这也就保证了异常安全性。
+
+### C++书籍推荐
+
+- 《C++ Primer》：读完这本书，会对C++的语法有全面的认识。
+- 《Effective C++》：此书适合面试之前突击，本书列举了使用C++经常出现的问题及解决这些问题的技巧。书中提到的问题也是很多面试官喜欢提问的问题。
+- 《Inside C++ Object Mode》：读完此书可以深入了解C++对象的内部，比如前面的sizeof的问题、虚函数的调用机制等。
+- 《The C++ Programming Language》：如果是想全面深入掌握C++，没有哪本书比这本书更适合的了。
+
+## 1.2 C++进阶一——《Inside C++ Object Mode》
 
 ### 1.2.1 默认构造函数的构建操作
 
@@ -1965,10 +2091,211 @@ Point<float>* ptr = new Point<float>();
 
 ### 2.1.3 关于链表的算法题
 
-- [反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
-- 如何判断链表是否有环？
+1. [反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
+
+   反转一个单链表。
+
+   - 示例:
+
+   输入: 1->2->3->4->5->NULL
+   输出: 5->4->3->2->1->NULL
+
+   - 进阶:
+     你可以迭代或递归地反转链表。你能否用两种方法解决这道题？
+
+   ```C++
+    struct ListNode {
+       int val;
+       ListNode *next;
+       ListNode(int x) : val(x), next(NULL) {}
+    };
+    
+    //迭代
+   ListNode* ReverseList(ListNode* pHead)
+   {
+       if(NULL == pHead)
+       {
+           return pHead;
+       }
+       ListNode* pPre = NULL;
+       while(pHead)
+       {
+           ListNode* pNext = pHead->next;
+           pHead->next = pPre;
+           pPre = pHead;
+           pHead = pNext;
+       }
+       return pPre;
+   }
+   
+   //递归
+   ListNode* ReverseListTrval(ListNode* pHead)
+   {
+       
+   }
+   ```
+
 - [从尾到头打印链表](https://www.nowcoder.com/practice/d0267f7f55b3412ba93bd35cfa8e8035?tpId=13&tqId=11156&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
+
+  输入一个链表，按链表从尾到头的顺序返回一个ArrayList。
+
+  NOTE：三种方法分别是链表逆序、使用栈、使用递归。
+
+  **方法一：链表逆序**
+
+  ```C++
+  vector<int> printListFromTailToHead(ListNode* head) {
+      vector<int> res;
+      if(NULL == head)
+      {
+          return res;
+      }
+  
+      ListNode* pre = NULL;
+      while (head && head->next)
+      {
+          ListNode* next = head->next;
+          head->next = pre;
+          pre = head;
+          head = next;
+      }
+  
+      if (head)
+      {
+          head->next = pre;
+      }
+      while (head)
+      {
+          res.push_back(head->val);
+          head = head->next;
+      }
+      return res;
+  }
+  ```
+
+  **方法二：使用栈**
+
+  ```C++
+  
+  ```
+
+  
+
 - [链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+
+  输入一个链表，输出该链表中倒数第k个结点。
+
+  NOTE：使用两个指针，其中一个指针从头开始遍历，另一个指针提前(k - 1)步开始遍历。当第二个指针到达最后一个结点时，第一个指针指向的就是结点就是倒数第K个。
+
+  ```C++
+  struct ListNode {
+  	int val;
+  	struct ListNode *next;
+  	ListNode(int x) :
+  			val(x), next(NULL) {
+  	}
+  };
+  
+  ListNode* FindKthToTail(ListNode* pListHead, unsigned int k) {
+      if(pListHead == NULL || k <= 0)
+          return NULL;
+      ListNode* pPreNode = pListHead;
+      ListNode* pCurNode = NULL;
+      for(int i = 0;i < (k - 1);i++)
+      {
+          if(pPreNode)
+          {
+              pPreNode = pPreNode->next;
+          }
+      }
+  
+      if(pPreNode == NULL)
+      {
+          return pCurNode;
+      }
+  
+      pCurNode = pListHead;
+      while(pPreNode != NULL && pPreNode->next != NULL)
+      {
+          pPreNode = pPreNode->next;
+          pCurNode = pCurNode->next;
+      }
+  
+      return pCurNode;
+  }
+  ```
+
+  
+
+- [合并两个排序的链表](https://www.nowcoder.com/practice/d8b6b4358f774294a89de2a6ac4d9337?tpId=13&tqId=11169&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+
+  输入两个单调递增的链表，输出两个链表合成后的链表，当然我们需要合成后的链表满足单调不减规则。
+
+  ```C++
+  struct ListNode {
+  	int val;
+  	struct ListNode *next;
+  	ListNode(int x) :
+  			val(x), next(NULL) {
+  	}
+  };
+  
+  ListNode* Merge(ListNode* pHead1, ListNode* pHead2)
+  {
+      if(pHead1 == NULL)
+          return pHead2;
+      else if(pHead2 == NULL)
+          return pHead1;
+  
+      
+      ListNode* pNode = NULL;
+      if(pHead1->val < pHead2->val)
+      {
+          pNode = pHead1;
+          pHead1 = pHead1->next;
+      }
+      else
+      {
+          pNode = pHead2;
+          pHead2 = pHead2->next;
+      }
+  
+      ListNode* pRes = pNode;
+      while(pHead1 != NULL && pHead2 != NULL)
+      {
+          if(pHead1->val < pHead2->val)
+          {
+              pRes->next = pHead1;
+              pRes = pHead1;
+              pHead1 = pHead1->next;
+          }
+          else 
+          {
+              pRes->next = pHead2;
+              pRes = pHead2;
+              pHead2 = pHead2->next;
+          }
+      }
+      
+      if(pRes)
+      {
+          pRes->next = pHead1 ? pHead1 : pHead2;
+      }
+      return pNode;
+  }
+  ```
+
+- [两个链表的第一个公共结点](https://www.nowcoder.com/practice/6ab1d9a29e88450685099d45c9e31e46?tpId=13&tqId=11189&tPage=2&rp=2&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+
+  输入两个链表，找出它们的第一个公共结点。（注意因为传入数据是链表，所以错误测试数据的提示是用其他方式显示的，保证传入数据是正确的）
+
+- [链表中环的入口结点](https://www.nowcoder.com/practice/253d2c59ec3e4bc68da16833f79a38e4?tpId=13&tqId=11208&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+
+  给一个链表，若其中包含环，请找出该链表的环的入口结点，否则，输出null。
+
+- [删除链表中重复的结点](https://www.nowcoder.com/practice/fc533c45b73a41b0b44ccba763f866ef?tpId=13&tqId=11209&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+
+  在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1->2->3->3->4->4->5 处理后为 1->2->5。
 
 ## 2.2 栈
 
