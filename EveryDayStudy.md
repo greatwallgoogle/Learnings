@@ -2129,7 +2129,7 @@ Point<float>* ptr = new Point<float>();
    }
    
    //递归
-   ListNode* ReverseListTrval(ListNode* pHead)
+   ListNode* ReverseListTravel(ListNode* pHead)
    {
        
    }
@@ -2629,7 +2629,11 @@ MASS
 
 # 六、设计模式
 
+## 6.1 单例模式
 
+面试题:
+
+设计一个类，我们只能生成该类的一个实例。
 
 
 
