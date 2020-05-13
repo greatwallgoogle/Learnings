@@ -1198,7 +1198,7 @@ protected:
 - 每一个```Point2d```的类都会导入一个虚函数表，此表用于存放类中所声明的每一个虚函数的地址。
 - 每一个```Point2d```和```Point3d```的类对象都会导入一个虚函数指针(vptr)，提供执行期的链接，使每一个对象都能找到对应的虚函数表，这就是多态的本质。
 
- 
+
 
 ```Point2d```和```Point3d```是单一继承关系，加上了虚函数之后的继承布局为：**（此图是把vptr指针放在基类的尾端，现在的编译器一般是放在基类的头部）**
 
@@ -1373,7 +1373,7 @@ float Point3d::magnitude() const  { }
    ```
    //非const 非静态成员函数
    Point3d Point3d::magnitude(Point3d* const this)
-   
+
    //const 非静态成员函数
    Point3d Point3d::magnitude(const Point3d* const this)
    ```
@@ -1598,7 +1598,7 @@ vtbl_Base2_Derived
 
   ```
   Base2* ptr = new Derived();
-  
+
   //调用Derived::~Derived
   //ptr必须向后调整sizeof(Base1)个bytes ? 向后还是向前？？？？应该是向前吧！！
   delete ptr;
@@ -1608,7 +1608,7 @@ vtbl_Base2_Derived
 
   ```
   Derived* pder = new Derived();
-  
+
   //调用Base2::mumble()
   //pder必须向前调整sizeof(Base1)个bytes ? 向前还是向后？？应该是向后吧！！！
   pder->mumble();
@@ -1620,7 +1620,7 @@ vtbl_Base2_Derived
   //clone函数的派生类版本会传回一个Derived类型指针，默默地改写了它两个基类的函数实体。
   //当通过”指向第二基类“的指针来调用clone()时，this指针的offset问题就会产生：
   Base2* pb1 = new Derived();
-  
+
   //调用Derived::clone()
   //返回值必须被调整，以指向Base2 subobject
   Base2* pb2 = pb1->clone();
@@ -2084,10 +2084,10 @@ Point<float>* ptr = new Point<float>();
 
 数组是有限个相同类型的变量所组成的有序集合，在内存中顺序存储的线程表。
 
-|      | 查找   | 插入     | 删除     |
+|      | 查找     | 插入       | 删除       |
 | ---- | ------ | -------- | -------- |
-| 数组 | $O(1)$ | $O(n)$   | $O( n )$ |
-| 链表 | $O(n)$ | $O( 1 )$ | $O( 1 )$ |
+| 数组   | $O(1)$ | $O(n)$   | $O( n )$ |
+| 链表   | $O(n)$ | $O( 1 )$ | $O( 1 )$ |
 
 ### 2.1.3 关于链表的算法题
 
@@ -2127,7 +2127,7 @@ Point<float>* ptr = new Point<float>();
        }
        return pPre;
    }
-   
+
    //递归
    ListNode* ReverseListTravel(ListNode* pHead)
    {
@@ -2150,7 +2150,7 @@ Point<float>* ptr = new Point<float>();
       {
           return res;
       }
-  
+
       ListNode* pre = NULL;
       while (head && head->next)
       {
@@ -2159,7 +2159,7 @@ Point<float>* ptr = new Point<float>();
           pre = head;
           head = next;
       }
-  
+
       if (head)
       {
           head->next = pre;
@@ -2176,10 +2176,9 @@ Point<float>* ptr = new Point<float>();
   **方法二：使用栈**
 
   ```C++
-  
+
   ```
 
-  
 
 - [链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
@@ -2195,7 +2194,7 @@ Point<float>* ptr = new Point<float>();
   			val(x), next(NULL) {
   	}
   };
-  
+
   ListNode* FindKthToTail(ListNode* pListHead, unsigned int k) {
       if(pListHead == NULL || k <= 0)
           return NULL;
@@ -2208,24 +2207,23 @@ Point<float>* ptr = new Point<float>();
               pPreNode = pPreNode->next;
           }
       }
-  
+
       if(pPreNode == NULL)
       {
           return pCurNode;
       }
-  
+
       pCurNode = pListHead;
       while(pPreNode != NULL && pPreNode->next != NULL)
       {
           pPreNode = pPreNode->next;
           pCurNode = pCurNode->next;
       }
-  
+
       return pCurNode;
   }
   ```
 
-  
 
 - [合并两个排序的链表](https://www.nowcoder.com/practice/d8b6b4358f774294a89de2a6ac4d9337?tpId=13&tqId=11169&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
@@ -2239,14 +2237,14 @@ Point<float>* ptr = new Point<float>();
   			val(x), next(NULL) {
   	}
   };
-  
+
   ListNode* Merge(ListNode* pHead1, ListNode* pHead2)
   {
       if(pHead1 == NULL)
           return pHead2;
       else if(pHead2 == NULL)
           return pHead1;
-  
+
       
       ListNode* pNode = NULL;
       if(pHead1->val < pHead2->val)
@@ -2259,7 +2257,7 @@ Point<float>* ptr = new Point<float>();
           pNode = pHead2;
           pHead2 = pHead2->next;
       }
-  
+
       ListNode* pRes = pNode;
       while(pHead1 != NULL && pHead2 != NULL)
       {
@@ -2426,7 +2424,7 @@ N叉树的遍历又可以扩展为图，因为图就是多个N叉树的组合。
 ### 2.6.1 相关算法题
 
 - [重建二叉树](https://www.nowcoder.com/practice/8a19cbe657394eeaac2f6ea9b0f6fcf6?tpId=13&tqId=11157&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
-- 
+- ​
 
 ## 2.7 二分图
 
@@ -2623,9 +2621,38 @@ MASS
 
 # 五、架构设计
 
+## 5.1 管理器思想
 
+大型引擎开发中，常用管理器管理一堆对象，比如动画管理器、粒子系统管理等。
 
-## 5.1 反射机制
+为了保持良好的风格，可以采用如下的格式实现管理器：
+
+```C++
+class XEPropertyCustomizationManager 
+{
+public:
+	static XEPropertyCustomizationManager*	CreateInstance();
+	static void					DestroyInstance(XEPropertyCustomizationManager *&pInstance);
+public:
+								XEPropertyCustomizationManager();
+	virtual						~XEPropertyCustomizationManager(){}
+public:
+	void						Init();
+	void						Release();
+	XEPropertyCustomization*			CreatePropertyCustomization(XEPropertyCustomizationType eType);
+	void								DeleteProperty(XEPropertyCustomization* pProperty);
+private:
+	XArray<XEPropertyCustomization*>	m_aCustomization;
+};
+```
+
+- 首先声明两个静态函数，用于创建和销毁当前管理器，例如第4-5行。
+- 声明管理器的构造函数和析构函数，例如第7-8行。
+- 声明管理器的初始化和销毁函数，例如第10-11行。
+- 管理器用来管理某些对象，因此也需要声明创建和销毁管理对象的函数，如第12-13行。
+- **XEPropertyCustomization **就是管理器需要管理的对象，使用数组缓存。
+
+## 5.2 反射机制
 
 **应用场景:**
 
@@ -2645,13 +2672,15 @@ C++反射实现：工厂模式+C++模板+宏定义。
 
 # 六、设计模式
 
-## 6.1 单例模式
+## 6.1 创建型模式
+
+### 6.1.1 单例模式
 
 面试题:
 
 设计一个类，我们只能生成该类的一个实例。
 
-### 6.1.1 非线程安全
+#### 6.1.1.1 非线程安全
 
 ```C++
 
@@ -2659,15 +2688,77 @@ C++反射实现：工厂模式+C++模板+宏定义。
 
 
 
-### 6.1.2 线程安全
+#### 6.1.1.2 线程安全
+
+### 6.1.2 工厂模式
 
 
 
-## 6.2 工厂模式
+### 6.1.3 抽象工厂模式
 
 
 
-## 6.3 抽象工厂模式
+### 6.1.4 建造者模式
+
+
+
+### 6.1.5 原型模式
+
+
+
+## 6.2 结构型模式
+
+### 6.2.1 适配器模式
+
+
+
+### 6.2.2 装饰器模式
+
+
+
+### 6.2.3 桥接模式
+
+
+
+### 6.2.4 外观模式
+
+
+
+### 6.2.5 代理模式
+
+
+
+### 6.2.6 过滤器模式
+
+
+
+### 6.2.7 组合模式
+
+
+
+### 6.2.8 享元模式
+
+
+
+## 6.3 行为型模式
+
+### 6.3.1 命令模式
+
+
+
+### 6.3.2 观察者模式
+
+
+
+### 6.3.3 中介者模式
+
+
+
+### 6.3.4 状态模式
+
+
+
+### 6.3.5 策略模式
 
 
 
