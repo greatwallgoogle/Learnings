@@ -1,3 +1,5 @@
+
+
 # 一、C++模块
 
 ## 1.1 C++基础
@@ -2068,6 +2070,36 @@ Point<float>* ptr = new Point<float>();
 
 
 
+### 1.2.17 工具及资源
+
+- Dev-C++ 5.11
+
+- [Doug Lea](http://gee.cs.oswego.edu/)：研究DL malloc 的大佬
+
+- 书籍：
+
+  ![](./pics/memory/memory.png)
+
+
+
+### 1.2.18 内存管理
+
+C++内存管理基本知识：
+
+执行流程(从高阶到低阶)：
+
+![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/mem1.png)
+
+基础工具总结：
+
+![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/mem2.png)
+
+
+
+
+
+
+
 # 二、数据结构
 
 ## 2.1 链表
@@ -2424,7 +2456,7 @@ N叉树的遍历又可以扩展为图，因为图就是多个N叉树的组合。
 ### 2.6.1 相关算法题
 
 - [重建二叉树](https://www.nowcoder.com/practice/8a19cbe657394eeaac2f6ea9b0f6fcf6?tpId=13&tqId=11157&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
-- ​
+- 
 
 ## 2.7 二分图
 
@@ -2616,6 +2648,115 @@ FBO
 MASS
 
 3d跟2d的区别
+
+---
+
+## 4.1 EGL 
+
+### 4.1.1 什么是EGL
+
+EGL是OpenGL ES API与设备的原生窗口系统之间的一个中间接口层，EGL作为一个桥梁，将OpenGL ES绘制的画面呈现在设备窗口上，EGL主要由系统制造商实现。
+
+### 4.1.2 EGL的作用
+
+1. 与设备的原生窗口系统通信
+2. 创建渲染表面
+3. 查询渲染表面可用的类型和配置
+4. 在OpenGL ES 和其他渲染API之间同步渲染
+5. 管理纹理贴图等资源
+
+### 4.1.3 EGL使用步骤
+
+1. 与原生窗口系统进行通信
+
+```
+EGLDispaly display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+if(display == EGL_NO_DISPLAY)
+{
+    //unable to open connection to local window system
+}
+```
+
+2. 初始化EGL
+
+与原生窗口系统成功连接后，需进行初始化操作
+
+```
+EGLint majorVersion;
+EGLint minorVersion;
+if(!eglInitialize(display,&majorVersion,&minorVersion))
+{
+    //unable to initialize egl
+}
+```
+
+3. 让EGL选择配置
+
+```
+//API
+EGLBoolean eglChooseConfig(
+	EGLDisplay display,
+	const EGLint* attribList,
+	EGLConfig* configs,
+	EGLint maxReturnConfigs,
+	EGLint* numConfigs
+);
+
+//使用
+EGLint attribList [] = {
+    EGL_RENDERABLE_TYPE,EGL_OPENGL_ES3_BIT_KHR,
+    EGL_REN_SIZE,5,
+    EGL_GREEEN_SIZE,6,
+    EGL_BLUE_SIZE,5,
+    EGL_DEPTH_SIZE,1,
+    EGL_NONE
+};
+
+const EGLint MaxConfigs = 10;
+EGLConfig configs[MaxConfigs];
+EGLint numConfigs;
+if(!eglChooseConfig(display,attribList,configs,MaxConfigs,&numConfigs))
+{
+    //error..
+}
+```
+
+
+
+**确定可用的表面配置**：EGL初始化成功后，可以确定渲染表面可用的类型和配置。
+
+```
+EGLBoolean eglGetConfigs(
+	EGLDisplay display,//渲染表面
+	EGLConfig* configs,//一个指定长度的空数组，返回值
+	EGLint maxReturnConfigs,//configs的数组长度
+	EGLint* numConfigs//实际可用的配置数量，返回值
+);
+```
+
+表面配置中包含的信息有：
+
+- 可用的颜色
+- 深度缓冲区
+- 模板缓冲区
+- 表面类型
+
+4. 创建屏幕上的渲染区域：EGL窗口，也称渲染表面
+
+```
+//API
+EGLSurface eglCreateWindowSurface(
+	EGLDisplay display,
+	EGLConfig config,
+	EGLNativeWindowType window,
+	const EGLint* attribList
+);
+
+//使用
+
+```
+
+
 
 
 
