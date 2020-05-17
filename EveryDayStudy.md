@@ -2227,6 +2227,16 @@ operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
 
 
 
+**五、new/delete/array new/array delete 重载实例**
+
+![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/overload_tst.png)
+
+使用：
+
+![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/overload_op_use.png)
+
+
+
 # 二、数据结构
 
 ## 2.1 链表
