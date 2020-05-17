@@ -1977,6 +1977,7 @@ int* ptr1 = __new(sizeof(int));//调用函数库的new操作符
 
 ```
 delete ptr1;
+ptr1 = NULL;
 ```
 
 实际上，编译器会判断ptr1是否为空，不为空就释放其指向的内存空间。
@@ -2086,17 +2087,143 @@ Point<float>* ptr = new Point<float>();
 
 C++内存管理基本知识：
 
-执行流程(从高阶到低阶)：
+#### 1.2.18.1 执行流程(从高阶到低阶)
 
 ![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/mem1.png)
 
-基础工具总结：
+#### 1.2.18.2 4种基础工具
 
 ![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/mem2.png)
 
+四种方式的使用：
+
+```c++
+ //1. malloc/free
+void* p1 = malloc(512);//512 bytes
+free(p1);
+
+//2. new/delete
+std::complex<int>* p2 = new std::complex<int>();
+delete p2;
+
+//3. ::operator new/::operator delete
+void* p3 = ::operator new(512);//512 bytes
+::operator delete (p3);//注意这个括号，丢失报错
+
+//4. 分配器
+int* p4 = std::allocator<int>().allocate(7);//7 ints
+std::allocator<int>().deallocate(p4,7);
+```
+
+注意：
+
+```C++
+//complex代表复数，如2 + 3i
+std::complex<int> a{2,3};
+```
+
+不可以使用指针调用构造函数，如下面的用法：
+
+```C++
+string* ptr = new string();
+ptr->string::string("hellos");
+
+//编译报错：
+// error: no member named 'string' in 'std::__1::basic_string<char>'
+```
+
+#### 1.2.18.3 new/delete 表达式
+
+**一、new**
+
+```C++
+A* ptr = new A();
+```
+
+编译器实际上执行两步操作：
+
+1. 调用```operator new```分配内存，本质上执行的是```malloc```。
+2. 进行初始化，如果有构造函数，调用类的构造函数。
+
+可参考1.2.13.1节。
+
+**二、delete**
+
+```C++
+delete ptr;
+ptr = NULL;
+```
+
+编译器同样也是执行两步操作：
+
+1. 调用类的析构函数。
+2. 调用```operator delete```释放内存。
+
+可参考1.2.13.2节。
+
+#### 1.2.18.4 array new / array delete
+
+array new : 创建一个长度为n的数组，分配内存，执行n次构造函数。
+
+array delete:释放一个长度为n的数组，执行n次析构函数，释放内存。
+
+```C++
+//Complex是自定义的类，有默认构造函数
+Complex* pca = new Complex[3];//执行3次类Complex的构造函数
+//...
+delete[] pca;//执行3次析构函数
+```
+
+array delete与ptr delete的区别在于：
+
+- array delete：是执行n次析构函数
+- ptr delete：仅执行一次析构函数
+
+![](./pics/memory/array_new.png)
+
+#### 1.2.18.5 placement new（定点new）
+
+placement new 本身不分配内存，代表将某个对象构建在指定内存上。
+
+placement new 相当于：```new(ptr)```和```::operator new(size,void*)```。
+
+用法：
+
+```
+char* buf = new char[sizeof(Complex) * 3];
+Complex* pc = new(buf) Complex(1,2);
+//..
+delete[] buf;
+```
+
+#### 1.2.18.6 重载
+
+**一、C++内存分配的执行路径**
+
+​	![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/memory_allo.png)
 
 
 
+- ``` new```->```operator new```->```::operator new```->```malloc```。
+- ```delete```->```operator delete```->```::operator delete```->```free```。
+
+了解了内存分配的执行路径，知道如何通过函数重载来”接管“内存分配与释放，这就是所谓的所谓的内存管理。
+
+**二、重载::operator new和::operator delete**
+
+::operator new和::operator delete 是一个全局的函数，可以被重载，但很少这么做，因为这是一个全局函数，影响范围较广。
+
+**三、重载operator new 和operator delete**
+
+operator new 和 operator delete 是类的成员函数，本质上是**静态函数**。即便声明函数时，未添加关键字static，编译器被会编译器当做static 函数处理。
+
+![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/overload_op.png)
+
+**四、重载operate new[] 和operator delete[]**
+
+operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
+
+![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/overload_op_arr.png)
 
 
 
