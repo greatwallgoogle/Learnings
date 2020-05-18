@@ -2890,10 +2890,62 @@ EGLSurface eglCreateWindowSurface(
 );
 
 //使用
+EGLint attribList [] = {
+    EGL_RENDER_BUFFER,EGL_BACK_BUFFER,//默认值
+    EGL_NONE
+};
 
+//window 入参
+EGLSurface surface = eglCreateWindowSurface(display,config,window,attribList);
 ```
 
+5. 创建渲染上下文
 
+```
+EGLContext eglCreateContext(
+	EGLDisplay display,
+	EGLConfig config,
+	EGLContext shareContext,
+	const EGLint* attribList
+);
+
+//使用
+EGLiny attribList [] = {
+	EGL_CONTEXT_CLIENT_VERSION,3,
+    EGL_NONE
+};
+EGLContext context = eglCreateContext(display,config,EGL_NO_CONTEXT,attribList);
+```
+
+6. 指定当前渲染上下文
+
+```
+EGLBoolean eglMakeCurrent(
+	EGLDisplay display,
+	EGLSurface draw,
+	EGLSurface read,
+	EGLContext context
+);
+
+//use
+if(!eglMakeCurrent(display,window,window,context))
+{
+    //error..
+}
+```
+
+## 4.2 着色器程序
+
+使用着色器程序对象的6个准备步骤：
+
+1. 创建着色器对象(一个顶点着色器和一个片元着色器)
+2. 加载着色器源码
+3. 编译着色器对象
+4. 创建着色器程序对象
+5. 将编译好的着色器对象attach到着色器程序对象
+6. 链接着色器程序对象
+
+上述6步完成之后，就可以使用着色器程序对象了，代码为```glUseProgram```。
 
 
 
