@@ -2089,11 +2089,11 @@ C++内存管理基本知识：
 
 #### 1.2.18.1 执行流程(从高阶到低阶)
 
-![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/mem1.png)
+![](./pics/memory/mem1.png)
 
 #### 1.2.18.2 4种基础工具
 
-![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/mem2.png)
+![](./pics/memory/mem2.png)
 
 四种方式的使用：
 
@@ -2217,23 +2217,23 @@ delete[] buf;
 
 operator new 和 operator delete 是类的成员函数，本质上是**静态函数**。即便声明函数时，未添加关键字static，编译器被会编译器当做static 函数处理。
 
-![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/overload_op.png)
+![](./pics/memory/overload_op.png)
 
 **四、重载operate new[] 和operator delete[]**
 
 operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
 
-![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/overload_op_arr.png)
+![](./pics/memory/overload_op_arr.png)
 
 
 
 **五、new/delete/array new/array delete 重载实例**
 
-![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/overload_tst.png)
+![](./pics/memory/overload_tst.png)
 
 使用：
 
-![](/Users/momo/Documents/workspace_script/Learnings/pics/memory/overload_op_use.png)
+![](./pics/memory/overload_op_use.png)
 
 
 
