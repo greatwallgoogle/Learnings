@@ -2304,165 +2304,162 @@ operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
    }
    ```
 
-- [从尾到头打印链表](https://www.nowcoder.com/practice/d0267f7f55b3412ba93bd35cfa8e8035?tpId=13&tqId=11156&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
+2. [从尾到头打印链表](https://www.nowcoder.com/practice/d0267f7f55b3412ba93bd35cfa8e8035?tpId=13&tqId=11156&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 
-  输入一个链表，按链表从尾到头的顺序返回一个ArrayList。
+输入一个链表，按链表从尾到头的顺序返回一个ArrayList。
 
-  NOTE：三种方法分别是链表逆序、使用栈、使用递归。
+NOTE：三种方法分别是链表逆序、使用栈、使用递归。
 
-  **方法一：链表逆序**
+**方法一：链表逆序**
 
-  ```C++
-  vector<int> printListFromTailToHead(ListNode* head) {
-      vector<int> res;
-      if(NULL == head)
-      {
-          return res;
-      }
+```C++
+vector<int> printListFromTailToHead(ListNode* head) {
+    vector<int> res;
+    if(NULL == head)
+    {
+        return res;
+    }
 
-      ListNode* pre = NULL;
-      while (head && head->next)
-      {
-          ListNode* next = head->next;
-          head->next = pre;
-          pre = head;
-          head = next;
-      }
+    ListNode* pre = NULL;
+    while (head && head->next)
+    {
+        ListNode* next = head->next;
+        head->next = pre;
+        pre = head;
+        head = next;
+    }
 
-      if (head)
-      {
-          head->next = pre;
-      }
-      while (head)
-      {
-          res.push_back(head->val);
-          head = head->next;
-      }
-      return res;
-  }
-  ```
+    if (head)
+    {
+        head->next = pre;
+    }
+    while (head)
+    {
+        res.push_back(head->val);
+        head = head->next;
+    }
+    return res;
+}
+```
 
-  **方法二：使用栈**
+**方法二：使用栈**
 
-  ```C++
+```C++
 
-  ```
+```
+3. [链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
+输入一个链表，输出该链表中倒数第k个结点。
 
-- [链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+NOTE：使用两个指针，其中一个指针从头开始遍历，另一个指针提前(k - 1)步开始遍历。当第二个指针到达最后一个结点时，第一个指针指向的就是结点就是倒数第K个。
 
-  输入一个链表，输出该链表中倒数第k个结点。
+```C++
+struct ListNode {
+	int val;
+	struct ListNode *next;
+	ListNode(int x) :
+			val(x), next(NULL) {
+	}
+};
 
-  NOTE：使用两个指针，其中一个指针从头开始遍历，另一个指针提前(k - 1)步开始遍历。当第二个指针到达最后一个结点时，第一个指针指向的就是结点就是倒数第K个。
+ListNode* FindKthToTail(ListNode* pListHead, unsigned int k) {
+    if(pListHead == NULL || k <= 0)
+        return NULL;
+    ListNode* pPreNode = pListHead;
+    ListNode* pCurNode = NULL;
+    for(int i = 0;i < (k - 1);i++)
+    {
+        if(pPreNode)
+        {
+            pPreNode = pPreNode->next;
+        }
+    }
 
-  ```C++
-  struct ListNode {
-  	int val;
-  	struct ListNode *next;
-  	ListNode(int x) :
-  			val(x), next(NULL) {
-  	}
-  };
+    if(pPreNode == NULL)
+    {
+        return pCurNode;
+    }
 
-  ListNode* FindKthToTail(ListNode* pListHead, unsigned int k) {
-      if(pListHead == NULL || k <= 0)
-          return NULL;
-      ListNode* pPreNode = pListHead;
-      ListNode* pCurNode = NULL;
-      for(int i = 0;i < (k - 1);i++)
-      {
-          if(pPreNode)
-          {
-              pPreNode = pPreNode->next;
-          }
-      }
+    pCurNode = pListHead;
+    while(pPreNode != NULL && pPreNode->next != NULL)
+    {
+        pPreNode = pPreNode->next;
+        pCurNode = pCurNode->next;
+    }
 
-      if(pPreNode == NULL)
-      {
-          return pCurNode;
-      }
+    return pCurNode;
+}
+```
+4. [合并两个排序的链表](https://www.nowcoder.com/practice/d8b6b4358f774294a89de2a6ac4d9337?tpId=13&tqId=11169&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
-      pCurNode = pListHead;
-      while(pPreNode != NULL && pPreNode->next != NULL)
-      {
-          pPreNode = pPreNode->next;
-          pCurNode = pCurNode->next;
-      }
+输入两个单调递增的链表，输出两个链表合成后的链表，当然我们需要合成后的链表满足单调不减规则。
 
-      return pCurNode;
-  }
-  ```
+```C++
+struct ListNode {
+	int val;
+	struct ListNode *next;
+	ListNode(int x) :
+			val(x), next(NULL) {
+	}
+};
 
+ListNode* Merge(ListNode* pHead1, ListNode* pHead2)
+{
+    if(pHead1 == NULL)
+        return pHead2;
+    else if(pHead2 == NULL)
+        return pHead1;
 
-- [合并两个排序的链表](https://www.nowcoder.com/practice/d8b6b4358f774294a89de2a6ac4d9337?tpId=13&tqId=11169&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+    
+    ListNode* pNode = NULL;
+    if(pHead1->val < pHead2->val)
+    {
+        pNode = pHead1;
+        pHead1 = pHead1->next;
+    }
+    else
+    {
+        pNode = pHead2;
+        pHead2 = pHead2->next;
+    }
 
-  输入两个单调递增的链表，输出两个链表合成后的链表，当然我们需要合成后的链表满足单调不减规则。
+    ListNode* pRes = pNode;
+    while(pHead1 != NULL && pHead2 != NULL)
+    {
+        if(pHead1->val < pHead2->val)
+        {
+            pRes->next = pHead1;
+            pRes = pHead1;
+            pHead1 = pHead1->next;
+        }
+        else 
+        {
+            pRes->next = pHead2;
+            pRes = pHead2;
+            pHead2 = pHead2->next;
+        }
+    }
+    
+    if(pRes)
+    {
+        pRes->next = pHead1 ? pHead1 : pHead2;
+    }
+    return pNode;
+}
+```
+5. [两个链表的第一个公共结点](https://www.nowcoder.com/practice/6ab1d9a29e88450685099d45c9e31e46?tpId=13&tqId=11189&tPage=2&rp=2&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
-  ```C++
-  struct ListNode {
-  	int val;
-  	struct ListNode *next;
-  	ListNode(int x) :
-  			val(x), next(NULL) {
-  	}
-  };
+输入两个链表，找出它们的第一个公共结点。（注意因为传入数据是链表，所以错误测试数据的提示是用其他方式显示的，保证传入数据是正确的）
 
-  ListNode* Merge(ListNode* pHead1, ListNode* pHead2)
-  {
-      if(pHead1 == NULL)
-          return pHead2;
-      else if(pHead2 == NULL)
-          return pHead1;
+6. [链表中环的入口结点](https://www.nowcoder.com/practice/253d2c59ec3e4bc68da16833f79a38e4?tpId=13&tqId=11208&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
-      
-      ListNode* pNode = NULL;
-      if(pHead1->val < pHead2->val)
-      {
-          pNode = pHead1;
-          pHead1 = pHead1->next;
-      }
-      else
-      {
-          pNode = pHead2;
-          pHead2 = pHead2->next;
-      }
+给一个链表，若其中包含环，请找出该链表的环的入口结点，否则，输出null。
 
-      ListNode* pRes = pNode;
-      while(pHead1 != NULL && pHead2 != NULL)
-      {
-          if(pHead1->val < pHead2->val)
-          {
-              pRes->next = pHead1;
-              pRes = pHead1;
-              pHead1 = pHead1->next;
-          }
-          else 
-          {
-              pRes->next = pHead2;
-              pRes = pHead2;
-              pHead2 = pHead2->next;
-          }
-      }
-      
-      if(pRes)
-      {
-          pRes->next = pHead1 ? pHead1 : pHead2;
-      }
-      return pNode;
-  }
-  ```
+7. [删除链表中重复的结点](https://www.nowcoder.com/practice/fc533c45b73a41b0b44ccba763f866ef?tpId=13&tqId=11209&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
-- [两个链表的第一个公共结点](https://www.nowcoder.com/practice/6ab1d9a29e88450685099d45c9e31e46?tpId=13&tqId=11189&tPage=2&rp=2&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1->2->3->3->4->4->5 处理后为 1->2->5。
 
-  输入两个链表，找出它们的第一个公共结点。（注意因为传入数据是链表，所以错误测试数据的提示是用其他方式显示的，保证传入数据是正确的）
-
-- [链表中环的入口结点](https://www.nowcoder.com/practice/253d2c59ec3e4bc68da16833f79a38e4?tpId=13&tqId=11208&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
-
-  给一个链表，若其中包含环，请找出该链表的环的入口结点，否则，输出null。
-
-- [删除链表中重复的结点](https://www.nowcoder.com/practice/fc533c45b73a41b0b44ccba763f866ef?tpId=13&tqId=11209&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
-
-  在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1->2->3->3->4->4->5 处理后为 1->2->5。
+8. 判断是否为环形链表
 
 ## 2.2 栈
 
@@ -2593,7 +2590,7 @@ N叉树的遍历又可以扩展为图，因为图就是多个N叉树的组合。
 ### 2.6.1 相关算法题
 
 - [重建二叉树](https://www.nowcoder.com/practice/8a19cbe657394eeaac2f6ea9b0f6fcf6?tpId=13&tqId=11157&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
-- 
+- ​
 
 ## 2.7 二分图
 
@@ -2765,7 +2762,6 @@ int BinaryFind(const vector<int>& values,int target)
 - [跳台阶](https://www.nowcoder.com/practice/8c82a5b80378478f9484d87d1c5f12a4?tpId=13&tqId=11161&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 - [变态跳台阶](https://www.nowcoder.com/practice/22243d016f6b47f2a6928b4313c85387?tpId=13&tqId=11162&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 - [矩形覆盖](https://www.nowcoder.com/practice/72a5a919508a4251859fb2cfb987a0e6?tpId=13&tqId=11163&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
-
 
 
 [数字的整数幂](https://www.nowcoder.com/practice/1a834e5e3e1a4b7ba251417554e07c00?tpId=13&tqId=11165&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)：快速幂算法
@@ -3142,6 +3138,18 @@ GLES 3.0支持顶点着色器中的纹理查找操作，可以用作顶点偏移
 
 
 
+## 渲染的问题整理
+
+1. 欧拉角、四元数、旋转矩阵之间的关系
+2. 延迟渲染的原理
+3. 后期渲染的框架----（MRT，FXAA，FBO--与MSAA）
+4. 光照的问题（blinn_phone PBR SSAO）
+5. 物体阴影的渲染（有几种手段处理），跟后处理渲染框架的关系
+6. mipmap三维渲染贴图问题（可能延伸到物体表面逼真程度的法线与视差贴图）
+7. 三维渲染中，半透明的问题，怎么处理，混合公式
+
+
+
 # 五、架构设计
 
 ## 5.1 管理器思想
@@ -3291,3 +3299,12 @@ C++反射实现：工厂模式+C++模板+宏定义。
 
 
 
+# 八、其他公司面试
+
+1. bigo
+
+   ![](./pics/bigo.jpg)
+
+2. 百度
+
+![](./pics/baidu.jpg)
