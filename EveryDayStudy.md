@@ -3303,8 +3303,8 @@ C++反射实现：工厂模式+C++模板+宏定义。
 
 1. bigo
 
-   ![](./pics/bigo.jpg)
+   ![](./interview/bigo/bigo.jpg)
 
 2. 百度
 
-![](./pics/baidu.jpg)
+![](./interview/baidu/baidu.jpg)
