@@ -3298,13 +3298,3 @@ C++反射实现：工厂模式+C++模板+宏定义。
 # 七、多线程相关
 
 
-
-# 八、其他公司面试
-
-1. bigo
-
-   ![](./interview/bigo/bigo.jpg)
-
-2. 百度
-
-![](./interview/baidu/baidu.jpg)
