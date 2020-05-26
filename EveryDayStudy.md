@@ -3108,12 +3108,6 @@ GLES 3.0支持顶点着色器中的纹理查找操作，可以用作顶点偏移
 
 原理为：根据顶点着色器中的纹理坐标采样对应纹理上的值OffsetValue，沿顶点法线方向偏移顶点坐标，顶点偏移执行再执行矩阵变换。
 
-
-
-**顶点蒙皮**：
-
-
-
 ## 4.6 图元装配
 
 
@@ -3128,15 +3122,161 @@ GLES 3.0支持顶点着色器中的纹理查找操作，可以用作顶点偏移
 
 ## 4.N 光照算法
 
-### 4.4.1 Phone模型
+![](./pics/light1.png)
+
+- p代表当前进行光照计算的顶点
+- n代表p点的法向量，是单位向量
+- l代表光照方向的反方向的单位向量
+- v代表当前顶点到观察者的方向向量
+- r代表光照的反射向量，单位向量
+- h代表半角向量，(l + v) / 2
 
 
 
+Phong光照模型与Blinn-Phong模型非常相似，只是在计算镜面高光时有稍微的不同。
+
+### 4.4.1 Phong模型(逐片段)
+
+Phong模型也称为冯氏光照模型，是逐片段计算光照，由顶点着色器输出位置和法向量到片元着色器，由片元着色器进行光照计算。物体最终的颜色由环境光(ambient)、漫反射光(diffuse)和镜面高光(specular)三部分叠加。
+
+- 环境光：世界不会是完全黑暗的，总会有一些微弱的光照射到物体表面，使用环境光模拟这种情况。环境光本身不提供特别明显的光照效果。
+- 漫反射光：模拟光照照射到物体表面时，对物体的影响。面向光照的一面比其他面更亮。
+- 镜面高光：模拟有光泽感表面上的亮点。镜面光照照射到物体表面的颜色更倾向于光照本身的颜色。
+
+计算公式：
+
+$ambient = Ka * lightColor;$
+
+$diffuse = Kd * lightColor * max(0, dot(n,l));$
+
+$specular = Ks * lightColor * pow(max(0,dot(v,r)) , shininess);$
+
+其中Ka，Kd，Ks代表衰减因子，一般给一个常量值。```shininess```代表镜面高光的表面粗糙度。
+
+世界空间中计算片元光照：
+
+1. vertex shader
+
+```
+#version 330 core
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 normal;
+
+out vec3 Normal;
+out vec3 FragPos;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    gl_Position = projection * view *  model * vec4(position, 1.0f);
+    FragPos = vec3(model * vec4(position, 1.0f));
+    Normal = mat3(transpose(inverse(model))) * normal;  
+} 
+```
+
+2. fragment shader
+
+```
+#version 330 core
+out vec4 color;
+
+in vec3 FragPos;  
+in vec3 Normal;  
+  
+uniform vec3 lightPos; 
+uniform vec3 viewPos;
+uniform vec3 lightColor;
+uniform vec3 objectColor;
+
+void main()
+{
+    // Ambient
+    float ambientStrength = 0.1f;
+    vec3 ambient = ambientStrength * lightColor;
+  	
+    // Diffuse 
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - FragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
+    
+    // Specular
+    float specularStrength = 0.5f;
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);  
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec3 specular = specularStrength * spec * lightColor;  
+        
+    vec3 result = (ambient + diffuse + specular) * objectColor;
+    color = vec4(result, 1.0f);
+} 
+```
+
+**注意：**
+
+vertex shader第16行：不能直接将顶点的法向量与Model矩阵直接相乘，如果不是等比缩放时，顶点的法向量将不会垂直于表面。[法向量矩阵计算可参考](http://www.lighthouse3d.com/tutorials/glsl-12-tutorial/the-normal-matrix/)
 
 
-### 4.4.2 Blinn-Phone模型
 
+### 4.4.2 Blinn-Phong模型
 
+在Phong模型中，计算镜面光照时，需要计算**r向量与v向量的夹角**。
+
+在Phong模型中，计算反射向量相对比较耗时，Blinn-Phong模型对于这一点进行了改进，因此Blinn-Phong是改进版的Phone模型。
+
+在Blinne-Phong模型中，计算镜面高光，需要计算**n向量与h向量（半角向量）**的夹角。
+
+计算公式：
+
+$h = normalize(v + l);$
+
+$specular = Ks * lightColor * pow(max(0,dot(n,h)) , shininess);$
+
+fragment shader:
+
+```
+#version 330 core
+out vec4 color;
+
+in vec3 FragPos;  
+in vec3 Normal;  
+  
+uniform vec3 lightPos; 
+uniform vec3 viewPos;
+uniform vec3 lightColor;
+uniform vec3 objectColor;
+
+void main()
+{
+    // Ambient
+    float ambientStrength = 0.1f;
+    vec3 ambient = ambientStrength * lightColor;
+  	
+    // Diffuse 
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - FragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
+    
+    // Specular
+    float specularStrength = 0.5f;
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 halfDir = normalize(viewDir + lightDir);  
+    float spec = pow(max(dot(halfDir, Normal), 0.0), 32);
+    vec3 specular = specularStrength * spec * lightColor;  
+        
+    vec3 result = (ambient + diffuse + specular) * objectColor;
+    color = vec4(result, 1.0f);
+} 
+```
+
+### 4.4.3 对比
+
+- Blinn-Phong模型无需计算反射向量，效率更高。
+- Blinn-Phong模型的高光区域比Phong模型更大。
 
 ## 渲染的问题整理
 
