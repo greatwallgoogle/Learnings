@@ -3636,9 +3636,9 @@ glDrawBuffers(4,attachs);
 
 帧缓冲区对象(FBO)是一个容器，包含一个颜色附着、一个深度附着和一个模板附着。
 
-- 帧缓冲区对象的颜色附着支持纹理和渲染缓冲区对象两种。
+- 帧缓冲区对象的颜色附着支持纹理和渲染缓冲区对象两种，其中纹理**支持2D纹理的一个mipmap级别、立方图纹理的一个面、3D纹理的某个2D切片的Mipmap级别、2D数组纹理的一个层次**。
 
-- 帧缓冲区对象的深度附着可以使纹理和渲染缓冲区对象。
+- 帧缓冲区对象的深度附着可以使**2D纹理的一个mipmap级别、立方图纹理的一个面和渲染缓冲区对象**。
 
 - 帧缓冲区对象的模板附着**只能是渲染缓冲区对象**。
 
@@ -3673,7 +3673,11 @@ glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsiz
 glRenderbufferStorageMultisample
 ```
 
+4. 删除渲染缓冲区对象
 
+```
+glDeleteRenderbuffers(GLsizei n,GLuint* renderbuffers)
+```
 
 
 
@@ -3686,21 +3690,98 @@ GLuint fbo;
 glGenFrameBuffers(1, &fbo);
 ``````
 
-2. 绑定帧缓冲区对象
+2. 绑定帧缓冲区对象，渲染到不同的帧缓冲区对象被叫做离屏渲染。
 
 ```
 glBindFrameBuffer(GL_FRAMEBUFFER, fbo);
 ```
 
+3. 检查帧缓冲区完整性
+
+```
+glCheckFramebufferStatus(
+	GLenum target//必须为GL_FRAMEBUFFER/GL_READ_FRAME_BUFFER/GL_DRAW_FRAME_BUFFER
+)
+```
+
+如果帧缓冲区对象不完整，则试图使用该对象读取和写入像素将会失败。另外，图元的绘制和读取帧缓冲区的命令也将失败，并返回帧缓冲区操作异常的错误。
+
+图元绘制包括：
+
+- glDrawArrays
+- glDrawElements
 
 
 
+读取帧缓冲区的命令：
+
+- glReadPixels：是从颜色缓冲区中读取像素，并在一个用户分配的缓冲区中返回它们。
+- glCopyTexImage2D
+- glCopyTexSubImage2D
+- glCopyTexSubImage3D
+
+4. 删除帧缓冲区对象
+
+```
+glDeleteFramebuffers(GLsizei n,GLuint* framebuffers)
+```
 
 
 
+**一、将渲染缓冲区对象作为帧缓冲区附着**
 
+4.18.2.2节介绍帧缓冲区对象的附着点允许挂在渲染缓冲区对象，因此可以通过如下的API实现：
 
+```
+glFramebufferRenderbuffer(
+	GLenum target,//必须为GL_FRAMEBUFFER/GL_READ_FRAME_BUFFER/GL_DRAW_FRAME_BUFFER
+	GLenum attachment,//GL_COLOR_ATTACHMENT/GL_DEPTH_ATTACHMENT/GL_STENCIL_ATTACHMENT/GL_DEPTH_STENCIL_ATTACHMENT
+	GLenum renderbuffertarget,//必须是GL_RENDERBUFFER
+	GLenum renderbuffer //渲染缓冲区对象的id
+)
+```
 
+**二、将一个2D纹理作为帧缓冲区附着**
+
+2D纹理可以用来挂在颜色附着、深度附着，API为：
+
+```
+glFramebufferTexture2D(
+	GLenum target,//必须为GL_FRAMEBUFFER/GL_READ_FRAME_BUFFER/GL_DRAW_FRAME_BUFFER
+	GLenum attachment,//GL_COLOR_ATTACHMENT/GL_DEPTH_ATTACHMENT/GL_STENCIL_ATTACHMENT/GL_DEPTH_STENCIL_ATTACHMENT
+	GLenum textarget,//与glTexImage2D中的target参数相同
+	GLuint texture,//纹理对象的id
+	GLint  level//mip级别
+)
+```
+
+**三、将一个3D纹理或2D纹理数组作为帧缓冲区附着**
+
+将3D纹理的一个2D切片或者某个mip级别或者2D数组纹理的一个级连接到帧缓冲区的附着上，可以通过下面的API实现：
+
+```
+glFramebufferTextureLayer(
+	GLenum target,//必须为GL_FRAMEBUFFER/GL_READ_FRAME_BUFFER/GL_DRAW_FRAME_BUFFER
+	GLenum attachment,//GL_COLOR_ATTACHMENT/GL_DEPTH_ATTACHMENT/GL_STENCIL_ATTACHMENT/GL_DEPTH_STENCIL_ATTACHMENT
+	GLuint texture,//纹理对象的id
+	GLint  level,//mip级别
+	GLint layer//纹理图像层次
+)
+```
+
+#### 4.18.2.5 帧缓冲区位块传递
+
+帧缓冲区位块传递可以很高效的将一个矩形区域的像素从一个读帧缓冲区对象复制到一个写缓冲区对象。
+
+帧缓冲区位块操作典型的应用场景是将一个多重采样渲染缓冲区解析为一个纹理，该纹理挂载到一个帧缓冲区对象的颜色附着上。
+
+API接口为：
+
+```
+glBlitFramebuffer
+```
+
+[Learn Opengl 帧缓冲区对象介绍](https://learnopengl-cn.github.io/04%20Advanced%20OpenGL/05%20Framebuffers/)
 
 
 
@@ -3726,6 +3807,8 @@ glBindFrameBuffer(GL_FRAMEBUFFER, fbo);
 2. 使用映射缓冲区对象 ，可以将缓冲区数据直接映射到应用程序的地址空间，减少内存占用；同时还可以避免数据复制。
 3. 使用几何形状实例化，一次API调用多次渲染具有不同属性的一个对象，减少向OpenGL ES引擎多次发送API请求的CPU处理开销。
 4. 可以使用SRGB纹理，减少着色器指令数量。
+5. 避免频繁地在渲染到窗口系统提供的帧缓冲区和渲染到自定义帧缓冲区对象之间切换。频繁切换会到导致更大的带宽，比较耗电。
+6. 不要逐帧创建和删除渲染缓冲区对象和帧缓冲区对象。
 
 
 
