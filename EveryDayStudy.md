@@ -2596,7 +2596,7 @@ N叉树的遍历又可以扩展为图，因为图就是多个N叉树的组合。
 ### 2.6.1 相关算法题
 
 - [重建二叉树](https://www.nowcoder.com/practice/8a19cbe657394eeaac2f6ea9b0f6fcf6?tpId=13&tqId=11157&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
-- 
+- ​
 
 ## 2.7 二分图
 
@@ -3504,6 +3504,124 @@ void main()
 
 - Blinn-Phong模型无需计算反射向量，效率更高。
 - Blinn-Phong模型的高光区域比Phong模型更大。
+
+
+### 4.9.4 平行光
+
+当光源很远的时候，来自光源的每条光线近乎平行，看起来所有的光都来源于同一个方向，这种光成为定向光，也叫平行光，例如太阳光。
+
+平行光的光照方向固定，与光源位置没有任何关系。
+
+在shader中进行光照计算时：
+
+```
+vec3 lightDir = normalize(-light_direction);
+```
+
+### 4.9.5 点光源
+
+点光源不同于平行光，会朝所有方向发光，它位于世界中的某个位置，光照强度会随着距离光源的远近发生衰减。
+
+衰减因子的计算公式：
+
+$F_a = 1.0 / (K_c + K_l * d + K_q * d * d)$
+
+$K_c$：是常量项一般为1，为了避免分母小于1。
+
+$K_l$：一次项会与距离值相乘，以线性的方式减少强度。
+
+$K_q$：二次项会与距离的平方相乘，让光源以二次递减的方式减少强度。
+
+[OGRE WIKI](http://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation)给出了一些参数的参考值，可以直接拿来使用。
+
+
+
+在shader中使用：
+
+```
+float distance    = length(light.position - FragPos);
+float attenuation = 1.0 / (light.constant + light.linear * distance + 
+                light.quadratic * (distance * distance));
+                
+ambient  *= attenuation; 
+diffuse  *= attenuation;
+specular *= attenuation;
+```
+
+### 4.9.6 聚光灯
+
+聚光灯是位于世界中某个位置光源，它朝特定的方向发射光线，只有在聚光方向的特定半径内的物体才能被照亮，其他照射不到的部分保持黑暗。
+
+例如舞台灯、手电筒、路灯等都属聚光灯。
+
+聚光灯的照射区域是个圆锥体，聚光灯用一个3D位置、光照方向和一个切光角表示，其中切光角用于计算圆锥体的半径。
+
+![](./pics/spot.png)
+
+- SpotDir：代表聚光灯所指的方向。
+- LightDir：从片元位置指向光源的向量。
+- ϕ：代表指定圆锥体半径的切光角，这个角度之外的物体不会被聚光灯照射到。
+- θ：代表LightDir与SpotDir之间的夹角，此值小于ϕ时，对片元执行光照计算。
+
+```
+struct Light {
+    vec3  position;
+    vec3  direction;
+    float cutOff;//此值实际代表cos(ϕ)
+    ...
+};
+
+float theta = dot(lightDir, normalize(-light.direction));
+
+if(theta > light.cutOff) 
+{       
+  // 执行光照计算
+}
+else  // 否则，使用环境光，让场景在聚光之外时不至于完全黑暗
+{
+  color = vec4(light.ambient * vec3(texture(material.diffuse, TexCoords)), 1.0);
+}
+```
+
+向shader传递数据的代码为：
+
+```
+lightingShader.setVec3("light.position",  camera.Position);
+lightingShader.setVec3("light.direction", camera.Front);
+lightingShader.setFloat("light.cutOff",   glm::cos(glm::radians(12.5f)));
+```
+
+上述的代码计算的聚光灯效果，边缘效果比较生硬，分界线会比较明显，为了使边缘更加平滑，可以采用内圆锥和外圆锥模拟聚光灯。
+
+位于内圆锥的光照强度为1，位于圆锥的光照强度为0，从内圆锥到外圆锥强逐渐减小。
+
+衰减因子的公式为：
+
+$I=(θ−γ)/ϵ$
+
+这里$ϵ$(Epsilon)是内（$ϕ$）和外圆锥（$γ$）之间的余弦值差（$ϵ=ϕ−γ$）。
+
+```
+struct Light {
+    vec3  position;
+    vec3  direction;
+    float cutOff;//cos值
+    float outerCutOff;//cos值
+    ...
+};
+
+float theta     = dot(lightDir, normalize(-light.direction));
+float epsilon   = light.cutOff - light.outerCutOff;
+float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);    
+//...
+// 将不对环境光做出影响，让它总是能有一点光
+diffuse  *= intensity;
+specular *= intensity;
+//...
+```
+
+
+
 
 
 
