@@ -2596,7 +2596,7 @@ N叉树的遍历又可以扩展为图，因为图就是多个N叉树的组合。
 ### 2.6.1 相关算法题
 
 - [重建二叉树](https://www.nowcoder.com/practice/8a19cbe657394eeaac2f6ea9b0f6fcf6?tpId=13&tqId=11157&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
-- 
+- ​
 
 ## 2.7 二分图
 
@@ -3978,6 +3978,18 @@ TBN矩阵用于将世界空间的视线向量和光照向量转换到TBN空间�
 
 1. 将相机还原到原始相机位置，构建新的MVP矩阵。
 2. 用第一遍渲染的深度纹理渲染场景，其中片元着色器中使用```sampler2DShadow```采样器从深度纹理上采样。
+
+
+## 4.20 数学部分
+
+### 4.20.1 View矩阵推导
+
+
+
+### 4.20.2 Project矩阵推导
+
+[project matrix](http://www.songho.ca/opengl/gl_projectionmatrix.html)
+
 
 
 
