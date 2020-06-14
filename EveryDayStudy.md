@@ -2566,6 +2566,71 @@ void traverse(TreeNode* pHead)
 
 与单链表的递归访问相似，因此可以抽象出N叉树的遍历。
 
+二叉树的遍历分为深度遍历和广度遍历，其中深度遍历包括先序遍历、中序遍历和后续遍历，广度遍历包括层次遍历。
+
+- 非递归的深度遍历：（基于栈的先序遍历）
+
+```C++
+void depthFirstSearch(TreeNode* pRoot)
+{
+    if(NULL == pRoot)
+    {
+        return;
+    }
+
+    stack<TreeNode*> stack1;
+    stack1.push(pRoot);
+    while(!stack1.empty())
+    {
+        TreeNode* pCurNode = stack1.top();
+        printf("%d ",pCurNode->val);
+        stack1.pop();
+        if(pCurNode->right)
+        {
+            stack1.push(pCurNode->right);//right
+        }
+        if(pCurNode->left)
+        {
+            stack1.push(pCurNode->left);//left
+        }
+    }
+}
+```
+
+- 非递归的广度遍历：基于队列的层次遍历
+
+```C++
+void levelFirstSearch(TreeNode* pRoot)
+{
+    if(NULL == pRoot)
+    {
+        return;
+    }
+    queue<TreeNode*> que;
+    que.push(pRoot);
+    while(!que.empty())
+    {
+        TreeNode* pCurNode = que.front();
+        printf("%d ",pCurNode->val);
+        que.pop();
+        
+        if(pCurNode->left)
+        {
+            que.push(pCurNode->left);//left
+        }
+
+        if(pCurNode->right)
+        {
+            que.push(pCurNode->right);//right
+        }
+    }
+}
+```
+
+
+
+
+
 ### 2.5.4 N叉树
 
 ```c++
@@ -2589,14 +2654,237 @@ N叉树的遍历又可以扩展为图，因为图就是多个N叉树的组合。
 
 ## 2.6 二叉树
 
+### 2.6.1 [重建二叉树](https://www.nowcoder.com/practice/8a19cbe657394eeaac2f6ea9b0f6fcf6?tpId=13&tqId=11157&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 
 
 
 
-### 2.6.1 相关算法题
 
-- [重建二叉树](https://www.nowcoder.com/practice/8a19cbe657394eeaac2f6ea9b0f6fcf6?tpId=13&tqId=11157&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
-- ​
+### 2.6.2 [二叉树的深度](https://leetcode-cn.com/problems/maximum-depth-of-binary-tree/)
+
+给定一个二叉树，找出其最大深度。
+
+二叉树的深度为根节点到最远叶子节点的最长路径上的节点数。
+
+- 深度遍历实现(栈)
+
+```C++
+int maxDepth(TreeNode* root) {
+	return getDepth(root);
+}
+
+int getDepth(TreeNode* pRoot)
+{
+    if(NULL == pRoot)
+    {
+        return 0;
+    }
+    int left = getDepth(pRoot->left);
+    int right = getDepth(pRoot->right);
+    if(left > right)
+    {
+        return (left + 1);
+    }
+    return (right + 1);
+}
+```
+
+- 层次遍历实现(队列)
+
+```C++
+int getDepth2(TreeNode* pRoot)
+{
+    int depth = 0;
+    if(NULL == pRoot)
+    {
+        return depth;
+    }
+    queue<TreeNode*> que;
+    que.push(pRoot);
+   
+    while(!que.empty())
+    {
+        int size = que.size();
+        for(int i = 0;i < size;i++)
+        {
+            TreeNode* pCurNode = que.front();
+            que.pop();
+            if(pCurNode->left)
+             	que.push(pCurNode->left);
+            if(pCurNode->right)
+           		que.push(pCurNode->right);
+        }
+        depth++;
+    }
+    return depth;
+}
+```
+
+### 2.6.3 [最深叶节点的最近公共祖先](https://leetcode-cn.com/problems/lowest-common-ancestor-of-deepest-leaves/)
+
+采用深度遍历实现，有如下几种情况：
+
+- 如果某个根节点的左右子树深度相同，则当前根节点为最近公共祖先。
+- 如果根节点的左右子树深度不同，则递归深度大的子节点。
+
+```C++
+TreeNode* lcaDeepestLeaves(TreeNode* root) {
+    if(NULL == root)
+	    return NULL;
+
+    int left = getDepth2(root->left);
+    int right = getDepth2(root->right);
+    if(left == right)
+   		return root;
+    
+    if(left > right)
+	    return lcaDeepestLeaves(root->left);
+    
+    return lcaDeepestLeaves(root->right);
+}
+
+int getDepth2(TreeNode* pRoot)
+{
+    if(NULL == pRoot)
+    {
+        return 0;
+    }
+
+    queue<TreeNode*> que;
+    que.push(pRoot);
+    int depth = 0;
+    while(!que.empty())
+    {
+        int size = que.size();
+        for(int i = 0;i < size;i++)
+        {
+            TreeNode* pCurNode = que.front();
+            que.pop();
+            if(pCurNode->left)
+            {
+                que.push(pCurNode->left);
+            }
+            if(pCurNode->right)
+            {
+                que.push(pCurNode->right);
+            }
+        }
+        depth++;
+    }
+    return depth;
+}
+```
+
+### 2.6.4 [层数最深叶子节点的和](https://leetcode-cn.com/problems/deepest-leaves-sum/)
+
+采用层次遍历，计算每层的节点之和，最后一次计算的和就是最深层的叶子节点之和。
+
+- 深度遍历
+
+```C++
+int deepestLeavesSum(TreeNode* root) {
+    return depthFirst(root);
+}
+int depthFirst(TreeNode* root)
+{
+    if(NULL == root)
+    {
+        return 0;
+    }
+    if(root->left == NULL && root->right == NULL)
+    {
+        return root->val;
+    }
+    int left = getDepth2(root->left);
+    int right = getDepth2(root->right);
+    if(left == right)
+    {
+        return deepestLeavesSum(root->left) + deepestLeavesSum(root->right);
+    }
+    else if(left > right)
+    {
+        return deepestLeavesSum(root->left);
+    }
+    return deepestLeavesSum(root->right);
+}
+int getDepth2(TreeNode* pRoot)
+{
+    if(NULL == pRoot)
+    {
+        return 0;
+    }
+
+    queue<TreeNode*> que;
+    que.push(pRoot);
+    int depth = 0;
+    while(!que.empty())
+    {
+        int size = que.size();
+        for(int i = 0;i < size;i++)
+        {
+            TreeNode* pCurNode = que.front();
+            que.pop();
+            if(pCurNode->left)
+            {
+                que.push(pCurNode->left);
+            }
+            if(pCurNode->right)
+            {
+                que.push(pCurNode->right);
+            }
+        }
+        depth++;
+    }
+    return depth;
+}
+```
+
+- 层次遍历
+
+```C++
+int deepestLeavesSum(TreeNode* root) {
+    return levelFrist(root);
+}
+
+int levelFrist(TreeNode* root)
+{
+    if(NULL == root)
+    {
+        return 0;
+    }
+    int sum = 0;
+    queue<TreeNode*> que;
+    que.push(root);
+    while(!que.empty())
+    {
+        int size = que.size();
+        if(size > 0)
+        {
+            sum = 0;
+        }
+        for(int i =0;i < size;i++)
+        {
+            TreeNode* pCurNode = que.front();
+            que.pop();
+            sum += pCurNode->val;
+            if(pCurNode->left)
+            {
+                que.push(pCurNode->left);
+            }
+            if(pCurNode->right)
+            {
+                que.push(pCurNode->right);
+            }
+        }
+    }
+
+    return sum;
+}
+```
+
+
+
+
 
 ## 2.7 二分图
 
@@ -2629,6 +2917,23 @@ N叉树的遍历又可以扩展为图，因为图就是多个N叉树的组合。
 动态规划的使用条件：**可分解为多个相关子问题，子问题的解被重复使用**。
 
 动态规划的特点：整个问题的最优解取决于子问题的最优解，将子问题称为状态，最终状态的求解归结为其他状态的求解。
+
+三要素：
+
+1. 重叠子问题
+2. 最优子结构：**要符合「最优子结构」，子问题间必须互相独立。**
+3. 写出正确的状态转移方程。
+   - 如何写出状态转移方程才是重点，要点如下：
+     - **1.先确定「状态」:也就是原问题和子问题中变化的变量。**
+     - **2. 然后确定dp函数的定义**。
+     - **3.然后确定「选择」并择优。**
+     - **4.最后明确base case。**
+
+以凑零钱问题为例，说明问题，题目为：给你 `k` 种面值的硬币，面值分别为 `c1, c2 ... ck`，每种硬币的数量无限，再给一个总金额 `amount`，问你**最少**需要几枚硬币凑出这个金额，如果不可能凑出，算法返回 -1 。
+
+
+
+
 
 ### 3.1.4 应用场景
 
