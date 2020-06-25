@@ -657,7 +657,86 @@ MyString& operator= (const MyString& rf)
 
 ### 1.2.11 基础知识
 
-#### 1.2.12.1 map与under_map的区别
+#### 1.2.12.1 map与unorder_map的区别
+
+**一、map**
+
+- map使用键值对存储数据，键不允许重复，值可以重复。set只存储键，不允许重复。
+- STL中map/set采用红黑树（非严格的平衡二叉搜索树）实现，红黑树能够自动排序，因此map中每个元素都是有序的。
+- map/set具有更高的插入效率，插入、删除和查找的时间复杂度为$O(logn)$。
+- 数据结构的的稳定与非稳定的是根据排序移动后原来在前面的逻辑位置仍然在前面保持不变的，所以map和set是稳定排序。
+- map中的元素是按照二叉搜索树存储的，通过中序遍历将键值按照从小到大的顺序遍历出来。
+
+**二、unorder_map**
+
+- unordered_map内部实现了一个哈希表（也叫散列表，通过把关键码值映射到Hash表中一个位置来访问记录，查找的时间复杂度可达到O(1)，其在海量数据处理中有着广泛应用），其元素的排列顺序是无序的。
+
+**三、对比**
+
+map：
+
+- 优点：有序性：红黑树自动排序。
+
+- 缺点： 空间占用率高，因为map内部实现了红黑树，虽然提高了运行效率，但是因为每一个节点都需要额外保存父、子节点和红/黑性质，使得每一个节点都占用大量的空间。
+
+- 适用处：对于有顺序要求的问题，用map会更高效一些。
+
+Unorder_map:
+
+- 优点： 因为内部实现了哈希表，因此其查找速度非常的快。
+- 缺点： 哈希表的建立比较耗费时间。
+- 适用处：对于查找问题，unordered_map会更加高效一些。
+
+
+
+#### 1.2.12.2 STL中单链表和双链表
+
+双链表：list。
+
+- 双向链表每个元素都是通过指针双向相连。
+- 从双向链表中的任意一个结点开始，都可以很方便地访问前驱结点和后继结点。
+- 增加删除节点复杂，需要多分配一个指针存储空间。
+
+单链表：forward_list。
+
+- 也是通过指针相连，但是指针是单向的，且尾端是封闭的。
+- 单向链表增加删除节点简单。遍历时候不会死循环。
+- 只能从头到尾遍历。只能找到后继，无法找到前驱，也就是只能前进。
+
+
+
+#### 1.2.12.3 vector底层实现的原理
+
+- vector是数据结构，拥有一段连续的内存空间，能够高效的进行随机访问，时间复杂度为$O(1)$。
+- 插入和删除的时间复杂度为$O(n)$。
+- 当内存不够时，会动态扩容，一般是二倍扩容。
+
+#### 1.2.12.4 C++栈和堆的区别
+
+**一、管理方式不同**：
+
+- stack：系统自动分配释放，如声明int a;系统自动在栈区为变量开辟空间。
+- heap：程序员申请释放，容易产生内存泄漏，并指明大小，如malloc。
+
+二、**分配方式不同**
+
+- 堆都是动态分配的，没有静态分配的堆。
+- 栈有两种分配方式：静态分配和动态分配。静态分配由操作系统完成，比如局部变量的分配。动态分配由alloc函数进行分配，但是栈的动态分配和堆不同，它的动态分配是由操作系统进行释放，无需我们手工实现。
+
+**三、分配效率不同**
+
+- 栈是由系统自动分配，会在硬件层级对栈提供支持，分配专门的寄存器存放栈的地址，压栈出栈都有专门的指令执行，这就决定了栈的效率比较高。
+- 堆则是由C/C++提供的库函数或运算符来完成申请与管理，实现机制比较复杂，频繁的内存申请容易产生内存碎片。
+
+#### 1.2.12.5 C++如何实现序列化和反序列化
+
+
+
+#### 1.2.12.6 std::deque的底层实现？
+
+为什么要分段连续？有什么好处？
+
+deque容器类与vector类似，支持随机访问和快速插入删除，它在容器中某一位置上的操作所花费的是线性时间。与vector不同的是，deque还支持从开始端插入数据：push_front()。
 
 
 
@@ -2266,51 +2345,51 @@ operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
 
 ### 2.1.3 关于链表的算法题
 
-1. [反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
+#### 2.1.3.1[反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
 
-   反转一个单链表。
+反转一个单链表。
 
-   - 示例:
+- 示例:
 
-   输入: 1->2->3->4->5->NULL
-   输出: 5->4->3->2->1->NULL
+输入: 1->2->3->4->5->NULL
+输出: 5->4->3->2->1->NULL
 
-   - 进阶:
-     你可以迭代或递归地反转链表。你能否用两种方法解决这道题？
+- 进阶:
+  你可以迭代或递归地反转链表。你能否用两种方法解决这道题？
 
-   ```C++
-    struct ListNode {
-       int val;
-       ListNode *next;
-       ListNode(int x) : val(x), next(NULL) {}
-    };
+```C++
+ struct ListNode {
+    int val;
+    ListNode *next;
+    ListNode(int x) : val(x), next(NULL) {}
+ };
+ 
+ //迭代
+ListNode* ReverseList(ListNode* pHead)
+{
+    if(NULL == pHead)
+    {
+        return pHead;
+    }
+    ListNode* pPre = NULL;
+    while(pHead)
+    {
+        ListNode* pNext = pHead->next;
+        pHead->next = pPre;
+        pPre = pHead;
+        pHead = pNext;
+    }
+    return pPre;
+}
+
+//递归
+ListNode* ReverseListTravel(ListNode* pHead)
+{
     
-    //迭代
-   ListNode* ReverseList(ListNode* pHead)
-   {
-       if(NULL == pHead)
-       {
-           return pHead;
-       }
-       ListNode* pPre = NULL;
-       while(pHead)
-       {
-           ListNode* pNext = pHead->next;
-           pHead->next = pPre;
-           pPre = pHead;
-           pHead = pNext;
-       }
-       return pPre;
-   }
+}
+```
 
-   //递归
-   ListNode* ReverseListTravel(ListNode* pHead)
-   {
-       
-   }
-   ```
-
-2. [从尾到头打印链表](https://www.nowcoder.com/practice/d0267f7f55b3412ba93bd35cfa8e8035?tpId=13&tqId=11156&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
+#### 2.1.3.2 [从尾到头打印链表](https://www.nowcoder.com/practice/d0267f7f55b3412ba93bd35cfa8e8035?tpId=13&tqId=11156&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 
 输入一个链表，按链表从尾到头的顺序返回一个ArrayList。
 
@@ -2353,7 +2432,7 @@ vector<int> printListFromTailToHead(ListNode* head) {
 ```C++
 
 ```
-3. [链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+#### 2.1.3.3[链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 输入一个链表，输出该链表中倒数第k个结点。
 
@@ -2396,7 +2475,7 @@ ListNode* FindKthToTail(ListNode* pListHead, unsigned int k) {
     return pCurNode;
 }
 ```
-4. [合并两个排序的链表](https://www.nowcoder.com/practice/d8b6b4358f774294a89de2a6ac4d9337?tpId=13&tqId=11169&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+#### 2.1.3.4[合并两个排序的链表](https://www.nowcoder.com/practice/d8b6b4358f774294a89de2a6ac4d9337?tpId=13&tqId=11169&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 输入两个单调递增的链表，输出两个链表合成后的链表，当然我们需要合成后的链表满足单调不减规则。
 
@@ -2453,19 +2532,252 @@ ListNode* Merge(ListNode* pHead1, ListNode* pHead2)
     return pNode;
 }
 ```
-5. [两个链表的第一个公共结点](https://www.nowcoder.com/practice/6ab1d9a29e88450685099d45c9e31e46?tpId=13&tqId=11189&tPage=2&rp=2&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
-输入两个链表，找出它们的第一个公共结点。（注意因为传入数据是链表，所以错误测试数据的提示是用其他方式显示的，保证传入数据是正确的）
 
-6. [链表中环的入口结点](https://www.nowcoder.com/practice/253d2c59ec3e4bc68da16833f79a38e4?tpId=13&tqId=11208&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+#### 2.1.3.5[两个链表的第一个公共结点](https://www.nowcoder.com/practice/6ab1d9a29e88450685099d45c9e31e46?tpId=13&tqId=11189&tPage=2&rp=2&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+
+输入两个链表，找出它们的第一个公共结点。（注意因为传入数据是链表，所以错误测试数据的提示是用其他方式显示的，保证传入数据是正确的）。
+
+思路是用两个指针分别指向两个链表的头指针。
+
+使用两个指针 node1，node2 分别指向两个链表 headA，headB 的头结点，然后同时分别逐结点遍历，当 node1 到达链表 headA 的末尾时，重新定位到链表 headB 的头结点；当 node2 到达链表 headB 的末尾时，重新定位到链表 headA 的头结点。当node1和node2相等时，所指向的节点就是第一个公共结点。
+
+```C++
+ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+    ListNode* pH1 = headA;
+    ListNode* pH2 = headB;
+    while(pH1 != pH2)
+    {
+        if(pH1)
+       		pH1 = pH1->next;
+        else
+            pH1 = headB;
+        if(pH2)
+        	pH2 = pH2->next;
+        else
+            pH2 = headA;
+    }
+    return pH1;
+}
+```
+
+判断两个链表是否相交，也可以采用此方法判断。
+
+#### 2.1.3.6 [删除排序链表中重复的节点1](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-list/)
+
+给定一个排序链表，删除所有重复的元素，**使得每个元素只出现一次**。
+
+例如：
+
+```
+输入: 1->1->2
+输出: 1->2
+```
+
+```
+输入: 1->1->2->3->3
+输出: 1->2->3
+```
+
+思路还是用两个指针，一个是快指针，一个是慢指针，快指针比慢指针始终快一步。
+
+如果当前快指针的值与慢指针的值相等，则需要将慢指针的next指针指向快指针的next指针，以达到删除重复节点的目的。
+
+```C++
+ListNode* deleteDuplicates(ListNode* head) {
+    if(NULL == head)
+    {
+        return NULL;
+    }
+
+    ListNode* pPre = head;
+    ListNode* pH = head->next;
+    while(pH)
+    {
+        if(pPre->val != pH->val)
+        {
+            pPre = pH;
+            pH = pH->next;
+        }
+        else
+        {
+            ListNode* pNext = pH->next;
+            pPre->next = pNext;
+            pH = pNext;
+        }
+    }
+    return head;
+}
+```
+
+
+
+#### 2.1.3.7 [删除排序链表中重复的结点2](https://www.nowcoder.com/practice/fc533c45b73a41b0b44ccba763f866ef?tpId=13&tqId=11209&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+
+在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，**重复的结点不保留**，返回链表头指针。
+
+ 例如：
+
+```
+输入: 1->2->3->3->4->4->5
+输出: 1->2->5
+```
+
+```
+输入: 1->1->1->2->3
+输出: 2->3
+```
+
+
+
+#### 2.1.3.8 [移除重复节点](https://leetcode-cn.com/problems/remove-duplicate-node-lcci/)
+
+移除未排序链表中的重复节点，保留最开始出现的节点。
+
+例如：
+
+```
+ 输入：[1, 2, 3, 3, 2, 1]
+ 输出：[1, 2, 3]
+```
+
+```
+ 输入：[1, 1, 1, 1, 2]
+ 输出：[1, 2]
+```
+
+**进阶：**如果不得使用临时缓冲区，该怎么解决？
+
+思路是使用map或set记录某个值是否存在，如果存在，则将上一针的next指针指向当前指针的next指针。
+
+```C++
+ListNode* removeDuplicateNodes(ListNode* head) {
+    if(NULL == head)
+    {
+        return NULL;
+    }
+    map<int,bool> htNodeNum;
+    ListNode* pCur = head->next;
+    ListNode* pPre = head;
+    htNodeNum[head->val] = true;
+    while(pCur)
+    {
+        if(htNodeNum.find(pCur->val) != htNodeNum.end())
+        {
+            ListNode* pNext = pCur->next;
+            pPre->next = pNext;
+            pCur = pNext;
+        }
+        else
+        {
+            htNodeNum[pCur->val] = true;
+            ListNode* pNext = pCur->next;
+            pPre = pCur;
+            pCur = pNext;
+        }
+    }
+    return head;
+}
+```
+
+
+
+#### 2.1.3.9 [判断是否为环形链表](https://leetcode-cn.com/problems/linked-list-cycle/)
+
+给定一个链表，判断链表中是否有环。
+
+为了表示给定链表中的环，我们使用整数 pos 来表示链表尾连接到链表中的位置（索引从 0 开始）。 如果 pos 是 -1，则在该链表中没有环。
+
+思路是采用两个指针，慢指针每次前进一位，快指针每次前进两位，当两者相等且不为空时，说明是环形链表。
+
+```C++
+bool hasCycle(ListNode *head) {
+    ListNode* pH1 = head;
+    ListNode* pH2 = head;
+    while(pH2 && pH2->next)
+    {
+        pH1 = pH1->next;
+        pH2 = pH2->next->next;
+        if(pH1 == pH2)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+#### 2.1.3.10 [链表中环的入口结点](https://www.nowcoder.com/practice/253d2c59ec3e4bc68da16833f79a38e4?tpId=13&tqId=11208&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 给一个链表，若其中包含环，请找出该链表的环的入口结点，否则，输出null。
 
-7. [删除链表中重复的结点](https://www.nowcoder.com/practice/fc533c45b73a41b0b44ccba763f866ef?tpId=13&tqId=11209&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+**一、哈希法**
 
-在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1->2->3->3->4->4->5 处理后为 1->2->5。
+1. 遍历单链表的每个结点 
+2. 如果当前结点地址没有出现在set中，则存入set中 ；若出现在set中，则当前结点就是环的入口结点 
+3. 整个单链表遍历完，若没出现在set中，则不存在环
 
-8. 判断是否为环形链表
+```C++
+ListNode* EntryNodeOfLoop(ListNode* pHead)
+{
+    set<ListNode*> setVal;
+    while(pHead != NULL)
+    {
+        if(setVal.find(pHead) == setVal.end())
+        {
+            setVal.insert(pHead);
+            pHead = pHead->next;
+        }
+        else
+        {
+            return pHead;
+        }
+    }
+    return NULL;
+}
+```
+
+时间复杂度$O(n)$、空间复杂度$O(n)$。
+
+**二、采用快慢双指针法**
+
+1、设快慢指针，快指针每次前进两步，慢指针每次前进一步。
+
+2、当快慢指针相遇时，将快指针设置到头结点，此时快指针走的长度刚好是慢指针的两倍。然后将快慢指针分别每次前进一步，当再次相遇时，相遇的节点就是入口节点。
+
+
+
+快慢指针一定在环中相遇，而且第一次相遇慢指针一定还没绕环超过一圈，因为当慢指针进入环时，此时快指针无论在环中的哪个位置，都可以在慢指针走一圈之内追上。
+
+```C++
+ListNode* EntryNodeOfLoop2(ListNode* pHead)
+{
+    ListNode* pF = pHead;
+    ListNode* pS = pHead;
+    ListNode* pN = NULL;
+    while(pF != NULL && pF->next != NULL)
+    {
+        pS = pS->next;
+        pF = pF->next->next;
+        
+        if(pS == pF)
+        {
+            pN = pHead;
+            while(pN != pS)
+            {
+                pN = pN->next;
+                pS = pS->next;
+            }
+            return pS;
+        }
+    }
+    return NULL;
+}
+```
+
+
+
+
 
 ## 2.2 栈
 
@@ -2882,7 +3194,48 @@ int levelFrist(TreeNode* root)
 }
 ```
 
+### 2.6.5 给两个二叉树节点，求最近的公共祖先
 
+题目描述：给定两个节点p和q,求两个节点的最近公共祖先。
+思路：
+1.看p或者q是否为根节点，若有一个是；则最近的公共祖先是根节点。
+2.分别在根节点的左子树和右子树中找p节点和q节点：
+
+1）左右子树两边的都不为空，则说明p、q存在于根节点的左子树或者右子树；则最近公共祖先是根节点。
+2）左不空，右空；则说明p、q存在于根节点的左子树中，则最近公共祖先是在左树中先找到的那个。
+3）右不空，左空；说明p、q都在根节点的右子树，则最近公共祖先是右树中最先找到的那个。
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if(root == NULL)
+            return NULL;
+        if(root == p || root == q)
+            return root;
+        //递归左右子树   
+        TreeNode* left = lowestCommonAncestor(root->left, p, q);   
+        TreeNode* right = lowestCommonAncestor(root->right, p, q);
+        if(left && right) 
+            return root;
+        else if(left)  
+            return left;
+        else if(right)  
+            return right;
+        else 
+            return NULL;
+    }
+};
+```
 
 
 
@@ -2957,15 +3310,47 @@ int levelFrist(TreeNode* root)
 
 ## 3.2 排序算法
 
-### 3.2.1 冒泡排序
+### 3.2.1 时间复杂度为$O(n)$的排序算法
+
+冒泡排序、插入排序、选择排序都是基于比较的算法。
+
+#### 3.2.1.1 冒泡排序
 
 
 
-### 3.2.2 插入排序
+#### 3.2.1.2 插入排序
 
 
 
-### 3.2.3 选择排序
+#### 3.2.1.3 选择排序
+
+
+
+### 3.2.2 时间复杂度为$O(nlogn)$的排序算法
+
+快排、归并也是基于比较的算法。
+
+#### 3.2.2.1 快排
+
+
+
+#### 3.2.2.2 归并
+
+
+
+### 3.2.3 时间复杂度为$O(n)$的排序算法
+
+桶、计数、基数都是不基于比较的算法。
+
+#### 3.2.3.1 桶排序
+
+
+
+#### 3.2.3.2 计数排序
+
+
+
+#### 3.2.3.3 基数排序
 
 
 
@@ -3062,6 +3447,33 @@ int BinaryFind(const vector<int>& values,int target)
 2. [寻找两个有序数组的中位数](https://leetcode-cn.com/problems/median-of-two-sorted-arrays/)：用到二分查找
 3. [旋转数组的最小数字](https://www.nowcoder.com/practice/9f3231a991af4f55b95579b44b7a01ba?tpId=13&tqId=11159&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 4. 
+
+
+
+## 3.2 LRU缓存策略
+
+
+
+## 3.3 字符串转化为数组
+
+```C++
+int StrToInt(char* szStr)
+{
+    int number = 0;
+    while(*szStr != 0)
+    {
+        number = number * 10 + *szStr - '0';
+        ++szStr;
+    }
+    return number;
+}
+```
+
+
+
+## 3.4 将一个字符数组按字典顺序排序
+
+要求时间复杂度$O(n)$。
 
 
 
@@ -4333,11 +4745,44 @@ TBN矩阵用于将世界空间的视线向量和光照向量转换到TBN空间�
 2. 用第一遍渲染的深度纹理渲染场景，其中片元着色器中使用```sampler2DShadow```采样器从深度纹理上采样。
 
 
+
+### 4.19.11 [法线贴图](https://www.cnblogs.com/calence/p/5551504.html)
+
+
+
 ## 4.20 数学部分
 
 ### 4.20.1 View矩阵推导
 
+[原理](https://www.cnblogs.com/calence/p/6645299.html)
 
+View矩阵用于直接将World坐标系下的坐标转换到Camera坐标系下。
+
+右手坐标系下的推到如下：
+
+相机本身的变换C包括两个元素：$C = T * R​$，其中T是平移变换，R是旋转变换。
+
+而相机变换是相机本身变换的逆变换：
+
+$C^{-1} = (T * R) ^ {-1} = R^{-1} * T^{-1}​$
+
+已知世界空间相机位置eyePos，相机观察点位置tarPos，和相机up向量，计算相机view矩阵：
+
+计算u、v、w三个基向量，基向量互相垂直的单位向量。
+
+1. w向量：视线向量，(eyePos - tarPos)，并归一化。
+
+2. u向量：up叉乘w向量，归一化。u = up x w。
+
+3. v向量：up虽然向上，但不一定跟w, u 垂直，所以重新求v，同上v = w x u。
+
+4. w向量的第四个分量：向量(-w)与eye的点乘；
+
+   u向量的第四个分量：向量(-u)与eye的点乘；
+
+   v向量的第四个分量：向量(-v)与eye的点乘；
+
+   
 
 ### 4.20.2 Project矩阵推导
 
@@ -4516,4 +4961,9 @@ C++反射实现：工厂模式+C++模板+宏定义。
 
 # 七、多线程相关
 
+
+
+
+
+# 八、
 
