@@ -3963,19 +3963,39 @@ OpenGL ES 3.0 支持的纹理类型分为： 2D纹理、立方图纹理、2D纹�
 
 缩小发生在当投影到屏幕上的多边行小于纹理的尺寸时；缩小时，可以指定mipmap贴图方式。
 
+```
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+```
+
+
+
 **放大过滤器：**
 
 - GL_NERAEST：从最靠近纹理坐标的纹理中获取一个单点样本。
+
+![](./pics/glsl/near.png)
+
+上图中有四个像素，其中加号代表纹理，左上角纹素中心距离纹理坐标最近，因此采样时选取左上角纹素的颜色。
+
 - GL_LINEAR：从最靠近纹理坐标的纹理中获取一个双线性样本（四次样本的平均值）。
+
+![](./pics/glsl/linear.png)
+
+放大模式下，对比最近点采样与线性采样的效果：
+
+![](./pics/glsl/linear_near.png)
 
 **缩小过滤器：**
 
 - GL_NEAREST：从最靠近纹理坐标的纹理中获取一个单点样本。
 - GL_LINEAR：从最靠近纹理坐标的纹理中获取一个双线性样本（四次样本的平均值）。
 - GL_NEARSET_MIPMAP_NEAREST：从所选的最近的mip级别中获取一个单点样本。
-- GL_NEARSET_MIPMAP_LINEAR：从两个最近的mip级别中获取样本，并在这些样本之间进行插值。
 - GL_LINEAR_MIPMAP_NEAREST：从所选的最近的mip级别中获取双线性采样。
-- GL_LINEAR_MIPMAP_LINEAR：从两个最近的mip级别中获取双线性采样，然后在他们之间进行插值。也称为三线性过滤，在所有模式中质量最佳。
+- GL_NEARSET_MIPMAP_LINEAR：从两个最近的mip级别中线性插值，并取得最近点采样。
+- GL_LINEAR_MIPMAP_LINEAR：从两个最近的mip级别中线性插值，然后在他们之间进行插值。也称为三线性过滤，在所有模式中质量最佳。
+
+可以参考第4.8.10小节。
 
 ### 4.8.6 纹理格式
 
@@ -3997,7 +4017,47 @@ OpenGL ES 3.0支持的纹理格式：规范化纹理、浮点纹理、整数纹�
 
 2D纹理使用：
 
-1. 在CPU端激活纹理，并将采样器与纹理绑定。
+1. 创建纹理ID:
+
+```
+unsigned int textureID;
+glGenTextures(1, &textureID);
+```
+
+2. 绑定纹理：
+
+```
+glBindTexture(GL_TEXTURE_2D, textureID);
+```
+
+3. 设置纹理环绕方式和过滤方式
+
+```
+// 为当前绑定的纹理对象设置环绕、过滤方式
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+```
+
+4. 加载纹理数据，为当前绑定的纹理对象附加上纹理图像：
+
+```
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+```
+
+- 第二个参数为纹理指定多级渐远纹理的级别，如果你希望单独手动设置每个多级渐远纹理的级别的话。这里我们填0，也就是基本级别。
+- 第六个参数总是被设为0，历史遗留问题。
+- 第七第八个参数定义了源图的格式和数据类型。
+- 最后一个参数是真正的图像数据。
+
+5. 为当前绑定的纹理自动生成mipmap纹理：
+
+```
+glGenerateMipmap(GL_TEXTURE_2D);
+```
+
+6. 在CPU端激活纹理，并将采样器与纹理绑定。
 
 ```
 GLint textureLocation = glGetUniformLocation(program,"s_texture");//s_texture采样器名称
@@ -4006,7 +4066,7 @@ glBindTexture(GL_TEXTURE_2D,textureID);//将纹理id绑定到0号纹理单元；
 glUniform1i(textureLocation,0);//绑定采样器与纹理
 ```
 
-2. 在片元着色器中，根据纹理坐标进行采样。
+7. 在片元着色器中，根据纹理坐标进行采样。
 
 ```
 void main()
@@ -4055,6 +4115,74 @@ mipmap纹理不仅可以改善渲染质量，还能提高渲染性能，一般�
 
 - **闪烁**：当投影到屏幕的多边形小于纹理的尺寸时，会出现这个问题。
 - **性能问题**
+
+OpenGL中提供一个```glGenerateMipmaps```函数为创建的一个纹理生成一系列的mipmap纹理。
+
+渲染mipmap时，当切换两个不同级别的mipmap纹理层时会产生生硬的边界，类似于纹理过滤一样，可以在两个不同级别的纹理层之间采用NEAREST和LINEAR过滤。
+
+为了指定不同mipmap层级之间的过滤方式，有四种方式：(4.8.5节已经介绍，这里复习一遍)
+
+| 过滤方式                  | 作用                                                       |
+| ------------------------- | ---------------------------------------------------------- |
+| GL_NEAREST_MIPMAP_NEAREST | 使用最邻近的mipmap来匹配像素大小，并使用邻近纹理进行采样   |
+| GL_LINEAR_MIPMAP_NEAREST  | 使用最邻近的mipmap级别，并使用线性插值进行采样             |
+| GL_NEAREST_MIPMAP_LINEAR  | 在两个临近的mipmap之间进行线性插值，并使用邻近纹理进行采样 |
+| GL_LINEAR_MIPMAP_LINEAR   | 在两个邻近的mipmap之间使用线性插值，并使用线性插值进行采样 |
+
+
+
+### 4.8.10 纹理环绕方式
+
+纹理坐标的范围通常在[0,1]之间，当纹理超过正常范围时，需要设置纹理环绕方式，常用的有如下几种：
+
+- GL_REPEAT
+- GL_MIRRORED_REPEAT
+- GL_CLAMP_TO_EDGE
+
+1. 重复纹理环绕——GL_REPEAT
+
+当纹理S/T坐标超过1时，实际上其中的是小数部分。比如(1.5,0) 实际采样时，纹理坐标为(0.5,0)。
+
+比如给定矩形的四个顶点坐标(0,0,)、(0,2)、(3,2)、(3,0)，如果指定重复环绕，其效果为：
+
+![](./pics/glsl/repeat.png)
+
+```
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, 
+    GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_REPEAT); //设置 S 轴的􏰸􏰹方式为重复环绕
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, 
+    GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_REPEAT); //设置 T 轴的􏰸􏰹方式为重复环绕
+```
+
+备注：如果是3D纹理，除了ST坐标之外，还有一个R轴。
+
+2. 镜像重复环绕
+
+当纹理S/T坐标超过1时，实际上其中的是小数部分。
+
+![](./pics/glsl/mirro.png)
+
+```
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, //设置 S 轴的􏰸􏰹方式为􏰼镜像重复 
+    GLES30.GL_TEXTURE_WRAP_S, GLES30. GL_MIRRORED_REPEAT);
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, //设置 T 轴的􏰸􏰹方式为􏰼镜像重复 
+    GLES30.GL_TEXTURE_WRAP_T, GLES30. GL_MIRRORED_REPEAT);
+```
+
+3. 边缘截取
+
+截取环绕方式中当纹理坐标的值大于 1 时都看作 1，因此，会产生边缘被拉伸的效果。
+
+![](./pics/glsl/edge.png)
+
+```
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, 
+    GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE); //设置 S 轴的􏰸􏰹方式为􏰻截取环绕
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, 
+    GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE); //设置 T 轴的􏰸􏰹方式为􏰻截取环绕
+```
+
+
 
 ## 4.9 光照算法
 
