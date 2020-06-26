@@ -4500,6 +4500,8 @@ OpenGL ES 3.0支持三种缓冲区，每种缓冲区都保存帧缓冲中每个�
 
 模板缓冲区是一个逐像素掩码，保存可用于确定某像素是否应该被更新的值。模板测试本质上是一个位测试。
 
+模板缓冲区中，每个缓冲值是8位的，每个像素或片段一共能有256中不同的模板值。我们可以将模板值设为我们想要的值，但某个片段有某个模板值时，我们可以选择保留或者丢弃此片段。
+
 为了更精准的控制模板测试，可以使用一个掩码参数控制模板值的哪几位参与测试。
 
 
@@ -4509,6 +4511,150 @@ OpenGL ES 3.0支持三种缓冲区，每种缓冲区都保存帧缓冲中每个�
 1. 模板测试不通过，也就不会进行深度测试。
 2. 模板测试通过，深度测试不通过。
 3. 模板测试和深度测试都通不过。
+
+### 4.13.1 启用模板测试
+
+开启模板测试：
+
+````
+glEnable(GL_STENCIL_TEST);
+````
+
+### 4.13.2 清除模板缓冲
+
+与颜色和深度缓冲一样，每次迭代之前需要清除模板缓冲。
+
+```
+glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+```
+
+### 4.13.3 设置模板掩码
+
+与深度测试的```glDepthMask	```函数类似，模板缓冲也有一个类似函数，```glStencilMask```函数允许设置一个位掩码，它会与将要写入缓冲的模板值进行**与(AND)**操作。
+
+默认情况下，设置的位掩码所有位都是1，不影响输出，如果我们将其设置为```0x00```，写入缓冲的所有模板值最后都会变成0，与深度测试中```glDepthMask(GL_FALSE)	``类似。
+
+```
+glStencilMask(0xFF); // 每一位写入模板缓冲时都保持原样
+glStencilMask(0x00); // 每一位在写入模板缓冲时都会变成0（禁用写入）
+```
+
+### 4.13.4 模板函数
+
+与深度测试类似，对模板缓冲应该通过还是失败，以及它应该如何影响模板缓冲，可以通过```glStencilFunc```和```glStencilOp```函数设置。
+
+**一、glStencilFunc**
+
+```glStencilFunc(GLenum func, GLint ref, GLuint mask)；```一共包含三个参数:
+
+- func：模板测试函数，将会应用到已存储的模板值和ref值上。可取的值有```GL_NEVER```、```GL_LESS```、```GL_LEQUAL```、```GL_GREATER```、```GL_GEQUAL```、```GL_EQUAL```、```GL_NOTEQUAL```和```GL_ALWAYS```。
+- ref：模板测试的参考值。模板缓冲的内容将会与这个值进行比较。
+- mask：设置的掩码，它将会与参考值和储存的模板值在测试比较它们之前进行与(AND)运算。
+
+例如：
+
+```
+glStencilFunc(GL_EQUAL, 1, 0xFF);
+```
+
+上述代码的意思是：只要一个片段的模板值等于(`GL_EQUAL`)参考值1，片段将会通过测试并被绘制，否则会被丢弃。
+
+**二、glStencilOp**
+
+glStencilFunc函数仅仅描述了OpenGL应该对模板缓冲内容做什么，而不是应该如何更新缓冲，此时就需要用到```glStencilOp```函数。
+
+```glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass);```一共包含三个选项：
+
+- ```sfail```：模板测试失败时采取的行为。
+- ```dpfail```：模板测试通过，深度测试失败时采取的行为。
+- ```dppass```：模板测试和深度测试都通过时采取的行为。、
+
+每个选项可选的值如下：
+
+| 值           | 作用                                               |
+| ------------ | -------------------------------------------------- |
+| GL_KEEP      | 保持当前储存的模板值                               |
+| GL_ZERO      | 将模板值设置为0                                    |
+| GL_REPLACE   | 将模板值设置为glStencilFunc函数设置的`ref`值       |
+| GL_INCR      | 如果模板值小于最大值则将模板值加1                  |
+| GL_INCR_WRAP | 与GL_INCR一样，但如果模板值超过了最大值则归零      |
+| GL_DECR      | 如果模板值大于最小值则将模板值减1                  |
+| GL_DECR_WRAP | 与GL_DECR一样，但如果模板值小于0则将其设置为最大值 |
+| GL_INVERT    | 按位翻转当前的模板缓冲值                           |
+
+默认情况下glStencilOp是设置为`(GL_KEEP, GL_KEEP, GL_KEEP)`的，所以不论任何测试的结果是如何，模板缓冲都会保留它的值。默认的行为不会更新模板缓冲，所以如果你想写入模板缓冲的话，你需要至少对其中一个选项设置不同的值。
+
+
+
+使用模板测试，可以制作物体轮廓效果，也就是为每个物体在它的周围创建一个很小的有色边框。
+
+步骤如下：
+
+1. 在绘制物体之前，为模板函数设置为```GL_ALWAYS```，每当物体的片段被渲染时，将模板缓冲更新为1。
+2. 渲染物体。
+3. 禁用模板写入和深度测试。
+4. 将物体缩放一点点。
+5. 使用一个不同的片段着色器，输出一个单独的边框颜色。
+6. 再次绘制物体，但只在他们片段的模板值不等于1时才绘制。
+7. 再次启用模板写入和深度测试。
+
+
+
+```
+// configure global opengl state
+// -----------------------------
+glEnable(GL_DEPTH_TEST);
+glDepthFunc(GL_LESS);
+glEnable(GL_STENCIL_TEST);
+glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+// render
+// ------
+glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // don't forget to clear the stencil buffer!
+
+// draw floor as normal, but don't write the floor to the stencil buffer, we only care about the containers. We set its mask to 0x00 to not write to the stencil buffer.
+glStencilMask(0x00);
+//glDrawArrays floor
+
+// 1st. render pass, draw objects as normal, writing to the stencil buffer
+// --------------------------------------------------------------------
+glStencilFunc(GL_ALWAYS, 1, 0xFF);
+glStencilMask(0xFF);
+// cubes
+glBindVertexArray(cubeVAO);
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, cubeTexture);
+model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+shader.setMat4("model", model);
+glDrawArrays(GL_TRIANGLES, 0, 36);
+
+// 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
+// Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing 
+// the objects' size differences, making it look like borders.
+// ------------------------------------------------------------------------
+glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+glStencilMask(0x00);
+glDisable(GL_DEPTH_TEST);
+shaderSingleColor.use();//绘制轮廓颜色
+float scale = 1.1;
+// cubes
+glBindVertexArray(cubeVAO);
+glBindTexture(GL_TEXTURE_2D, cubeTexture);
+model = glm::mat4(1.0f);
+model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+model = glm::scale(model, glm::vec3(scale, scale, scale));
+shaderSingleColor.setMat4("model", model);
+glDrawArrays(GL_TRIANGLES, 0, 36);
+glBindVertexArray(0);
+
+glStencilMask(0xFF);
+glStencilFunc(GL_ALWAYS, 0, 0xFF);
+glEnable(GL_DEPTH_TEST);
+```
+
+
 
 
 
