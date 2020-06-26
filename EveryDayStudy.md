@@ -5016,9 +5016,57 @@ TBN矩阵用于将世界空间的视线向量和光照向量转换到TBN空间�
 
 片元着色器根据法线贴图中的法向量和TBN空间的视线向量、光照向量计算每个片元的光照颜色。
 
-### 4.19.2 环境贴图
+### 4.19.2 环境贴图/环境映射
 
-环境贴图实际上是立方图纹理的应用，根据光照的入射方向计算反射方向，根据单位化之后的反射向量在立方图上采样，得到立方图上的颜色值，再将此颜色值乘以片元颜色作为最终的颜色值。
+环境贴图实际上是立方图纹理的应用，最流行的两个技术是反射和折射。
+
+#### 4.19.2.1 反射
+
+根据光照的入射方向计算反射方向，根据单位化之后的反射向量在立方图上采样，得到立方图上的颜色值，再将此颜色值乘以片元颜色作为最终的颜色值。
+
+![](./pics/glsl/reflact.png)
+
+- 可以引入反射贴图，为模型添加反射性。
+
+为立方体模型添加反射特性：
+
+```
+#version 330 core
+out vec4 FragColor;
+
+in vec3 Normal;
+in vec3 Position;
+
+uniform vec3 cameraPos;
+uniform samplerCube skybox;
+
+void main()
+{             
+    vec3 I = normalize(Position - cameraPos);
+    vec3 R = reflect(I, normalize(Normal));//计算反射向量
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
+}
+```
+
+#### 4.19.2.2 折射
+
+折射可以使用GLSL的内建函数```refract```实现，它需要一个法向量、一个观察方向和两个材质之间的折射率。
+
+![](./pics/glsl/refract.png)
+
+例如从光线从空气进入玻璃，折射率为$1.0/1.52 = 0.658$。
+
+```
+void main()
+{             
+    float ratio = 1.00 / 1.52;
+    vec3 I = normalize(Position - cameraPos);
+    vec3 R = refract(I, normalize(Normal), ratio);
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
+}
+```
+
+
 
 ### 4.19.3 基于点精灵的粒子系统
 
