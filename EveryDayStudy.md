@@ -3860,7 +3860,15 @@ GLES 3.0支持顶点着色器中的纹理查找操作，可以用作顶点偏移
 - 剪裁：判断图元是否位于视景体。如果完全在视景体内，则不进行剪裁；如果图元完全在视景体外，则图元将被淘汰；如果图元有部分在视景体内，需要根据平面进行剪裁，剪裁操作将产生新的顶点，组成新的图元。
 - 透视分割：对顶点的(x,y,z,w)分别处以w值，使其坐标转换到标准化设备空间，范围为[-1,1]。
 - 视口变换：将标准化设备空间的坐标转化视口空间，转化为二维坐标。
-- 淘汰：判断是否开启了背面剪裁，如果图元卷绕方式与渲染方式相反，则图元将被淘汰。
+- 淘汰/剔除(Cull)：判断是否开启了背面剪裁，如果图元卷绕方式与渲染方式相反，则图元将被淘汰。
+
+```
+glEnable(GL_CULL_FACE);//开启面剔除
+glCullFace(GL_BACK);//剔除背面
+glFrontFace(GL_CCW);//设置逆时针面为正向面  
+```
+
+默认值是```GL_CCW```，它代表的是逆时针的环绕顺序，另一个选项是```GL_CW```代表顺时针顺序。
 
 
 
@@ -5028,7 +5036,103 @@ TBN矩阵用于将世界空间的视线向量和光照向量转换到TBN空间�
 2. 将帧缓冲区对象绑定的纹理作为来源，并在屏幕上渲染一个全屏矩形。
 3. 执行片段着色器，在整个矩形空间进行后处理特效处理。
 
+![](./pics/glsl/origin.png)
 
+比较简单的后期处理效果如下：
+
+#### 4.19.5.1 反向
+
+反向的操作比较简单，就是1.0减去当前片段的颜色值。
+
+```
+void main()
+{
+    gl_FragColor = vec4(vec3(1.0 - texture(screenTexture, TexCoords)), 1.0);
+}
+```
+
+![](./pics/glsl/invert.png)
+
+#### 4.19.5.2 灰度
+
+剔除屏幕中除了黑白灰之外的所有颜色，让整个图像灰度化。
+
+```
+void main()
+{
+    vec4 vColor = texture(screenTexture, TexCoords);
+    float average = 0.2126 * vColor.r + 0.7152 * vColor.g + 0.0722 * vColor.b;
+    gl_FragColor = vec4(average, average, average, 1.0);
+}
+```
+
+![](./pics/glsl/gray.png)
+
+#### 4.19.5.3 模糊
+
+模糊应用的是3*3的卷积内核：
+$$
+\begin{bmatrix}
+1 & 2 & 1\\
+2 & 4 & 2\\
+1 & 2 & 1
+\end{bmatrix}/16
+$$
+卷积内核是一个类矩阵的数值数组，它的中心为当前的像素，它会用它的核值乘以周围的像素值，并将结果相加变成一个值。所以，基本上我们是在对当前像素周围的纹理坐标添加一个小的偏移量，并根据核将结果加权合并。
+
+```
+const float offset = 1.0 / 300.0;  
+
+void main()
+{
+    vec2 offsets[9] = vec2[](
+        vec2(-offset,  offset), // 左上
+        vec2( 0.0f,    offset), // 正上
+        vec2( offset,  offset), // 右上
+        vec2(-offset,  0.0f),   // 左
+        vec2( 0.0f,    0.0f),   // 中
+        vec2( offset,  0.0f),   // 右
+        vec2(-offset, -offset), // 左下
+        vec2( 0.0f,   -offset), // 正下
+        vec2( offset, -offset)  // 右下
+    );
+
+    float kernel[9] = float[](
+        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0,
+        2.0 / 16.0, 4.0 / 16.0, 2.0 / 16.0,
+        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0  
+	);
+
+    vec3 sampleTex[9];
+    for(int i = 0; i < 9; i++)
+    {
+        sampleTex[i] = vec3(texture(screenTexture, TexCoords.st + offsets[i]));
+    }
+    vec3 col = vec3(0.0);
+    for(int i = 0; i < 9; i++)
+    {
+        col += sampleTex[i] * kernel[i];
+    }
+
+    gl_FragColor = vec4(col, 1.0);
+}
+```
+
+![](./pics/glsl/blur.png)
+
+#### 4.19.4 边缘检测
+
+可以在后处理阶段执行执行边缘检测，同样也是应用卷积内核，值如下：
+$$
+\begin{bmatrix}
+1 & 1 & 1 \\
+1 & -8 & 1\\
+1 & 1 &1 
+\end{bmatrix}
+$$
+这个核高亮了所有的边缘，而暗化了其它部分，在我们只关心图像的边角的时候是非常有用的。
+
+![](./pics/glsl/edge_detect.png)
 
 ### 4.19.6 投影纹理
 
