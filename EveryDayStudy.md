@@ -657,7 +657,86 @@ MyString& operator= (const MyString& rf)
 
 ### 1.2.11 基础知识
 
-#### 1.2.12.1 map与under_map的区别
+#### 1.2.12.1 map与unorder_map的区别
+
+**一、map**
+
+- map使用键值对存储数据，键不允许重复，值可以重复。set只存储键，不允许重复。
+- STL中map/set采用红黑树（非严格的平衡二叉搜索树）实现，红黑树能够自动排序，因此map中每个元素都是有序的。
+- map/set具有更高的插入效率，插入、删除和查找的时间复杂度为$O(logn)$。
+- 数据结构的的稳定与非稳定的是根据排序移动后原来在前面的逻辑位置仍然在前面保持不变的，所以map和set是稳定排序。
+- map中的元素是按照二叉搜索树存储的，通过中序遍历将键值按照从小到大的顺序遍历出来。
+
+**二、unorder_map**
+
+- unordered_map内部实现了一个哈希表（也叫散列表，通过把关键码值映射到Hash表中一个位置来访问记录，查找的时间复杂度可达到O(1)，其在海量数据处理中有着广泛应用），其元素的排列顺序是无序的。
+
+**三、对比**
+
+map：
+
+- 优点：有序性：红黑树自动排序。
+
+- 缺点： 空间占用率高，因为map内部实现了红黑树，虽然提高了运行效率，但是因为每一个节点都需要额外保存父、子节点和红/黑性质，使得每一个节点都占用大量的空间。
+
+- 适用处：对于有顺序要求的问题，用map会更高效一些。
+
+Unorder_map:
+
+- 优点： 因为内部实现了哈希表，因此其查找速度非常的快。
+- 缺点： 哈希表的建立比较耗费时间。
+- 适用处：对于查找问题，unordered_map会更加高效一些。
+
+
+
+#### 1.2.12.2 STL中单链表和双链表
+
+双链表：list。
+
+- 双向链表每个元素都是通过指针双向相连。
+- 从双向链表中的任意一个结点开始，都可以很方便地访问前驱结点和后继结点。
+- 增加删除节点复杂，需要多分配一个指针存储空间。
+
+单链表：forward_list。
+
+- 也是通过指针相连，但是指针是单向的，且尾端是封闭的。
+- 单向链表增加删除节点简单。遍历时候不会死循环。
+- 只能从头到尾遍历。只能找到后继，无法找到前驱，也就是只能前进。
+
+
+
+#### 1.2.12.3 vector底层实现的原理
+
+- vector是数据结构，拥有一段连续的内存空间，能够高效的进行随机访问，时间复杂度为$O(1)$。
+- 插入和删除的时间复杂度为$O(n)$。
+- 当内存不够时，会动态扩容，一般是二倍扩容。
+
+#### 1.2.12.4 C++栈和堆的区别
+
+**一、管理方式不同**：
+
+- stack：系统自动分配释放，如声明int a;系统自动在栈区为变量开辟空间。
+- heap：程序员申请释放，容易产生内存泄漏，并指明大小，如malloc。
+
+二、**分配方式不同**
+
+- 堆都是动态分配的，没有静态分配的堆。
+- 栈有两种分配方式：静态分配和动态分配。静态分配由操作系统完成，比如局部变量的分配。动态分配由alloc函数进行分配，但是栈的动态分配和堆不同，它的动态分配是由操作系统进行释放，无需我们手工实现。
+
+**三、分配效率不同**
+
+- 栈是由系统自动分配，会在硬件层级对栈提供支持，分配专门的寄存器存放栈的地址，压栈出栈都有专门的指令执行，这就决定了栈的效率比较高。
+- 堆则是由C/C++提供的库函数或运算符来完成申请与管理，实现机制比较复杂，频繁的内存申请容易产生内存碎片。
+
+#### 1.2.12.5 C++如何实现序列化和反序列化
+
+
+
+#### 1.2.12.6 std::deque的底层实现？
+
+为什么要分段连续？有什么好处？
+
+deque容器类与vector类似，支持随机访问和快速插入删除，它在容器中某一位置上的操作所花费的是线性时间。与vector不同的是，deque还支持从开始端插入数据：push_front()。
 
 
 
@@ -2266,51 +2345,51 @@ operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
 
 ### 2.1.3 关于链表的算法题
 
-1. [反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
+#### 2.1.3.1[反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
 
-   反转一个单链表。
+反转一个单链表。
 
-   - 示例:
+- 示例:
 
-   输入: 1->2->3->4->5->NULL
-   输出: 5->4->3->2->1->NULL
+输入: 1->2->3->4->5->NULL
+输出: 5->4->3->2->1->NULL
 
-   - 进阶:
-     你可以迭代或递归地反转链表。你能否用两种方法解决这道题？
+- 进阶:
+  你可以迭代或递归地反转链表。你能否用两种方法解决这道题？
 
-   ```C++
-    struct ListNode {
-       int val;
-       ListNode *next;
-       ListNode(int x) : val(x), next(NULL) {}
-    };
+```C++
+ struct ListNode {
+    int val;
+    ListNode *next;
+    ListNode(int x) : val(x), next(NULL) {}
+ };
+ 
+ //迭代
+ListNode* ReverseList(ListNode* pHead)
+{
+    if(NULL == pHead)
+    {
+        return pHead;
+    }
+    ListNode* pPre = NULL;
+    while(pHead)
+    {
+        ListNode* pNext = pHead->next;
+        pHead->next = pPre;
+        pPre = pHead;
+        pHead = pNext;
+    }
+    return pPre;
+}
+
+//递归
+ListNode* ReverseListTravel(ListNode* pHead)
+{
     
-    //迭代
-   ListNode* ReverseList(ListNode* pHead)
-   {
-       if(NULL == pHead)
-       {
-           return pHead;
-       }
-       ListNode* pPre = NULL;
-       while(pHead)
-       {
-           ListNode* pNext = pHead->next;
-           pHead->next = pPre;
-           pPre = pHead;
-           pHead = pNext;
-       }
-       return pPre;
-   }
+}
+```
 
-   //递归
-   ListNode* ReverseListTravel(ListNode* pHead)
-   {
-       
-   }
-   ```
-
-2. [从尾到头打印链表](https://www.nowcoder.com/practice/d0267f7f55b3412ba93bd35cfa8e8035?tpId=13&tqId=11156&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
+#### 2.1.3.2 [从尾到头打印链表](https://www.nowcoder.com/practice/d0267f7f55b3412ba93bd35cfa8e8035?tpId=13&tqId=11156&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 
 输入一个链表，按链表从尾到头的顺序返回一个ArrayList。
 
@@ -2353,7 +2432,7 @@ vector<int> printListFromTailToHead(ListNode* head) {
 ```C++
 
 ```
-3. [链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+#### 2.1.3.3[链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 输入一个链表，输出该链表中倒数第k个结点。
 
@@ -2396,7 +2475,7 @@ ListNode* FindKthToTail(ListNode* pListHead, unsigned int k) {
     return pCurNode;
 }
 ```
-4. [合并两个排序的链表](https://www.nowcoder.com/practice/d8b6b4358f774294a89de2a6ac4d9337?tpId=13&tqId=11169&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+#### 2.1.3.4[合并两个排序的链表](https://www.nowcoder.com/practice/d8b6b4358f774294a89de2a6ac4d9337?tpId=13&tqId=11169&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 输入两个单调递增的链表，输出两个链表合成后的链表，当然我们需要合成后的链表满足单调不减规则。
 
@@ -2453,19 +2532,252 @@ ListNode* Merge(ListNode* pHead1, ListNode* pHead2)
     return pNode;
 }
 ```
-5. [两个链表的第一个公共结点](https://www.nowcoder.com/practice/6ab1d9a29e88450685099d45c9e31e46?tpId=13&tqId=11189&tPage=2&rp=2&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
-输入两个链表，找出它们的第一个公共结点。（注意因为传入数据是链表，所以错误测试数据的提示是用其他方式显示的，保证传入数据是正确的）
 
-6. [链表中环的入口结点](https://www.nowcoder.com/practice/253d2c59ec3e4bc68da16833f79a38e4?tpId=13&tqId=11208&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+#### 2.1.3.5[两个链表的第一个公共结点](https://www.nowcoder.com/practice/6ab1d9a29e88450685099d45c9e31e46?tpId=13&tqId=11189&tPage=2&rp=2&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+
+输入两个链表，找出它们的第一个公共结点。（注意因为传入数据是链表，所以错误测试数据的提示是用其他方式显示的，保证传入数据是正确的）。
+
+思路是用两个指针分别指向两个链表的头指针。
+
+使用两个指针 node1，node2 分别指向两个链表 headA，headB 的头结点，然后同时分别逐结点遍历，当 node1 到达链表 headA 的末尾时，重新定位到链表 headB 的头结点；当 node2 到达链表 headB 的末尾时，重新定位到链表 headA 的头结点。当node1和node2相等时，所指向的节点就是第一个公共结点。
+
+```C++
+ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+    ListNode* pH1 = headA;
+    ListNode* pH2 = headB;
+    while(pH1 != pH2)
+    {
+        if(pH1)
+       		pH1 = pH1->next;
+        else
+            pH1 = headB;
+        if(pH2)
+        	pH2 = pH2->next;
+        else
+            pH2 = headA;
+    }
+    return pH1;
+}
+```
+
+判断两个链表是否相交，也可以采用此方法判断。
+
+#### 2.1.3.6 [删除排序链表中重复的节点1](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-list/)
+
+给定一个排序链表，删除所有重复的元素，**使得每个元素只出现一次**。
+
+例如：
+
+```
+输入: 1->1->2
+输出: 1->2
+```
+
+```
+输入: 1->1->2->3->3
+输出: 1->2->3
+```
+
+思路还是用两个指针，一个是快指针，一个是慢指针，快指针比慢指针始终快一步。
+
+如果当前快指针的值与慢指针的值相等，则需要将慢指针的next指针指向快指针的next指针，以达到删除重复节点的目的。
+
+```C++
+ListNode* deleteDuplicates(ListNode* head) {
+    if(NULL == head)
+    {
+        return NULL;
+    }
+
+    ListNode* pPre = head;
+    ListNode* pH = head->next;
+    while(pH)
+    {
+        if(pPre->val != pH->val)
+        {
+            pPre = pH;
+            pH = pH->next;
+        }
+        else
+        {
+            ListNode* pNext = pH->next;
+            pPre->next = pNext;
+            pH = pNext;
+        }
+    }
+    return head;
+}
+```
+
+
+
+#### 2.1.3.7 [删除排序链表中重复的结点2](https://www.nowcoder.com/practice/fc533c45b73a41b0b44ccba763f866ef?tpId=13&tqId=11209&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+
+在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，**重复的结点不保留**，返回链表头指针。
+
+ 例如：
+
+```
+输入: 1->2->3->3->4->4->5
+输出: 1->2->5
+```
+
+```
+输入: 1->1->1->2->3
+输出: 2->3
+```
+
+
+
+#### 2.1.3.8 [移除重复节点](https://leetcode-cn.com/problems/remove-duplicate-node-lcci/)
+
+移除未排序链表中的重复节点，保留最开始出现的节点。
+
+例如：
+
+```
+ 输入：[1, 2, 3, 3, 2, 1]
+ 输出：[1, 2, 3]
+```
+
+```
+ 输入：[1, 1, 1, 1, 2]
+ 输出：[1, 2]
+```
+
+**进阶：**如果不得使用临时缓冲区，该怎么解决？
+
+思路是使用map或set记录某个值是否存在，如果存在，则将上一针的next指针指向当前指针的next指针。
+
+```C++
+ListNode* removeDuplicateNodes(ListNode* head) {
+    if(NULL == head)
+    {
+        return NULL;
+    }
+    map<int,bool> htNodeNum;
+    ListNode* pCur = head->next;
+    ListNode* pPre = head;
+    htNodeNum[head->val] = true;
+    while(pCur)
+    {
+        if(htNodeNum.find(pCur->val) != htNodeNum.end())
+        {
+            ListNode* pNext = pCur->next;
+            pPre->next = pNext;
+            pCur = pNext;
+        }
+        else
+        {
+            htNodeNum[pCur->val] = true;
+            ListNode* pNext = pCur->next;
+            pPre = pCur;
+            pCur = pNext;
+        }
+    }
+    return head;
+}
+```
+
+
+
+#### 2.1.3.9 [判断是否为环形链表](https://leetcode-cn.com/problems/linked-list-cycle/)
+
+给定一个链表，判断链表中是否有环。
+
+为了表示给定链表中的环，我们使用整数 pos 来表示链表尾连接到链表中的位置（索引从 0 开始）。 如果 pos 是 -1，则在该链表中没有环。
+
+思路是采用两个指针，慢指针每次前进一位，快指针每次前进两位，当两者相等且不为空时，说明是环形链表。
+
+```C++
+bool hasCycle(ListNode *head) {
+    ListNode* pH1 = head;
+    ListNode* pH2 = head;
+    while(pH2 && pH2->next)
+    {
+        pH1 = pH1->next;
+        pH2 = pH2->next->next;
+        if(pH1 == pH2)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+#### 2.1.3.10 [链表中环的入口结点](https://www.nowcoder.com/practice/253d2c59ec3e4bc68da16833f79a38e4?tpId=13&tqId=11208&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 给一个链表，若其中包含环，请找出该链表的环的入口结点，否则，输出null。
 
-7. [删除链表中重复的结点](https://www.nowcoder.com/practice/fc533c45b73a41b0b44ccba763f866ef?tpId=13&tqId=11209&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+**一、哈希法**
 
-在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1->2->3->3->4->4->5 处理后为 1->2->5。
+1. 遍历单链表的每个结点 
+2. 如果当前结点地址没有出现在set中，则存入set中 ；若出现在set中，则当前结点就是环的入口结点 
+3. 整个单链表遍历完，若没出现在set中，则不存在环
 
-8. 判断是否为环形链表
+```C++
+ListNode* EntryNodeOfLoop(ListNode* pHead)
+{
+    set<ListNode*> setVal;
+    while(pHead != NULL)
+    {
+        if(setVal.find(pHead) == setVal.end())
+        {
+            setVal.insert(pHead);
+            pHead = pHead->next;
+        }
+        else
+        {
+            return pHead;
+        }
+    }
+    return NULL;
+}
+```
+
+时间复杂度$O(n)$、空间复杂度$O(n)$。
+
+**二、采用快慢双指针法**
+
+1、设快慢指针，快指针每次前进两步，慢指针每次前进一步。
+
+2、当快慢指针相遇时，将快指针设置到头结点，此时快指针走的长度刚好是慢指针的两倍。然后将快慢指针分别每次前进一步，当再次相遇时，相遇的节点就是入口节点。
+
+
+
+快慢指针一定在环中相遇，而且第一次相遇慢指针一定还没绕环超过一圈，因为当慢指针进入环时，此时快指针无论在环中的哪个位置，都可以在慢指针走一圈之内追上。
+
+```C++
+ListNode* EntryNodeOfLoop2(ListNode* pHead)
+{
+    ListNode* pF = pHead;
+    ListNode* pS = pHead;
+    ListNode* pN = NULL;
+    while(pF != NULL && pF->next != NULL)
+    {
+        pS = pS->next;
+        pF = pF->next->next;
+        
+        if(pS == pF)
+        {
+            pN = pHead;
+            while(pN != pS)
+            {
+                pN = pN->next;
+                pS = pS->next;
+            }
+            return pS;
+        }
+    }
+    return NULL;
+}
+```
+
+
+
+
 
 ## 2.2 栈
 
@@ -2882,7 +3194,48 @@ int levelFrist(TreeNode* root)
 }
 ```
 
+### 2.6.5 给两个二叉树节点，求最近的公共祖先
 
+题目描述：给定两个节点p和q,求两个节点的最近公共祖先。
+思路：
+1.看p或者q是否为根节点，若有一个是；则最近的公共祖先是根节点。
+2.分别在根节点的左子树和右子树中找p节点和q节点：
+
+1）左右子树两边的都不为空，则说明p、q存在于根节点的左子树或者右子树；则最近公共祖先是根节点。
+2）左不空，右空；则说明p、q存在于根节点的左子树中，则最近公共祖先是在左树中先找到的那个。
+3）右不空，左空；说明p、q都在根节点的右子树，则最近公共祖先是右树中最先找到的那个。
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if(root == NULL)
+            return NULL;
+        if(root == p || root == q)
+            return root;
+        //递归左右子树   
+        TreeNode* left = lowestCommonAncestor(root->left, p, q);   
+        TreeNode* right = lowestCommonAncestor(root->right, p, q);
+        if(left && right) 
+            return root;
+        else if(left)  
+            return left;
+        else if(right)  
+            return right;
+        else 
+            return NULL;
+    }
+};
+```
 
 
 
@@ -2957,15 +3310,47 @@ int levelFrist(TreeNode* root)
 
 ## 3.2 排序算法
 
-### 3.2.1 冒泡排序
+### 3.2.1 时间复杂度为$O(n)$的排序算法
+
+冒泡排序、插入排序、选择排序都是基于比较的算法。
+
+#### 3.2.1.1 冒泡排序
 
 
 
-### 3.2.2 插入排序
+#### 3.2.1.2 插入排序
 
 
 
-### 3.2.3 选择排序
+#### 3.2.1.3 选择排序
+
+
+
+### 3.2.2 时间复杂度为$O(nlogn)$的排序算法
+
+快排、归并也是基于比较的算法。
+
+#### 3.2.2.1 快排
+
+
+
+#### 3.2.2.2 归并
+
+
+
+### 3.2.3 时间复杂度为$O(n)$的排序算法
+
+桶、计数、基数都是不基于比较的算法。
+
+#### 3.2.3.1 桶排序
+
+
+
+#### 3.2.3.2 计数排序
+
+
+
+#### 3.2.3.3 基数排序
 
 
 
@@ -3062,6 +3447,33 @@ int BinaryFind(const vector<int>& values,int target)
 2. [寻找两个有序数组的中位数](https://leetcode-cn.com/problems/median-of-two-sorted-arrays/)：用到二分查找
 3. [旋转数组的最小数字](https://www.nowcoder.com/practice/9f3231a991af4f55b95579b44b7a01ba?tpId=13&tqId=11159&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 4. 
+
+
+
+## 3.2 LRU缓存策略
+
+
+
+## 3.3 字符串转化为数组
+
+```C++
+int StrToInt(char* szStr)
+{
+    int number = 0;
+    while(*szStr != 0)
+    {
+        number = number * 10 + *szStr - '0';
+        ++szStr;
+    }
+    return number;
+}
+```
+
+
+
+## 3.4 将一个字符数组按字典顺序排序
+
+要求时间复杂度$O(n)$。
 
 
 
@@ -3448,7 +3860,15 @@ GLES 3.0支持顶点着色器中的纹理查找操作，可以用作顶点偏移
 - 剪裁：判断图元是否位于视景体。如果完全在视景体内，则不进行剪裁；如果图元完全在视景体外，则图元将被淘汰；如果图元有部分在视景体内，需要根据平面进行剪裁，剪裁操作将产生新的顶点，组成新的图元。
 - 透视分割：对顶点的(x,y,z,w)分别处以w值，使其坐标转换到标准化设备空间，范围为[-1,1]。
 - 视口变换：将标准化设备空间的坐标转化视口空间，转化为二维坐标。
-- 淘汰：判断是否开启了背面剪裁，如果图元卷绕方式与渲染方式相反，则图元将被淘汰。
+- 淘汰/剔除(Cull)：判断是否开启了背面剪裁，如果图元卷绕方式与渲染方式相反，则图元将被淘汰。
+
+```
+glEnable(GL_CULL_FACE);//开启面剔除
+glCullFace(GL_BACK);//剔除背面
+glFrontFace(GL_CCW);//设置逆时针面为正向面  
+```
+
+默认值是```GL_CCW```，它代表的是逆时针的环绕顺序，另一个选项是```GL_CW```代表顺时针顺序。
 
 
 
@@ -3551,19 +3971,39 @@ OpenGL ES 3.0 支持的纹理类型分为： 2D纹理、立方图纹理、2D纹�
 
 缩小发生在当投影到屏幕上的多边行小于纹理的尺寸时；缩小时，可以指定mipmap贴图方式。
 
+```
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+```
+
+
+
 **放大过滤器：**
 
 - GL_NERAEST：从最靠近纹理坐标的纹理中获取一个单点样本。
+
+![](./pics/glsl/near.png)
+
+上图中有四个像素，其中加号代表纹理，左上角纹素中心距离纹理坐标最近，因此采样时选取左上角纹素的颜色。
+
 - GL_LINEAR：从最靠近纹理坐标的纹理中获取一个双线性样本（四次样本的平均值）。
+
+![](./pics/glsl/linear.png)
+
+放大模式下，对比最近点采样与线性采样的效果：
+
+![](./pics/glsl/linear_near.png)
 
 **缩小过滤器：**
 
 - GL_NEAREST：从最靠近纹理坐标的纹理中获取一个单点样本。
 - GL_LINEAR：从最靠近纹理坐标的纹理中获取一个双线性样本（四次样本的平均值）。
 - GL_NEARSET_MIPMAP_NEAREST：从所选的最近的mip级别中获取一个单点样本。
-- GL_NEARSET_MIPMAP_LINEAR：从两个最近的mip级别中获取样本，并在这些样本之间进行插值。
 - GL_LINEAR_MIPMAP_NEAREST：从所选的最近的mip级别中获取双线性采样。
-- GL_LINEAR_MIPMAP_LINEAR：从两个最近的mip级别中获取双线性采样，然后在他们之间进行插值。也称为三线性过滤，在所有模式中质量最佳。
+- GL_NEARSET_MIPMAP_LINEAR：从两个最近的mip级别中线性插值，并取得最近点采样。
+- GL_LINEAR_MIPMAP_LINEAR：从两个最近的mip级别中线性插值，然后在他们之间进行插值。也称为三线性过滤，在所有模式中质量最佳。
+
+可以参考第4.8.10小节。
 
 ### 4.8.6 纹理格式
 
@@ -3585,7 +4025,47 @@ OpenGL ES 3.0支持的纹理格式：规范化纹理、浮点纹理、整数纹�
 
 2D纹理使用：
 
-1. 在CPU端激活纹理，并将采样器与纹理绑定。
+1. 创建纹理ID:
+
+```
+unsigned int textureID;
+glGenTextures(1, &textureID);
+```
+
+2. 绑定纹理：
+
+```
+glBindTexture(GL_TEXTURE_2D, textureID);
+```
+
+3. 设置纹理环绕方式和过滤方式
+
+```
+// 为当前绑定的纹理对象设置环绕、过滤方式
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+```
+
+4. 加载纹理数据，为当前绑定的纹理对象附加上纹理图像：
+
+```
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+```
+
+- 第二个参数为纹理指定多级渐远纹理的级别，如果你希望单独手动设置每个多级渐远纹理的级别的话。这里我们填0，也就是基本级别。
+- 第六个参数总是被设为0，历史遗留问题。
+- 第七第八个参数定义了源图的格式和数据类型。
+- 最后一个参数是真正的图像数据。
+
+5. 为当前绑定的纹理自动生成mipmap纹理：
+
+```
+glGenerateMipmap(GL_TEXTURE_2D);
+```
+
+6. 在CPU端激活纹理，并将采样器与纹理绑定。
 
 ```
 GLint textureLocation = glGetUniformLocation(program,"s_texture");//s_texture采样器名称
@@ -3594,7 +4074,7 @@ glBindTexture(GL_TEXTURE_2D,textureID);//将纹理id绑定到0号纹理单元；
 glUniform1i(textureLocation,0);//绑定采样器与纹理
 ```
 
-2. 在片元着色器中，根据纹理坐标进行采样。
+7. 在片元着色器中，根据纹理坐标进行采样。
 
 ```
 void main()
@@ -3643,6 +4123,74 @@ mipmap纹理不仅可以改善渲染质量，还能提高渲染性能，一般�
 
 - **闪烁**：当投影到屏幕的多边形小于纹理的尺寸时，会出现这个问题。
 - **性能问题**
+
+OpenGL中提供一个```glGenerateMipmaps```函数为创建的一个纹理生成一系列的mipmap纹理。
+
+渲染mipmap时，当切换两个不同级别的mipmap纹理层时会产生生硬的边界，类似于纹理过滤一样，可以在两个不同级别的纹理层之间采用NEAREST和LINEAR过滤。
+
+为了指定不同mipmap层级之间的过滤方式，有四种方式：(4.8.5节已经介绍，这里复习一遍)
+
+| 过滤方式                  | 作用                                                       |
+| ------------------------- | ---------------------------------------------------------- |
+| GL_NEAREST_MIPMAP_NEAREST | 使用最邻近的mipmap来匹配像素大小，并使用邻近纹理进行采样   |
+| GL_LINEAR_MIPMAP_NEAREST  | 使用最邻近的mipmap级别，并使用线性插值进行采样             |
+| GL_NEAREST_MIPMAP_LINEAR  | 在两个临近的mipmap之间进行线性插值，并使用邻近纹理进行采样 |
+| GL_LINEAR_MIPMAP_LINEAR   | 在两个邻近的mipmap之间使用线性插值，并使用线性插值进行采样 |
+
+
+
+### 4.8.10 纹理环绕方式
+
+纹理坐标的范围通常在[0,1]之间，当纹理超过正常范围时，需要设置纹理环绕方式，常用的有如下几种：
+
+- GL_REPEAT
+- GL_MIRRORED_REPEAT
+- GL_CLAMP_TO_EDGE
+
+1. 重复纹理环绕——GL_REPEAT
+
+当纹理S/T坐标超过1时，实际上其中的是小数部分。比如(1.5,0) 实际采样时，纹理坐标为(0.5,0)。
+
+比如给定矩形的四个顶点坐标(0,0,)、(0,2)、(3,2)、(3,0)，如果指定重复环绕，其效果为：
+
+![](./pics/glsl/repeat.png)
+
+```
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, 
+    GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_REPEAT); //设置 S 轴的􏰸􏰹方式为重复环绕
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, 
+    GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_REPEAT); //设置 T 轴的􏰸􏰹方式为重复环绕
+```
+
+备注：如果是3D纹理，除了ST坐标之外，还有一个R轴。
+
+2. 镜像重复环绕
+
+当纹理S/T坐标超过1时，实际上其中的是小数部分。
+
+![](./pics/glsl/mirro.png)
+
+```
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, //设置 S 轴的􏰸􏰹方式为􏰼镜像重复 
+    GLES30.GL_TEXTURE_WRAP_S, GLES30. GL_MIRRORED_REPEAT);
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, //设置 T 轴的􏰸􏰹方式为􏰼镜像重复 
+    GLES30.GL_TEXTURE_WRAP_T, GLES30. GL_MIRRORED_REPEAT);
+```
+
+3. 边缘截取
+
+截取环绕方式中当纹理坐标的值大于 1 时都看作 1，因此，会产生边缘被拉伸的效果。
+
+![](./pics/glsl/edge.png)
+
+```
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, 
+    GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE); //设置 S 轴的􏰸􏰹方式为􏰻截取环绕
+GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D, 
+    GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE); //设置 T 轴的􏰸􏰹方式为􏰻截取环绕
+```
+
+
 
 ## 4.9 光照算法
 
@@ -3960,6 +4508,8 @@ OpenGL ES 3.0支持三种缓冲区，每种缓冲区都保存帧缓冲中每个�
 
 模板缓冲区是一个逐像素掩码，保存可用于确定某像素是否应该被更新的值。模板测试本质上是一个位测试。
 
+模板缓冲区中，每个缓冲值是8位的，每个像素或片段一共能有256中不同的模板值。我们可以将模板值设为我们想要的值，但某个片段有某个模板值时，我们可以选择保留或者丢弃此片段。
+
 为了更精准的控制模板测试，可以使用一个掩码参数控制模板值的哪几位参与测试。
 
 
@@ -3969,6 +4519,150 @@ OpenGL ES 3.0支持三种缓冲区，每种缓冲区都保存帧缓冲中每个�
 1. 模板测试不通过，也就不会进行深度测试。
 2. 模板测试通过，深度测试不通过。
 3. 模板测试和深度测试都通不过。
+
+### 4.13.1 启用模板测试
+
+开启模板测试：
+
+````
+glEnable(GL_STENCIL_TEST);
+````
+
+### 4.13.2 清除模板缓冲
+
+与颜色和深度缓冲一样，每次迭代之前需要清除模板缓冲。
+
+```
+glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+```
+
+### 4.13.3 设置模板掩码
+
+与深度测试的```glDepthMask	```函数类似，模板缓冲也有一个类似函数，```glStencilMask```函数允许设置一个位掩码，它会与将要写入缓冲的模板值进行**与(AND)**操作。
+
+默认情况下，设置的位掩码所有位都是1，不影响输出，如果我们将其设置为```0x00```，写入缓冲的所有模板值最后都会变成0，与深度测试中```glDepthMask(GL_FALSE)	``类似。
+
+```
+glStencilMask(0xFF); // 每一位写入模板缓冲时都保持原样
+glStencilMask(0x00); // 每一位在写入模板缓冲时都会变成0（禁用写入）
+```
+
+### 4.13.4 模板函数
+
+与深度测试类似，对模板缓冲应该通过还是失败，以及它应该如何影响模板缓冲，可以通过```glStencilFunc```和```glStencilOp```函数设置。
+
+**一、glStencilFunc**
+
+```glStencilFunc(GLenum func, GLint ref, GLuint mask)；```一共包含三个参数:
+
+- func：模板测试函数，将会应用到已存储的模板值和ref值上。可取的值有```GL_NEVER```、```GL_LESS```、```GL_LEQUAL```、```GL_GREATER```、```GL_GEQUAL```、```GL_EQUAL```、```GL_NOTEQUAL```和```GL_ALWAYS```。
+- ref：模板测试的参考值。模板缓冲的内容将会与这个值进行比较。
+- mask：设置的掩码，它将会与参考值和储存的模板值在测试比较它们之前进行与(AND)运算。
+
+例如：
+
+```
+glStencilFunc(GL_EQUAL, 1, 0xFF);
+```
+
+上述代码的意思是：只要一个片段的模板值等于(`GL_EQUAL`)参考值1，片段将会通过测试并被绘制，否则会被丢弃。
+
+**二、glStencilOp**
+
+glStencilFunc函数仅仅描述了OpenGL应该对模板缓冲内容做什么，而不是应该如何更新缓冲，此时就需要用到```glStencilOp```函数。
+
+```glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass);```一共包含三个选项：
+
+- ```sfail```：模板测试失败时采取的行为。
+- ```dpfail```：模板测试通过，深度测试失败时采取的行为。
+- ```dppass```：模板测试和深度测试都通过时采取的行为。、
+
+每个选项可选的值如下：
+
+| 值           | 作用                                               |
+| ------------ | -------------------------------------------------- |
+| GL_KEEP      | 保持当前储存的模板值                               |
+| GL_ZERO      | 将模板值设置为0                                    |
+| GL_REPLACE   | 将模板值设置为glStencilFunc函数设置的`ref`值       |
+| GL_INCR      | 如果模板值小于最大值则将模板值加1                  |
+| GL_INCR_WRAP | 与GL_INCR一样，但如果模板值超过了最大值则归零      |
+| GL_DECR      | 如果模板值大于最小值则将模板值减1                  |
+| GL_DECR_WRAP | 与GL_DECR一样，但如果模板值小于0则将其设置为最大值 |
+| GL_INVERT    | 按位翻转当前的模板缓冲值                           |
+
+默认情况下glStencilOp是设置为`(GL_KEEP, GL_KEEP, GL_KEEP)`的，所以不论任何测试的结果是如何，模板缓冲都会保留它的值。默认的行为不会更新模板缓冲，所以如果你想写入模板缓冲的话，你需要至少对其中一个选项设置不同的值。
+
+
+
+使用模板测试，可以制作物体轮廓效果，也就是为每个物体在它的周围创建一个很小的有色边框。
+
+步骤如下：
+
+1. 在绘制物体之前，为模板函数设置为```GL_ALWAYS```，每当物体的片段被渲染时，将模板缓冲更新为1。
+2. 渲染物体。
+3. 禁用模板写入和深度测试。
+4. 将物体缩放一点点。
+5. 使用一个不同的片段着色器，输出一个单独的边框颜色。
+6. 再次绘制物体，但只在他们片段的模板值不等于1时才绘制。
+7. 再次启用模板写入和深度测试。
+
+
+
+```
+// configure global opengl state
+// -----------------------------
+glEnable(GL_DEPTH_TEST);
+glDepthFunc(GL_LESS);
+glEnable(GL_STENCIL_TEST);
+glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+// render
+// ------
+glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // don't forget to clear the stencil buffer!
+
+// draw floor as normal, but don't write the floor to the stencil buffer, we only care about the containers. We set its mask to 0x00 to not write to the stencil buffer.
+glStencilMask(0x00);
+//glDrawArrays floor
+
+// 1st. render pass, draw objects as normal, writing to the stencil buffer
+// --------------------------------------------------------------------
+glStencilFunc(GL_ALWAYS, 1, 0xFF);
+glStencilMask(0xFF);
+// cubes
+glBindVertexArray(cubeVAO);
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, cubeTexture);
+model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+shader.setMat4("model", model);
+glDrawArrays(GL_TRIANGLES, 0, 36);
+
+// 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
+// Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing 
+// the objects' size differences, making it look like borders.
+// ------------------------------------------------------------------------
+glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+glStencilMask(0x00);
+glDisable(GL_DEPTH_TEST);
+shaderSingleColor.use();//绘制轮廓颜色
+float scale = 1.1;
+// cubes
+glBindVertexArray(cubeVAO);
+glBindTexture(GL_TEXTURE_2D, cubeTexture);
+model = glm::mat4(1.0f);
+model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+model = glm::scale(model, glm::vec3(scale, scale, scale));
+shaderSingleColor.setMat4("model", model);
+glDrawArrays(GL_TRIANGLES, 0, 36);
+glBindVertexArray(0);
+
+glStencilMask(0xFF);
+glStencilFunc(GL_ALWAYS, 0, 0xFF);
+glEnable(GL_DEPTH_TEST);
+```
+
+
 
 
 
@@ -4028,17 +4722,63 @@ glDepthFunc(GL_LESS);
 
 ## 4.15 混合
 
-经过片元一系列的测试之后，会进入混合阶段，也就是输入片元的颜色将与颜色缓冲区中的颜色进行混合操作。
+当渲染有多个透明级别的物体时，需要启用混合：
+
+```
+glEnable(GL_BLEND);
+```
 
 混合公式：
 
-$Cfinal = Fsource * Csource OP Fdest * Cdest$
+$$
+Cfinal = F_{source} * C_{source} OP F_{dest} * C_{dest}
+$$
+其中$F_{source}$ 和$C_{source}$分别代表输入片元的混合因子和颜色值。
 
-其中$Fsource$ 和$Csource$分别代表输入片元的混合因子和颜色值。
-
-$Fdest$ 和$Cdest$分别代表颜色缓冲区中的混合因子和颜色值。
+$F_{dest}$ 和$C_{dest}$分别代表颜色缓冲区中的混合因子和颜色值。
 
 $OP$代表组合运算符。
+
+片元着色器运行之后，并且所有的测试都通过之后，这个混合方程才会应用到片元输出颜色与当前颜色缓冲区中的值上。
+
+设置混合因子的函数：
+
+```
+glBlendFunc(GLenum sfactor, GLenum dfactor);
+```
+
+绘制半透明物体时，混合因子一般设置为：
+
+```
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+```
+
+### 4.15.1 绘制半透明的窗户效果
+
+![](./pics/glsl/blend.png)
+
+```
+glEnable(GL_BLEND);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+```
+
+要想让混合在多个物体上工作，我们需要最先绘制最远的物体，最后绘制最近的物体。
+
+普通不需要混合的物体仍然可以使用深度缓冲正常绘制，所以它们不需要排序。但我们仍要保证它们在绘制（排序的）透明物体之前已经绘制完毕了。
+
+
+
+**当绘制一个有不透明和透明物体的场景的时候，大体的原则如下：**
+
+1. **先绘制所有不透明的物体。**
+2. **对所有透明的物体排序。**
+3. **按顺序绘制所有透明的物体。**
+
+排序透明物体的一种方法是，从观察者视角获取物体的距离，按照距离由远及近的顺序排列并渲染，这样就能正确地透过半透明的物体看到远处不透明的物体了。
+
+更高级的技术还有次序无关透明度(Order Independent Transparency, OIT)。
+
+
 
 ## 4.16 抗锯齿
 
@@ -4046,6 +4786,85 @@ $OP$代表组合运算符。
 
 - FXAA：快速近似采样抗锯齿，需要shader编程实现。
 - MSAA：多重采样抗锯齿，是硬件抗锯齿，OpenGL ES 3.0才支持，通过gl命令指定多重采样抗锯齿属性。
+- SSAA：超级采样抗锯齿。
+
+### 4.16.1 SSAA——超级采样抗锯齿
+
+超级采样抗锯齿会使用比正常分辨率更高的分辨率（即超采样）来渲染场景，当图像输出在帧缓冲区中更新时，分辨率会被下采样至正常分辨率。
+
+这些额外的分辨率被用来防止锯齿边缘的产生，但是会带来很大的性能开销。
+
+SSAA是全屏抗锯齿，渲染一幅为屏幕尺寸N被的帧，然后用若干个像素混合成一个像素。
+
+例如：4倍抗锯齿
+
+假设屏幕分辨率是800$\times$600，4倍SSAA会先渲染到一个分辨率为1600$\times$1200的buffer上，然后再直接把放大4倍的buffer下采样到800$\times$600。劣势是光栅化和着色计算比原来多了4倍，render target的大小也变为原来的4倍。
+
+### 4.16.2 MSAA——多重采样抗锯齿
+
+MSAA是基于FSAA诞生的更为现代的技术，**基本上只对物体的边缘进行放大、混合的抗拒操作**，更加高效的实现了抗锯齿。
+
+多重采样所做的正是将单一的采样点变成多个采样点，不再使用像素中心的单一采样点，取而代之的是以特定图案排列的4个采样点，最终将4个采样点加权平均得到片段最终的颜色值。
+
+![](./pics/glsl/mult_sample.png)
+
+上图中该像素的颜色将会是三角形颜色与其他两个采样点的颜色(这里是无色)的平均值，最终形成淡蓝色。
+
+- MSAA是硬件抗锯齿，发生在**光栅化阶段**。
+- 颜色缓冲区的大小会随着采样点的增加而增加。
+- **采样点的数量可以是任意的，更多的采样点能带来更精确的遮盖率。**即一个像素中如果有更多的采样点被三角形覆盖，那么这个像素的颜色会更接近于三角形的颜色。
+
+- MSAA的工作方式是：无论三角形覆盖了多少个子采样点，每个图元中每个像素只执行**一次**片段着色器。
+- 深度和模板缓冲区也能够使用多个采样点，其缓冲区的大小会乘以子采样点的个数。对于深度测试而言，每个顶点的深度值会在深度测试之前被插值到各个子样本中。对于模板测试来说，是对每个子样本，而不是每个像素，存储一个模板值。
+
+
+
+使用步骤：
+
+1. 设置采样点个数
+2. 开启多重采样：```glEnable(GL_MULTISAMPLE);```
+
+
+
+如果使用离屏 MSAA，可以创建多重渲染缓冲，采用纹理附件或渲染缓冲区附件作为帧缓冲区对象的附着。
+
+- ### 多重采样纹理附件
+
+```
+glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, tex);
+glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, width, height, GL_TRUE);
+glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+//将纹理绑定到帧缓冲区的颜色附件
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, tex, 0);
+```
+
+glTexImage2DMultisample函数的第二个参数samples代表采样点个数，最后一个参数为GL_TRUE代表对每个纹素使用相同的样本位置以及相同数量的子采样点个数。
+
+- ### 多重采样渲染缓冲对象
+
+所要做的只是在指定（当前绑定的）渲染缓冲的内存存储时，将glRenderbufferStorage的调用改为glRenderbufferStorageMultisample就可以了。
+
+```
+glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, width, height);
+```
+
+采样点个数为4。
+
+- ### 渲染到多重采样帧缓冲
+
+渲染到多重采样帧缓冲的过程是自动的，最终会得到一个多重采样颜色缓冲以及/或深度和模板缓冲。
+
+**多重采样帧缓冲比较特殊，不能直接将它们的缓冲图像用于其他运算，比如在着色器中对它们进行采样。**
+
+多重采样帧缓冲的还原通常是通过glBlitFramebuffer来完成，它能够将一个帧缓冲中的某个区域复制到另一个帧缓冲中，并且将多重采样缓冲还原。
+
+
+
+因为不能直接在片段着色器中使用多重采样纹理，若想要使用多重采样帧缓冲的纹理输出来做后期处理，我们需要将多重采样缓冲位块传送到一个没有使用多重采样纹理附件的FBO中。然后用这个普通的颜色附件来做后期处理，从而达到我们的目的。
+
+### 4.16.3 FXAA——快速近似采样抗锯齿
+
+FXAA也是边缘处理的抗锯齿技术，但不同于MSAA。MSAA依赖显卡，发生在**光栅化阶段**，而FXAA是中后处理技术，通过像素颜色检测边缘。
 
 
 
@@ -4276,9 +5095,57 @@ TBN矩阵用于将世界空间的视线向量和光照向量转换到TBN空间�
 
 片元着色器根据法线贴图中的法向量和TBN空间的视线向量、光照向量计算每个片元的光照颜色。
 
-### 4.19.2 环境贴图
+### 4.19.2 环境贴图/环境映射
 
-环境贴图实际上是立方图纹理的应用，根据光照的入射方向计算反射方向，根据单位化之后的反射向量在立方图上采样，得到立方图上的颜色值，再将此颜色值乘以片元颜色作为最终的颜色值。
+环境贴图实际上是立方图纹理的应用，最流行的两个技术是反射和折射。
+
+#### 4.19.2.1 反射
+
+根据光照的入射方向计算反射方向，根据单位化之后的反射向量在立方图上采样，得到立方图上的颜色值，再将此颜色值乘以片元颜色作为最终的颜色值。
+
+![](./pics/glsl/reflact.png)
+
+- 可以引入反射贴图，为模型添加反射性。
+
+为立方体模型添加反射特性：
+
+```
+#version 330 core
+out vec4 FragColor;
+
+in vec3 Normal;
+in vec3 Position;
+
+uniform vec3 cameraPos;
+uniform samplerCube skybox;
+
+void main()
+{             
+    vec3 I = normalize(Position - cameraPos);
+    vec3 R = reflect(I, normalize(Normal));//计算反射向量
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
+}
+```
+
+#### 4.19.2.2 折射
+
+折射可以使用GLSL的内建函数```refract```实现，它需要一个法向量、一个观察方向和两个材质之间的折射率。
+
+![](./pics/glsl/refract.png)
+
+例如从光线从空气进入玻璃，折射率为$1.0/1.52 = 0.658$。
+
+```
+void main()
+{             
+    float ratio = 1.00 / 1.52;
+    vec3 I = normalize(Position - cameraPos);
+    vec3 R = refract(I, normalize(Normal), ratio);
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
+}
+```
+
+
 
 ### 4.19.3 基于点精灵的粒子系统
 
@@ -4296,7 +5163,103 @@ TBN矩阵用于将世界空间的视线向量和光照向量转换到TBN空间�
 2. 将帧缓冲区对象绑定的纹理作为来源，并在屏幕上渲染一个全屏矩形。
 3. 执行片段着色器，在整个矩形空间进行后处理特效处理。
 
+![](./pics/glsl/origin.png)
 
+比较简单的后期处理效果如下：
+
+#### 4.19.5.1 反向
+
+反向的操作比较简单，就是1.0减去当前片段的颜色值。
+
+```
+void main()
+{
+    gl_FragColor = vec4(vec3(1.0 - texture(screenTexture, TexCoords)), 1.0);
+}
+```
+
+![](./pics/glsl/invert.png)
+
+#### 4.19.5.2 灰度
+
+剔除屏幕中除了黑白灰之外的所有颜色，让整个图像灰度化。
+
+```
+void main()
+{
+    vec4 vColor = texture(screenTexture, TexCoords);
+    float average = 0.2126 * vColor.r + 0.7152 * vColor.g + 0.0722 * vColor.b;
+    gl_FragColor = vec4(average, average, average, 1.0);
+}
+```
+
+![](./pics/glsl/gray.png)
+
+#### 4.19.5.3 模糊
+
+模糊应用的是3*3的卷积内核：
+$$
+\begin{bmatrix}
+1 & 2 & 1\\
+2 & 4 & 2\\
+1 & 2 & 1
+\end{bmatrix}/16
+$$
+卷积内核是一个类矩阵的数值数组，它的中心为当前的像素，它会用它的核值乘以周围的像素值，并将结果相加变成一个值。所以，基本上我们是在对当前像素周围的纹理坐标添加一个小的偏移量，并根据核将结果加权合并。
+
+```
+const float offset = 1.0 / 300.0;  
+
+void main()
+{
+    vec2 offsets[9] = vec2[](
+        vec2(-offset,  offset), // 左上
+        vec2( 0.0f,    offset), // 正上
+        vec2( offset,  offset), // 右上
+        vec2(-offset,  0.0f),   // 左
+        vec2( 0.0f,    0.0f),   // 中
+        vec2( offset,  0.0f),   // 右
+        vec2(-offset, -offset), // 左下
+        vec2( 0.0f,   -offset), // 正下
+        vec2( offset, -offset)  // 右下
+    );
+
+    float kernel[9] = float[](
+        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0,
+        2.0 / 16.0, 4.0 / 16.0, 2.0 / 16.0,
+        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0  
+	);
+
+    vec3 sampleTex[9];
+    for(int i = 0; i < 9; i++)
+    {
+        sampleTex[i] = vec3(texture(screenTexture, TexCoords.st + offsets[i]));
+    }
+    vec3 col = vec3(0.0);
+    for(int i = 0; i < 9; i++)
+    {
+        col += sampleTex[i] * kernel[i];
+    }
+
+    gl_FragColor = vec4(col, 1.0);
+}
+```
+
+![](./pics/glsl/blur.png)
+
+#### 4.19.4 边缘检测
+
+可以在后处理阶段执行执行边缘检测，同样也是应用卷积内核，值如下：
+$$
+\begin{bmatrix}
+1 & 1 & 1 \\
+1 & -8 & 1\\
+1 & 1 &1 
+\end{bmatrix}
+$$
+这个核高亮了所有的边缘，而暗化了其它部分，在我们只关心图像的边角的时候是非常有用的。
+
+![](./pics/glsl/edge_detect.png)
 
 ### 4.19.6 投影纹理
 
@@ -4333,11 +5296,90 @@ TBN矩阵用于将世界空间的视线向量和光照向量转换到TBN空间�
 2. 用第一遍渲染的深度纹理渲染场景，其中片元着色器中使用```sampler2DShadow```采样器从深度纹理上采样。
 
 
+
+### 4.19.11 [法线贴图](https://www.cnblogs.com/calence/p/5551504.html)
+
+法线贴图中的法向量位于切空间中，在切空间中，法向量永远朝向正Z轴。
+
+切空间用到TBN矩阵，由tangent、bitangent和normal三个向量组成。
+
+法线贴图的切线和副切线与纹理坐标的两个方向对齐，就是用到这个特性计算每个表面的切线和副切线的。需要用到一些数学才能得到它们；请看下图：
+
+![](./pics/glsl/tbn1.png)
+
+ΔU2与切线向量T方向相同，而ΔV2与副切线向量B方向相同。可以将三角形的边E1与E2写成切线向量T和副切线向量B的线性组合：
+
+
+
+两种使用方式：
+
+1. 使用TBN矩阵，将切空间的法向量转化到世界空间
+2. 使用TBN矩阵的逆矩阵，将世界空间的向量转化到切空间。将切空间的光源位置、视线向量等发送到片元着色器，无需在片元着色器执行矩阵运算，是一个极佳的优化。
+
+
+
 ## 4.20 数学部分
 
 ### 4.20.1 View矩阵推导
 
+[原理](https://www.cnblogs.com/calence/p/6645299.html)
 
+View矩阵用于直接将World坐标系下的坐标转换到Camera坐标系下。
+
+右手坐标系下的推到如下：
+
+相机本身的变换C包括两个元素：$C = T * R​$，其中T是平移变换，R是旋转变换。
+
+而相机变换是相机本身变换的逆变换：
+
+$C^{-1} = (T * R) ^ {-1} = R^{-1} * T^{-1}​$
+
+已知世界空间相机位置eyePos，相机观察点位置tarPos，和相机up向量，计算相机view矩阵：
+
+计算u、v、w三个基向量，基向量互相垂直的单位向量。
+
+1. w向量：视线向量，$w = normalize(eyePos - tarPos)​$，并归一化。
+
+2. u向量：up叉乘w向量，归一化，$u = normalize(up \times w)$。
+
+3. v向量：up虽然向上，但不一定跟w, u 垂直，所以重新求v，$v = normalize(w \times u)$。
+
+4. w向量的第四个分量：向量(-w)与eye的点乘；
+
+   u向量的第四个分量：向量(-u)与eye的点乘；
+
+   v向量的第四个分量：向量(-v)与eye的点乘；
+
+
+$$
+view = \begin{bmatrix}
+u_x & u_y & u_z & 0 \\
+v_x & v_y & v_ z & 0\\
+w_x & w_y & w_z & 0\\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\times
+\begin{bmatrix}
+1 & 0 & 0 & -eye_x \\
+0 & 1 & 0 & -eye_y \\
+0 & 0 & 1 & -eye_z \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\tag{1}
+= \begin{bmatrix}
+u_x & u_y & u_z & -u\cdot{eye} \\
+v_x & v_y & v_ z & -v\cdot{eye}\\
+w_x & w_y & w_z & -w\cdot{eye}\\
+0 & 0 & 0 & 1
+\end{bmatrix}
+$$
+
+
+
+
+数学表达式格式的快捷键为：option + command + b。
+
+[md数学表达式](https://blog.csdn.net/nuoyanli/article/details/96179976)
 
 ### 4.20.2 Project矩阵推导
 
@@ -4345,16 +5387,106 @@ TBN矩阵用于将世界空间的视线向量和光照向量转换到TBN空间�
 
 
 
+### 4.20.3 欧拉角
+
+#### 4.20.3.1 什么是欧拉角
+
+一句话总结：欧拉角就是物体绕坐标系三个轴的旋转角度。
+
+这里说的坐标系可以是世界坐标系，也可以是物体坐标系，旋转顺序也是任意的。物体的旋转可以分解为绕三个轴的旋转。
+
+欧拉角分为两种情况：
+
+1. 静态：即绕世界坐标系三个轴的旋转。物体在旋转过程中，坐标轴保持静止，所以称为静态。
+2. 动态：即绕物体坐标系三个轴的旋转。物体在旋转过程中，坐标轴跟随物体做相同的转动，所以称为动态。
+
+#### 4.20.3.2 万向锁现象
+
+将空间的旋转分解为绕X轴、绕Y轴和绕Z轴的旋转的叠加。
+
+**静态不存在万向锁问题，对于动态欧拉角，即绕物体坐标系时，无论绕X轴和Z轴旋转多少度，只要绕Y轴旋转的角度为±90°，会导致第三次的旋转轴和第一次的旋转轴重合，就会出现万向锁问题。**
+
+> 用自己的手机做一个试验，你把手机屏幕朝上，手机的长边为X轴，短边为Y轴，Z轴垂直屏幕向下，那你先绕Z轴旋转一下手机，假设旋转30度，然后再把手机绕Y轴旋转90度，也就是把手机长边接触桌面竖立起来，这时候你再绕手机的短边旋转，你会发现手机的长边一直定在桌面上不可能脱离桌面，这就是万向锁现象。
+
+#### 4.20.3.3 游戏动画中遇到万向锁会有什么问题
+
+产生万向锁的原因是，当第二次旋转角度为90度时，第三个轴就被旋转到与第一轴相同的方向，因此会丢失一个自由度，只剩下第一个轴和第二个轴的自由度。
+
+
+
+#### 4.20.3.4 解决万向锁问题
+
+将欧拉角转化为四元数，对四元数进行slerp（即球面线性插值），再将这一系列四元数转化为对应的欧拉角，将其作用于角色。
+
+
+
+## 4.21 PBR技术
+
+PBR，英文为Physically Based Rendering，中文为基于物理的渲染。
+
+判断PBR光照模型是否是基于物理的，需要满足三个条件：
+
+1. 基于微平面的表面模型。
+2. 能量守恒。
+3. 应用基于物理的BRDF。
+
+
+
+一、微平面模型
+
+所有的PBR技术都基于微平面理论，也就是在微观层面，任何平面都可以用被称为微平面的细小镜面来进行描绘。
+
+一个平面越是粗糙，这个平面上的微平面排列越是混乱，镜面反射的分布范围越广泛。
+
+二、能量守恒
+
+能量守恒：出射光线的能量永远不能超过入射光线的能量。即随着粗糙度的上升，镜面反射的区域会增加，但镜面反射的亮度却会下降。
+
+镜面反射光与漫反射光的区别：当一束光碰撞到一个表面时，会分离成一个折射部分和一个反射部分。反射部分就是会直接反射开来而不会进入平面的那部分光线，这就是镜面反射光照。而折射部分就是余下的会进入表面并被吸收的那部分光，也就是漫反射光照。
+
+根据能量守恒的关系，反射光照+折射光照 = 1.0，已知反射光，可以得到折射部分。
+
+```
+float kS = calculateSpecularComponent(...); // 反射/镜面 部分
+float kD = 1.0 - ks;                        // 折射/漫反射 部分
+```
+
+三、反射率方程
+
+反射率方程如下：
+$$
+L_0(p,w_0)= \int_\Omega f_r(p,w_i,w_0)L_i(p,w_i)n\cdot{w_i}{\rm d}w_i
+$$
+L代表通过某个无限小的立体角$w$在某个点上的辐射率。
+
+辐射通量**：辐射通量Φ表示的是一个光源所输出的能量，以瓦特为单位。
+
+**立体角**：立体角用*ω*表示，它可以为我们描述投射到单位球体上的一个截面的大小或者面积。投射到这个单位球体上的截面的面积就被称为立体角(Solid Angle)。
+
+![](./pics/glsl/solid_angle.png)
+
+**辐射强度**：辐射强度(Radiant Intensity)表示的是在单位球面上，一个光源向每单位立体角所投送的辐射通量。计算公式为：
+$$
+I = \frac{{\rm d}Φ}{{\rm d}w}
+$$
+**辐射率方程式：**表示的是，一个拥有辐射强度Φ的光源在单位面积A，单位立体角$w$上的辐射出的总能量，计算公式为：
+$$
+L= \frac{{\rm d^2}Φ}{{\rm d}A{\rm d}wcos\theta}
+$$
+![](./pics/glsl/fushelv.png)
+
+
 
 ## 渲染的问题整理
 
 1. 欧拉角、四元数、旋转矩阵之间的关系
-2. 延迟渲染的原理
-3. 后期渲染的框架----（MRT，FXAA，FBO--与MSAA）
-4. 光照的问题（blinn_phone PBR SSAO）
-5. 物体阴影的渲染（有几种手段处理），跟后处理渲染框架的关系
-6. mipmap三维渲染贴图问题（可能延伸到物体表面逼真程度的法线与视差贴图）
-7. 三维渲染中，半透明的问题，怎么处理，混合公式
+2. 
+3. 延迟渲染的原理
+4. 后期渲染的框架----（MRT，FXAA，FBO--与MSAA）
+5. 光照的问题（blinn_phone PBR SSAO）
+6. 物体阴影的渲染（有几种手段处理），跟后处理渲染框架的关系
+7. mipmap三维渲染贴图问题（可能延伸到物体表面逼真程度的法线与视差贴图）
+8. 三维渲染中，半透明的问题，怎么处理，混合公式
 
 
 
@@ -4516,4 +5648,9 @@ C++反射实现：工厂模式+C++模板+宏定义。
 
 # 七、多线程相关
 
+
+
+
+
+# 八、
 
