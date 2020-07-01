@@ -5556,6 +5556,143 @@ F0 = mix(F0, surfaceColor.rgb, metalness);
 
 
 
+## 4.22 伽马校正
+
+### 4.22.1 为什么需要伽马校正？
+
+在图形学中颜色(1.0,0.0,0.0,1.0)应该是(0.5,0.0,0.0,1.0)的2倍，但是实际在显示器上，对于输入的颜色，其亮度并不是按照线性关系反应亮度。
+
+显示器显示颜色是按照非线性工作的，显示器会将输入颜色变为原来的2.2次幂，亮度会变暗。
+
+公式为：$C_{out} = C_{in}^{2.2}$
+
+其中2.2代表伽马系数，一般位于[2.0,2.4]之间。
+
+为了将让显示器显示的颜色亮度与输入的颜色亮度一致，因此在输出到帧缓冲的颜色缓冲区之前，要进行伽马校正。
+
+### 4.22.2 处理着色器输出
+
+对于着色器的输出，有两种伽马校正方式。
+
+#### 4.22.2.1 开启SRGB帧缓冲
+
+第一种方式是采用OpenGL提供的FBO选项，开启```GL_FRAMEBUFFER_SRGB```，随后的所有FBO都将自动执行校正，包括默认缓冲区。
+
+```glEnable(GL_FRAMEBUFFER_SRGB);```
+
+当开启此选项后，执行的伽马校正的参数为2.2。当有多个帧缓冲区对象实现某功能时，一般在最后一个帧缓冲区对象开启此选项。
+
+
+
+#### 4.22.2.2 片元着色器中执行伽马校正
+
+```
+vec3 result = pow(frag_color,vec3(1.0/2.2));//启用伽马校正
+```
+
+注意：pow函数的第二个参数为vec3类型。
+
+
+
+### 4.22.3 处理输入的纹理
+
+对于输入的纹理，大部分已经进行了伽马校正，但是片元着色器中使用的线性空间，因此需要去掉伽马校正，得到它们的线性颜色。同样也有两种方法。
+
+**注意：一般漫反射纹理通常是线性空间，因此使用时，无需去掉伽马校正。**
+
+#### 4.22.3.1 使用OpenGL API加载SRGB纹理
+
+加载纹理数据时，指定纹理格式为```GL_SRGB或GL_SRFB_ALPHA```，SRGB就是执行伽马校正后的非线性颜色。
+
+```
+glTexImage2D(GL_TEXTURE_2D,0,GL_SRGB,width,height,0,GL_RGB, GL_UNSIGNED_BYTE, imageData);
+```
+
+执行此函数后，OpenGL会自动将其转化到线性空间。
+
+#### 4.22.3.2 在片元着色器中，手动剔除
+
+```
+float gamma = 2.2;
+vec3 diffuseColor = texture(diffuseSample,texCoords).rgb;
+diffuseColor = pow(diffuseColor,vec3(gamma));
+```
+
+
+
+## 4.23 HDR
+
+HDR，中文为高动态范围，允许用更大范围的颜色值渲染从而获取大范围的黑暗与明亮的场景细节。
+
+HDR的颜色值最大会超过1.0，但是因为显示器只能显示0至1之间的颜色值，因此还需要将HDR的颜色值转化到LDR（低动态范围），这个转化过程被称为**色调映射**。
+
+### 4.23.1 浮点帧缓冲
+
+当帧缓冲区的颜色缓冲采用标准化的内部格式(如GL_RGB)时，OpenGL会在这些颜色值存入帧缓冲区之前自动约束到0至1之间。
+
+当一个帧缓冲的颜色缓冲的内部格式被设定成了`GL_RGB16F`, `GL_RGBA16F`, `GL_RGB32F` 或者`GL_RGBA32F`时，这些帧缓冲被叫做浮点帧缓冲(Floating Point Framebuffer)，浮点帧缓冲可以存储超过0.0到1.0范围的浮点值，所以非常适合**HDR渲染**。
+
+想要创建浮点帧缓冲区，只需将其颜色缓冲区的内部格式类型：
+
+```
+glBindTexture(GL_TEXTURE_2D, colorBuffer);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+```
+
+与以往不同，此时纹理格式采用的是```GL_RGB16F```，数据格式类型也有普通的```GL_UNSIGNED_BYTE```转化为```GL_FLOAT```。
+
+默认的帧缓冲默认一个颜色分量只占用8位(bits)。当使用一个使用32位每颜色分量的浮点帧缓冲时(使用`GL_RGB16F` 或者`GL_RGBA16F`)，我们需要两倍的内存来存储这些颜色。
+
+### 4.23.2 色调映射
+
+如果我们后续直接对浮点帧缓冲进行二次处理，比如将其渲染到一个矩形中，在矩形渲染的片元着色器中，直接为片元颜色设置浮点纹理的颜色值，最终进入到帧缓冲的颜色值会被自动映射到[0，1]之间，导致颜色值超过1的部分失去细节，因此需要将HDR的颜色值转化到LDR(范围是[0,1])。
+
+色调映射是一种损失很小的将浮点颜色值转化到LDR[0,1]范围的过程。
+
+**一、Reinhard色调映射**
+
+最简单的映射算法是Reinhard色调映射，shader实现(包括伽马校正)：
+
+```
+void main()
+{             
+    const float gamma = 2.2;
+    vec3 hdrColor = texture(hdrBuffer, TexCoords).rgb;
+
+    // Reinhard色调映射
+    vec3 mapped = hdrColor / (hdrColor + vec3(1.0));
+    // Gamma校正
+    mapped = pow(mapped, vec3(1.0 / gamma));
+
+    color = vec4(mapped, 1.0);
+}   
+```
+
+**二、曝光色调映射**
+
+HDR图片包含不同曝光等级的细节，为了可以同时在白天和夜晚不同光照条件下工作的光照参数，需要设置曝光参数，shader如下：
+
+```
+uniform float exposure;//曝光参数，默认为1.0
+
+void main()
+{             
+    const float gamma = 2.2;
+    vec3 hdrColor = texture(hdrBuffer, TexCoords).rgb;
+
+    // 曝光色调映射
+    vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
+    // Gamma校正 
+    mapped = pow(mapped, vec3(1.0 / gamma));
+
+    color = vec4(mapped, 1.0);
+}  
+```
+
+高曝光值会使隧道的黑暗部分显示更多的细节，然而低曝光值会显著减少黑暗区域的细节，但允许我们看到更多明亮区域的细节。
+
+![](./pics/glsl/hdr.png)
+
 ## 渲染的问题整理
 
 1. 欧拉角、四元数、旋转矩阵之间的关系
