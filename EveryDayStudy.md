@@ -5582,8 +5582,6 @@ F0 = mix(F0, surfaceColor.rgb, metalness);
 
 当开启此选项后，执行的伽马校正的参数为2.2。当有多个帧缓冲区对象实现某功能时，一般在最后一个帧缓冲区对象开启此选项。
 
-
-
 #### 4.22.2.2 片元着色器中执行伽马校正
 
 ```
@@ -5592,13 +5590,15 @@ vec3 result = pow(frag_color,vec3(1.0/2.2));//启用伽马校正
 
 注意：pow函数的第二个参数为vec3类型。
 
+### 4.22.3 sRGB纹理
 
+对于输入的纹理，大部分已经进行了伽马校正，也就是sRGB纹理，其伽马参数一般为2.2。
 
-### 4.22.3 处理输入的纹理
+如果创建的纹理是sRGB纹理，在shader中不进行伽马校正，直接将其渲染到屏幕上，也是在sRGB空间展示，这种情况效果不会有问题。
 
-对于输入的纹理，大部分已经进行了伽马校正，但是片元着色器中使用的线性空间，因此需要去掉伽马校正，得到它们的线性颜色。同样也有两种方法。
+但如果渲染应用的纹理是sRGB纹理，并且在进行了伽马校正，会由于两次伽马校正，导致最终显示的纹理过亮，造成效果异常。
 
-**注意：一般漫反射纹理通常是线性空间，因此使用时，无需去掉伽马校正。**
+因此有两种方式可以将sRGB纹理剔除伽马校正，将其转化到线性空间。
 
 #### 4.22.3.1 使用OpenGL API加载SRGB纹理
 
@@ -5610,7 +5610,13 @@ glTexImage2D(GL_TEXTURE_2D,0,GL_SRGB,width,height,0,GL_RGB, GL_UNSIGNED_BYTE, im
 
 执行此函数后，OpenGL会自动将其转化到线性空间。
 
-#### 4.22.3.2 在片元着色器中，手动剔除
+**指定纹理格式为sRGB时要当心，因为并不是所有的纹理都是sRGB纹理。**
+
+比如diffuse纹理，这种为物体上色的纹理几乎都是在sRGB空间中的。而为了获取光照参数的纹理，像specular贴图和法线贴图几乎都在线性空间中，所以如果把它们也配置为sRGB纹理的话，光照就坏掉了。
+
+#### 4.22.3.2 颜色计算之前转化到线性空间
+
+在片元着色器中，将SRGB颜色值转化为线性空间，通过代码剔除伽马校正。
 
 ```
 float gamma = 2.2;
@@ -5618,7 +5624,7 @@ vec3 diffuseColor = texture(diffuseSample,texCoords).rgb;
 diffuseColor = pow(diffuseColor,vec3(gamma));
 ```
 
-
+这种方式比较麻烦，对于所有sRGB纹理都需要执行此步骤，重复性较高。
 
 ## 4.23 HDR
 
@@ -5692,6 +5698,188 @@ void main()
 高曝光值会使隧道的黑暗部分显示更多的细节，然而低曝光值会显著减少黑暗区域的细节，但允许我们看到更多明亮区域的细节。
 
 ![](./pics/glsl/hdr.png)
+
+
+
+## 4.24 泛光(Bloom)
+
+泛光是为了给明亮物体添加光晕效果，而光晕效果可以使用后处理特效泛光实现。
+
+泛光与HDR配合使用，效果会更好。
+
+![](./pics/glsl/bloom.png)
+
+上图是虚幻引擎的效果。
+
+泛光实现的步骤：
+
+1. 渲染有光场景，将其保存到HDR颜色缓冲。
+2. 提取场景HDR纹理和超过指定明亮区域的图片(将过滤掉小于指定强度的片元，以得到明亮区域可见的图片）。
+3. 对带有亮度的图片执行模糊操作，被模糊化的纹理就是我们用来获得发出光晕效果的东西。
+4. 最后将已模糊的纹理要添加到原来的HDR场景纹理之上。
+
+![](./pics/glsl/bloom2.png)
+
+### 4.24.1 提取亮度
+
+两种方法，一是可以使用两个帧缓冲区对象，分别对应生成场景HDR纹理和只有明亮区域可见的纹理。二是采用MRT，也就是多重渲染目标，在片元着色器中输出两个颜色值，分别对应场景HDR纹理和带有亮度的纹理。
+
+```
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
+```
+
+要想使用MRT提取两个纹理，需要为一个帧缓冲区对象绑定两个颜色附件，**注意采用的是浮点帧缓冲**，用于HDR。
+
+```
+// Set up floating point framebuffer to render scene to
+GLuint hdrFBO;
+glGenFramebuffers(1, &hdrFBO);
+glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+GLuint colorBuffers[2];
+glGenTextures(2, colorBuffers);
+for (GLuint i = 0; i < 2; i++)
+{
+    glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL
+    );
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // attach texture to framebuffer
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0
+    );
+}
+```
+
+显式告知OpenGL我们正在通过glDrawBuffers渲染到多个颜色缓冲，否则OpenGL只会渲染到帧缓冲的第一个颜色附件，而忽略所有其他的。
+
+```
+GLuint attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+glDrawBuffers(2, attachments);
+```
+
+输出多个片元颜色的shader：
+
+```
+#version 330 core
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
+
+[...]
+
+void main()
+{            
+    [...] // first do normal lighting calculations and output results
+    FragColor = vec4(lighting, 1.0f);
+    // Check whether fragment output is higher than threshold, if so output as brightness color
+    float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    if(brightness > 1.0)
+        BrightColor = vec4(FragColor.rgb, 1.0);
+}
+```
+
+由此可以得到两个颜色缓冲，一个是正常场景的图像和一个是提取出的亮区的图像。
+
+### 4.24.2 高斯模糊
+
+可以使用高斯模糊实现，需要两个帧缓冲，第一个帧缓冲执行横向高斯模糊，第二个帧缓冲区基于第一个帧缓冲的结果执行纵向高斯模糊。
+
+高斯模糊着色器：
+
+```
+#version 330 core
+out vec4 FragColor;
+in vec2 TexCoords;
+uniform sampler2D image;
+uniform bool horizontal;
+uniform float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+
+void main()
+{             
+    vec2 tex_offset = 1.0 / textureSize(image, 0); // gets size of single texel
+    vec3 result = texture(image, TexCoords).rgb * weight[0]; // current fragment's contribution
+    if(horizontal)
+    {
+        for(int i = 1; i < 5; ++i)
+        {
+            result += texture(image, TexCoords + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+            result += texture(image, TexCoords - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+        }
+    }
+    else
+    {
+        for(int i = 1; i < 5; ++i)
+        {
+            result += texture(image, TexCoords + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+            result += texture(image, TexCoords - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+        }
+    }
+    FragColor = vec4(result, 1.0);
+}
+```
+
+创建两个帧缓冲区对象，每个对象绑定一个颜色缓冲区，纹理格式为浮点纹理，分别实现横向模糊和纵向模糊：
+
+```
+GLuint pingpongFBO[2];
+GLuint pingpongBuffer[2];
+glGenFramebuffers(2, pingpongFBO);
+glGenTextures(2, pingpongBuffer);
+for (GLuint i = 0; i < 2; i++)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+    glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL
+    );
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffer[i], 0
+    );
+}
+```
+
+
+
+
+
+### 4.23.3 两个纹理混合
+
+将模糊后的纹理与场景的HDR纹理混合，就能实现泛光或光晕效果了。
+
+```
+#version 330 core
+out vec4 FragColor;
+in vec2 TexCoords;
+
+uniform sampler2D scene;
+uniform sampler2D bloomBlur;
+uniform float exposure;
+
+void main()
+{             
+    const float gamma = 2.2;
+    vec3 hdrColor = texture(scene, TexCoords).rgb;      
+    vec3 bloomColor = texture(bloomBlur, TexCoords).rgb;
+    hdrColor += bloomColor; // additive blending
+    // tone mapping
+    vec3 result = vec3(1.0) - exp(-hdrColor * exposure);
+    // also gamma correct while we're at it       
+    result = pow(result, vec3(1.0 / gamma));
+    FragColor = vec4(result, 1.0f);
+}
+```
+
+用到了混合、色调映射、伽马校正三个知识点，**要在应用色调映射之前添加泛光效果**。
+
+
 
 ## 渲染的问题整理
 
