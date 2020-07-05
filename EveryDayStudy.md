@@ -5247,7 +5247,7 @@ void main()
 
 ![](./pics/glsl/blur.png)
 
-#### 4.19.4 边缘检测
+#### 4.19.5.4 边缘检测
 
 可以在后处理阶段执行执行边缘检测，同样也是应用卷积内核，值如下：
 $$
@@ -5260,6 +5260,46 @@ $$
 这个核高亮了所有的边缘，而暗化了其它部分，在我们只关心图像的边角的时候是非常有用的。
 
 ![](./pics/glsl/edge_detect.png)
+
+#### 4.19.5.5 高斯模糊
+
+一维高斯模糊公式：
+$$
+G(x) = \frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{x^2}{2\sigma^2}}
+$$
+二维高斯模糊公式：
+$$
+G(x,y) = \frac{1}{2\pi\sigma^2}e^{-\frac{x^2 + y ^ 2}{2\sigma^2}}
+$$
+如果对于每个片元执行二维高斯模糊计算，性能消耗会非常大。比如对于1024*1024的纹理而言，对于每个纹理坐标，分别在横向和纵向方向采样33次，那么最终的计算量是1024 * 1024 * 33 * 33 ≈ 11.4亿次。
+
+
+
+为了更高效的处理模糊效果，可以将二维高斯模糊分解为两个一维高斯模糊，将两次的结果相乘实现。其计算量为1024 * 1024 * 33 * 2 ≈ 6900万次。
+
+一维纵向模糊的shader代码：
+
+```
+uniform sampler2D image;
+ 
+out vec4 FragmentColor;
+ 
+uniform float weight[5] = float[](0.2270270270, 0.1945945946, 0.1216216216,
+                                  0.0540540541, 0.0162162162);
+void main(void) {
+    FragmentColor = texture2D(image, vec2(gl_FragCoord) / 1024.0) * weight[0];
+    for (int i=1; i<5; i++)
+    {
+        FragmentColor +=
+            texture2D(image, (vec2(gl_FragCoord) + vec2(0.0, i)) / 1024.0) * weight[i];
+
+        FragmentColor +=
+            texture2D(image, (vec2(gl_FragCoord) - vec2(0.0, i)) / 1024.0) * weight[i];
+    }
+}
+```
+
+横向高斯模糊的实现与纵向的类似，只是将Y方向的偏移换成X方向。
 
 ### 4.19.6 投影纹理
 
@@ -5788,6 +5828,8 @@ void main()
 
 可以使用高斯模糊实现，需要两个帧缓冲，第一个帧缓冲执行横向高斯模糊，第二个帧缓冲区基于第一个帧缓冲的结果执行纵向高斯模糊。
 
+[详细介绍](http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/)
+
 高斯模糊着色器：
 
 ```
@@ -5846,7 +5888,7 @@ for (GLuint i = 0; i < 2; i++)
 }
 ```
 
-
+执行一组高斯模糊的次数越多，模糊效果越好。
 
 
 
@@ -5878,6 +5920,227 @@ void main()
 ```
 
 用到了混合、色调映射、伽马校正三个知识点，**要在应用色调映射之前添加泛光效果**。
+
+## 4.25 延迟渲染
+
+一般使用的光照方式是正向渲染或正向着色法，在渲染场景时，对于每个需要渲染的物体，程序都要对每一个光源每一个需要渲染的片段进行迭代，计算量非常大。
+
+另外，大部分片段着色器的输出都会被之后的输出覆盖，正向渲染还会在场景中因为高深的复杂度(多个物体重合在一个像素上)浪费大量的片段着色器运行时间。
+
+延迟渲染也称延迟着色法，就是为了解决上述问题诞生的，它的渲染方式与正向渲染不同，优化了有大量光源的渲染性能。
+
+延迟渲染包含两个处理过程：几何处理阶段和光照处理阶段，处理流程为：
+
+![](./pics/glsl/defer_process.png)
+
+### 4.25.1 几何处理阶段
+
+#### 4.25.1.1 处理流程
+
+几何处理阶段的操作是 渲染整个场景，将每个物体的各种几何信息保存到叫做G缓冲(G-buffer)的纹理中，每种几何信息单独存储到一张纹理中。
+
+在几何处理阶段中填充G缓冲非常高效，可以直接储存像素位置，颜色或者是法线等对象信息到帧缓冲中，而这几乎不会消耗处理时间。使用**多重渲染目标(Multiple Render Targets, MRT)技术**可以在一个渲染处理之内完成这所有的工作。
+
+其中几何信息包括：顶点位置、颜色、法向量和镜面强度浮点值，这些存储在G缓冲中的几何信息用于后续的光照计算。
+
+![](./pics/glsl/defer1.png)
+
+#### 4.25.1.2 G缓冲
+
+G缓冲(G-buffer)是所有用来存储光照相关数据，并在最后光照处理阶段中使用的所有纹理的总称。
+
+正向渲染中照亮某个片段需要用到的变量有：
+
+- 光源位置和颜色
+- 观察者位置
+- 一个3D的片段位置
+- 一个片段法向量
+- 一个漫反射颜色值，也就是反射率
+- 一个镜面强度浮点值
+
+其中光源位置、颜色和观察者的位置可以通过uniform传递，而其他四个变量就是在几何处理阶段保存到G缓冲的数据。可以应用MRT技术将上述四个数据存储到一个帧缓冲的多个颜色缓冲上。
+
+```
+while(...) // 游戏循环
+{
+    // 1. 几何处理阶段：渲染所有的几何/颜色数据到G缓冲 
+    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    gBufferShader.Use();
+    for(Object obj : Objects)
+    {
+        ConfigureShaderTransformsAndUniforms();
+        obj.Draw();
+    }  
+    // 2. 光照处理阶段：使用G缓冲计算场景的光照
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    lightingPassShader.Use();
+    BindAllGBufferTextures();
+    SetLightingUniforms();
+    RenderQuad();
+}
+```
+
+#### 4.25.1.3 G缓冲数据的存储——MRT技术
+
+在几何处理阶段，需要初始化一个帧缓冲对象，也就是gBuffer，它包含**多个颜色缓冲**和**一个独立的深度渲染缓冲对象**。其中位置和法向量，使用高精度的纹理，每分量16或32位，而反射率和镜面值，使用默认的纹理(每分量8位)即可。
+
+```
+GLuint gBuffer;
+glGenFramebuffers(1, &gBuffer);
+glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+GLuint gPosition, gNormal, gColorSpec;
+
+// 1. 位置颜色缓冲
+glGenTextures(1, &gPosition);
+glBindTexture(GL_TEXTURE_2D, gPosition);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0
+
+// 2. 法线颜色缓冲
+glGenTextures(1, &gNormal);
+glBindTexture(GL_TEXTURE_2D, gNormal);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+
+// 3. 颜色 + 镜面颜色缓冲
+glGenTextures(1, &gAlbedoSpec);
+glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+
+// 4. 告诉OpenGL我们将要使用(帧缓冲的)哪种颜色附件来进行渲染
+GLuint attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+glDrawBuffers(3, attachments);
+
+// 5. 之后同样添加渲染缓冲对象(Render Buffer Object)为深度缓冲(Depth Buffer)，并检查完整性
+[...]
+```
+
+注意事项：
+
+1. 由于使用了多渲染目标，需要显式告诉OpenGL，我们需要使用`glDrawBuffers`渲染的是和`GBuffer`关联的哪个颜色缓冲。
+2. 使用RGB纹理来储存位置和法线的数据，因为每个对象只有三个分量。
+3. 将颜色和镜面强度数据合并存储到一个单独的RGBA纹理里面，这样无需再额外声明一个颜色缓冲纹理了。
+
+接下来，将片元的相关数据分别输出到G缓冲对应的颜色缓冲上：
+
+```
+#version 330 core
+layout (location = 0) out vec3 gPosition;
+layout (location = 1) out vec3 gNormal;
+layout (location = 2) out vec4 gAlbedoSpec;
+
+in vec2 TexCoords;
+in vec3 FragPos;
+in vec3 Normal;
+
+uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_specular1;
+
+void main()
+{    
+    // 存储第一个G缓冲纹理中的片段位置向量
+    gPosition = FragPos;
+    // 同样存储对每个逐片段法线到G缓冲中
+    gNormal = normalize(Normal);
+    // 和漫反射对每个逐片段颜色
+    gAlbedoSpec.rgb = texture(texture_diffuse1, TexCoords).rgb;
+    // 存储镜面强度到gAlbedoSpec的alpha分量
+    gAlbedoSpec.a = texture(texture_specular1, TexCoords).r;
+}  
+```
+
+使用Layout关键字将数据渲染到指定的颜色缓冲上。
+
+### 4.25.2 光照处理阶段
+
+在光照处理阶段，渲染屏幕大小的矩形，使用G缓冲中的几何数据(纹理)对每个片元进行光照计算。光照计算过程还是和以前一样，但是现在需要从对应的G缓冲而不是顶点着色器中获取输入变量。
+
+由于所有的G缓冲纹理都代表的是最终变换的片段值，只需要对每一个像素执行一次昂贵的光照运算即可，这使得延迟光照非常高效。
+
+```
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+shaderLightingPass.Use();
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, gPosition);
+glActiveTexture(GL_TEXTURE1);
+glBindTexture(GL_TEXTURE_2D, gNormal);
+glActiveTexture(GL_TEXTURE2);
+glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+// 同样发送光照相关的uniform
+SendAllLightUniformsToShader(shaderLightingPass);
+glUniform3fv(glGetUniformLocation(shaderLightingPass.Program, "viewPos"), 1, &camera.Position[0]);
+RenderQuad();  
+```
+
+与正向渲染的光照计算类似，唯一需要改的就是获取光照输入变量的方式：
+
+```
+#version 330 core
+out vec4 FragColor;
+in vec2 TexCoords;
+
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gAlbedoSpec;
+
+struct Light {
+    vec3 Position;
+    vec3 Color;
+};
+const int NR_LIGHTS = 32;
+uniform Light lights[NR_LIGHTS];
+uniform vec3 viewPos;
+
+void main()
+{             
+    // 从G缓冲中获取数据
+    vec3 FragPos = texture(gPosition, TexCoords).rgb;
+    vec3 Normal = texture(gNormal, TexCoords).rgb;
+    vec3 Albedo = texture(gAlbedoSpec, TexCoords).rgb;
+    float Specular = texture(gAlbedoSpec, TexCoords).a;
+
+    // 然后和往常一样地计算光照
+    vec3 lighting = Albedo * 0.1; // 硬编码环境光照分量
+    vec3 viewDir = normalize(viewPos - FragPos);
+    for(int i = 0; i < NR_LIGHTS; ++i)
+    {
+        // 漫反射
+        vec3 lightDir = normalize(lights[i].Position - FragPos);
+        vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Albedo * lights[i].Color;
+        lighting += diffuse;
+    }
+
+    FragColor = vec4(lighting, 1.0);
+}  
+```
+
+这里片元位置、法向量、反射率等不再从顶点着色器或者uniform变量获取，而是直接从G缓冲的纹理中获取。
+
+注意我们从`gAlbedoSpec`纹理中同时获取了`Albedo`颜色和`Spqcular`强度。**
+
+
+
+### 4.25.3 延迟渲染的利弊
+
+#### 4.25.3.1 好处
+
+这种渲染方式最大的好处就是能保证在G缓冲中的片段和在屏幕上呈现的像素所包含的片段信息是一样的，因为深度测试已经最终将这里的片段信息作为最顶层的片段，保证了对于在光照处理阶段中的每一个像素都只处理一次，所以能够省下很多无用的渲染调用。
+
+#### 4.25.3.2 缺陷
+
+这种方法的最明显的缺陷有两个：
+
+- 显存占用过多：由于G缓冲要求我们在纹理颜色缓冲中存储相对比较大的场景数据，这会消耗比较多的显存，尤其是类似位置向量之类的需要高精度的场景数据。 
+- 不支持混合(因为我们只有最前面的片段信息)， 也不能使用MSAA。如果想要支持混合操作，通常分割渲染器为两个部分：一个是延迟渲染的部分，另一个是专门为了混合或者其他不适合延迟渲染管线的着色器效果而设计的的正向渲染的部分。
 
 
 
