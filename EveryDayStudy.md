@@ -5923,6 +5923,8 @@ void main()
 
 ## 4.25 延迟渲染
 
+ [OGL 延迟着色](http://ogldev.atspace.co.uk/www/tutorial35/tutorial35.html)
+
 一般使用的光照方式是正向渲染或正向着色法，在渲染场景时，对于每个需要渲染的物体，程序都要对每一个光源每一个需要渲染的片段进行迭代，计算量非常大。
 
 另外，大部分片段着色器的输出都会被之后的输出覆盖，正向渲染还会在场景中因为高深的复杂度(多个物体重合在一个像素上)浪费大量的片段着色器运行时间。
@@ -6158,6 +6160,8 @@ void main()
 
 ## 4.26 SSAO
 
+### 4.26.1 概述
+
 环境光遮蔽(Ambient Occlusion)的原理是通过将褶皱、洞孔、非常靠近墙面变暗的方法近似模拟出间接光照，使场景保留更多细节，更有深度感。
 
 褶皱、洞孔这些地方很大程度会被周围的几何体遮蔽，看起来会更暗一些。
@@ -6165,6 +6169,108 @@ void main()
 ![](./pics/glsl/ssao1.png)
 
 环境光遮蔽技术性能开销比较大，在2007年，Crytek公司发布了一款叫做**屏幕空间环境光遮蔽（Screen-Space Ambient Occlusion）**的技术，简称SSAO，这一技术使用了屏幕空间场景的深度而不是真实的几何体数据来确定遮蔽量，不但速度快，而且还能获得很好的效果。
+
+SSAO的原理：计算片元周围几个片元的深度值计算一个遮蔽因子，遮蔽因子会被用来减少或者抵消片段的环境光照分量。SSAO是一种屏幕空间的处理技术（类似于延迟着色），因此需要**对平铺到屏幕大小的2D矩形**的每个片元执行如下操作：
+
+**通过使用一个逐片段观察空间位置，将一个采样半球核心对准片段的观察空间表面法线。对于每一个核心样本我们会采样线性深度纹理来比较结果。采样核心会根据旋转矢量稍微偏转一点；我们所获得的遮蔽因子将会之后用来限制最终的环境光照分量。**
+
+![](./pics/glsl/ssao2.png)
+
+
+
+遮蔽因子的计算：通过采集片段周围半球型核心(Kernel)的多个深度样本，并计算高于片段深度值样本的个数，然后用1减去高于片元深度的样本占比就是遮蔽因子。
+$$
+OcclusionFactor = 1 - \frac{depthNum}{KernelNum}
+$$
+$depthNum$:代表高于片元深度的样本个数。
+
+$KernelNum$:代表半球型核心内的总样本数量。
+
+计算遮蔽因子需要的参数有：
+
+- 片元位置
+- 片元法向量
+- 片元漫反射颜色
+- 采样核心
+- 用于旋转采样核心的随机旋转矢量
+
+### 4.26.2 样本缓冲
+
+可以结合延迟着色法实现ssao，向G缓冲区中获取片元位置、法向量、**线性深度(从gl_FragCoord.z提取)**和漫反射颜色，几何着色器代码如下：
+
+```
+#version 330 core
+layout (location = 0) out vec4 gPositionDepth;
+layout (location = 1) out vec3 gNormal;
+layout (location = 2) out vec4 gAlbedoSpec;
+
+in vec2 TexCoords;
+in vec3 FragPos;
+in vec3 Normal;
+
+const float NEAR = 0.1; // 投影矩阵的近平面
+const float FAR = 50.0f; // 投影矩阵的远平面
+float LinearizeDepth(float depth)
+{
+    float z = depth * 2.0 - 1.0; // 回到NDC
+    return (2.0 * NEAR * FAR) / (FAR + NEAR - z * (FAR - NEAR));    
+}
+
+void main()
+{    
+    // 储存片段的位置矢量到第一个G缓冲纹理
+    gPositionDepth.xyz = FragPos;
+    // 储存线性深度到gPositionDepth的alpha分量
+    gPositionDepth.a = LinearizeDepth(gl_FragCoord.z); 
+    // 储存法线信息到G缓冲
+    gNormal = normalize(Normal);
+    // 和漫反射颜色
+    gAlbedoSpec.rgb = vec3(0.95);
+}
+```
+
+提取出来的线性深度是在观察空间中的，所以之后的运算也是在观察空间中。
+
+其中```gPositionDepth```对应G缓冲区的颜色缓冲为：
+
+```glGenTextures(1, &gPositionDepth);
+glBindTexture(GL_TEXTURE_2D, gPositionDepth);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+```
+
+我们把线性深度值存储为了浮点数据；这样从0.1到50.0范围深度值都不会被限制在[0.0, 1.0]之间了。
+
+### 4.26.3 法向半球
+
+
+
+
+
+### 4.26.4 随机核心转动
+
+
+
+
+
+
+
+### 4.26.5 SSAO着色器
+
+
+
+
+
+### 4.26.6 环境遮蔽模糊
+
+
+
+
+
+### 4.26.7 应用环境遮蔽
 
 
 
