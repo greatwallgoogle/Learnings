@@ -1,0 +1,1 @@
+//条带发射器，继承自ParticleSystemEmiter
