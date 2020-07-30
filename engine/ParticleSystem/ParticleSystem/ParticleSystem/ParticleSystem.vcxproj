@@ -138,6 +138,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\code\Manager.cpp" />
+    <ClCompile Include="..\..\code\ModuleBase.cpp" />
+    <ClCompile Include="..\..\code\ParticleEmitter.cpp" />
+    <ClCompile Include="..\..\code\ParticleModule.cpp" />
+    <ClCompile Include="..\..\code\ParticleSystemInstance.cpp" />
+    <ClCompile Include="..\..\code\ParticleSystemTemplate.cpp" />
+    <ClCompile Include="..\..\code\Variant.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\code\Manager.h" />
+    <ClInclude Include="..\..\code\ModuleBase.h" />
+    <ClInclude Include="..\..\code\ParticleEmitter.h" />
+    <ClInclude Include="..\..\code\ParticleModule.h" />
+    <ClInclude Include="..\..\code\ParticleSystemInstance.h" />
+    <ClInclude Include="..\..\code\ParticleSystemTemplate.h" />
+    <ClInclude Include="..\..\code\Variant.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
