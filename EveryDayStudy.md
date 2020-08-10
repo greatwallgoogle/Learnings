@@ -5365,7 +5365,7 @@ void main(void) {
 
 [原理](https://www.cnblogs.com/calence/p/6645299.html)
 
-View矩阵用于直接将World坐标系下的坐标转换到Camera坐标系下。
+[View](https://www.3dgep.com/understanding-the-view-matrix/)矩阵用于直接将World坐标系下的坐标转换到Camera坐标系下。
 
 右手坐标系下的推到如下：
 
