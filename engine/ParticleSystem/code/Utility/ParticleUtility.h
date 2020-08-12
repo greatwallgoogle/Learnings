@@ -1,3 +1,5 @@
+#pragma once
+
 namespace ParticleUtility
 {
     enum EParticleSystemEmitterType
@@ -13,5 +15,10 @@ namespace ParticleUtility
     {
         PMT_REQUIRED,					/**< Required模块	*/
         PMT_SPAWN,						/**< 发射模块		*/
+    };
+
+    enum EModuleType
+    {
+
     };
 };

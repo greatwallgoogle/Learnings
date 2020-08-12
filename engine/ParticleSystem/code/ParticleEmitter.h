@@ -1,4 +1,4 @@
-//粒子发射器
+#pragma once
 #include <string>
 #include "ParticleUtility.h"
 
@@ -9,6 +9,7 @@ class ParticleModuleSpawn;
 class ParticleModuleOrbit;
 
 //粒子发射器基类
+//对应UE4的UParticleLODLevel
 class ParticleEmitter
 {
 public:

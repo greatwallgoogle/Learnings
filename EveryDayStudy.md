@@ -5230,17 +5230,17 @@ void main(void) {
 
 右手坐标系下的推到如下：
 
-相机本身的变换C包括两个元素：$C = T * R​$，其中T是平移变换，R是旋转变换。
+相机本身的变换C包括两个元素：$C = T * R$，其中T是平移变换，R是旋转变换。
 
 而相机变换是相机本身变换的逆变换：
 
-$C^{-1} = (T * R) ^ {-1} = R^{-1} * T^{-1}​$
+$C^{-1} = (T * R) ^ {-1} = R^{-1} * T^{-1}$
 
 已知世界空间相机位置eyePos，相机观察点位置tarPos，和相机up向量，计算相机view矩阵：
 
 计算u、v、w三个基向量，基向量互相垂直的单位向量。
 
-1. w向量：视线向量，$w = normalize(eyePos - tarPos)​$，并归一化。
+1. w向量：视线向量，$w = normalize(eyePos - tarPos)$，并归一化。
 
 2. u向量：up叉乘w向量，归一化，$u = normalize(up \times w)$。
 
@@ -5380,8 +5380,8 @@ $$
 
 - L代表通过某个无限小的立体角$w$在某个点上的辐射率。
 
-- $w_0​$代表观察方向。
-- $\Omega​$代表半球区域。
+- $w_0$代表观察方向。
+- $\Omega$代表半球区域。
 
 反射率公式计算了点*p*在$w_0$方向上被反射出来的辐射率$L_0(p,w_0)$的总和。即$L_0$表示了从$w_0$方向上观察，光线投射到点*p*上反射出来的辐照度。
 
@@ -6388,6 +6388,35 @@ void main()
 
 
 
+## 4.27 粒子系统
+
+要点：
+
+1. 模板与实例的管理；
+2. 粒子合批；
+3. 发射器类型：面片、模型、光束、条带、骨骼拖尾；
+4. 渲染过程：如何排序、流程、如何Blend；
+5. Seed是什么❓
+
+UE4:
+
+1. AEmitter：粒子系统Actor。
+2. UParticleSystemComponent：组件，管理一组发射器实例(FParticleEmitterInstance)。
+3. UParticleSystem：粒子系统，包含一组发射器（UParticleEmitter）。
+4. UParticleEmitter：代表一个发射器，管理一组UParticleLODLevel。
+5. UParticleLODLevel：管理一组模块（UParticleModule）。
+6. UParticleModule：代表一个模块，与FParticleEmitterInstance关联密切。
+7. FParticleEmitterInstance：发射器实例，与UParticleEmitter是模板和实例的关系。
+8. 
+
+#### 4.27.1 合批
+
+对于半透明的物体，其渲染顺序是有要求的，必须按照从后往前的顺序渲染。
+
+动态合批只能对渲染顺序相邻且材质相同的物体有效。
+
+一般来讲，大规模使用粒子系统会造成Draw Call高，渲染开销大，CPU高等问题，
+
 
 
 
@@ -6395,7 +6424,7 @@ void main()
 ## 渲染的问题整理
 
 1. 欧拉角、四元数、旋转矩阵之间的关系
-2. ​
+2. 
 3. 延迟渲染的原理
 4. 后期渲染的框架----（MRT，FXAA，FBO--与MSAA）
 5. 光照的问题（blinn_phone PBR SSAO）
