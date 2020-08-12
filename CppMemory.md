@@ -85,15 +85,23 @@ array delete与ptr delete的区别在于：
 - array delete：是执行n次析构函数
 - ptr delete：仅执行一次析构函数
 
-![](./pics/memory/array_new.png)
+![](./pics/memory/array_new.jpg)
+
+![](./pics/memory/array_new2.jpg)
+
+![](./pics/memory/array_size.jpg)
+
+![](./pics/memory/array_size2.jpg)
 
 
 
 ## 1.4 placement new（定点new）
 
-placement new 本身不分配内存，代表将某个对象构建在指定内存上。
+**placement new 本身不分配内存，代表将某个对象构建在指定内存上。**
 
 placement new 相当于：```new(ptr)```和```::operator new(size,void*)```。
+
+![](./pics/memory/placement_new.jpg)
 
 用法：
 
