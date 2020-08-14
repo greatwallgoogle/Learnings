@@ -21,3 +21,6 @@
 */Debug
 *.vs
 
+/engine/ParticleSystem/iOS/Particle/Particle.xcodeproj/project.xcworkspace/xcuserdata/apple.xcuserdatad/UserInterfaceState.xcuserstate
+/engine/ParticleSystem/iOS/Particle/Particle.xcodeproj/xcuserdata/apple.xcuserdatad/xcschemes/xcschememanagement.plist
+/engine/ParticleSystem/iOS/Particle/Particle/Assets.xcassets/Contents.json
