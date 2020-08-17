@@ -129,6 +129,8 @@ delete[] buf;
 
 ::operator new和::operator delete 是一个全局的函数，可以被重载，但很少这么做，因为这是一个全局函数，影响范围较广。
 
+![](./pics/memory/global_operator_new_delete.jpg)
+
 **三、重载operator new 和operator delete**
 
 operator new 和 operator delete 是类的成员函数，本质上是**静态函数**。即便声明函数时，未添加关键字static，编译器被会编译器当做static 函数处理。
@@ -149,4 +151,4 @@ operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
 
 使用：
 
-![](./pics/memory/overload_op_use.png)
+![](./pics/memory/overload_op_use.jpg)
