@@ -7,6 +7,8 @@
 #include <vector>
 #include "AlgoUtil.h"
 #include <stack>
+#include "ReverseList.h"
+using namespace LinkNode;
 
 using namespace AlgoUtil;
 
@@ -193,11 +195,66 @@ void testSort()
 	printf("\nBubble sort ending !\n");
 }
 
+void InverseSingleNode()
+{
+	SingleNode* pNode1 = new SingleNode(1);
+	SingleNode* pNode2 = new SingleNode(2);
+	SingleNode* pNode3 = new SingleNode(3);
+	pNode1->pNextNode = pNode2;
+	pNode2->pNextNode = pNode3;
+
+	SingleNode* pNode = ReverseList(pNode1);
+	while (NULL != pNode)
+	{
+		printf("data:%d\n ", pNode->nData);
+		pNode = pNode->pNextNode;
+	}
+
+	delete pNode3;
+	delete pNode2;
+	delete pNode1;
+}
+
+void InverseLinkNode()
+{
+	LinkedNode* pNode1 = new LinkedNode(1);
+	LinkedNode* pNode2 = new LinkedNode(2);
+	LinkedNode* pNode3 = new LinkedNode(3);
+	pNode1->pNextNode = pNode2;
+	pNode2->pPreNode = pNode1;
+	pNode2->pNextNode = pNode3;
+	pNode3->pPreNode = pNode2;
+
+	{
+		printf("origin:");
+		LinkedNode* pNode = pNode1;
+		while (NULL != pNode)
+		{
+			printf("%d ", pNode->nData);
+			pNode = pNode->pNextNode;
+		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	printf("\n new:");
+	LinkedNode* pNode = ReverseList(pNode1);
+	while (NULL != pNode)
+	{
+		printf("%d ", pNode->nData);
+		pNode = pNode->pNextNode;
+	}
+
+	printf("\n");
+	delete pNode3;
+	delete pNode2;
+	delete pNode1;
+}
+
 int main(int argc, char* argv[])
 {
 	//TestArray();
 	printf("hello world !\n");
-	test1();
+	InverseLinkNode();
 	system("pause");
 	return 0;
 }

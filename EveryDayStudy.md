@@ -2230,7 +2230,7 @@ ListNode* ReverseList(ListNode* pHead)
 {
     if(NULL == pHead)
     {
-        return pHead;
+        return NULL;
     }
     ListNode* pPre = NULL;
     while(pHead)
@@ -2242,13 +2242,40 @@ ListNode* ReverseList(ListNode* pHead)
     }
     return pPre;
 }
+```
 
-//递归
-ListNode* ReverseListTravel(ListNode* pHead)
+翻转双向链表（比单链表反转多一行代码）：
+
+```c++
+struct LinkedNode
 {
-    
+  int nData;
+  LinkedNode *pPreNode;
+  LinkedNode *pNextNode;
+  LinkedNode(int data = 0) : nData(data), pPreNode(nullptr), pNextNode(nullptr) {}
+};
+
+//双向链表逆序
+LinkedNode *ReverseList(LinkedNode *pHead)
+{
+  if (nullptr == pHead)
+  {
+  	return nullptr;
+  }
+  LinkedNode* pPreNode = nullptr;
+  while (nullptr != pHead)
+  {
+    LinkedNode* pTemp = pHead->pNextNode;
+    pHead->pNextNode = pPreNode;
+    pHead->pPreNode = pTemp;
+    pPreNode = pHead;
+    pHead = pTemp;
+  }
+  return pPreNode;
 }
 ```
+
+
 
 #### 2.1.3.2 [从尾到头打印链表](https://www.nowcoder.com/practice/d0267f7f55b3412ba93bd35cfa8e8035?tpId=13&tqId=11156&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 
@@ -6408,7 +6435,7 @@ UE4:
 5. UParticleLODLevel：管理一组模块（UParticleModule）。
 6. UParticleModule：代表一个模块，与FParticleEmitterInstance关联密切。
 7. FParticleEmitterInstance：发射器实例，与UParticleEmitter是模板和实例的关系。
-8. 
+8. ​
 
 #### 4.27.1 合批
 
@@ -6428,7 +6455,7 @@ UE4:
 ## 渲染的问题整理
 
 1. 欧拉角、四元数、旋转矩阵之间的关系
-2. 
+2. ​
 3. 延迟渲染的原理
 4. 后期渲染的框架----（MRT，FXAA，FBO--与MSAA）
 5. 光照的问题（blinn_phone PBR SSAO）
@@ -6651,5 +6678,92 @@ private:
 
 
 
-# 八、
+# 八、美颜
+
+## 8.1 美妆
+
+### 8.1.1 瞳孔叠加图片
+
+瞳孔叠加图片一般是指给眼球添加眼瞳效果。
+
+例如为眼球叠加橘色图片：
+
+![](./pics/filter/CC.png)
+
+```
+precision highp float;
+uniform sampler2D InputTextureSampler;// 原图
+uniform sampler2D InputTextureSampler1;// mask
+varying vec2 VSOutTexCoord0; // 原图顶点
+varying vec2 VSOutTexCoord1;// 瞳孔顶点
+uniform float g_Intensity;
+
+vec4 unpremultiply(vec4 s) {
+	return vec4(s.rgb / max(s.a, 0.00001), s.a);
+}
+
+vec4 premultiply(vec4 s) {
+	return vec4(s.rgb * s.a, s.a);
+}
+
+vec4 normalBlend(vec4 Cb, vec4 Cs) {
+   vec4 dst = premultiply(Cb);
+   vec4 src = premultiply(Cs);
+   return unpremultiply(src + dst * (1.0 - src.a));
+}
+
+void main() {
+    vec4 color = texture2D(InputTextureSampler, VSOutTexCoord0);
+    vec4 pupilColor = texture2D(InputTextureSampler1, VSOutTexCoord1);
+    vec3 lumCoeff = vec3(0.299, 0.587, 0.114);
+    float lightness = dot(color.rgb, lumCoeff);
+    const float factor = 0.5;
+	float instensity = g_Intensity * factor;
+    pupilColor.a = pupilColor.a * (1.0 - clamp(pow(lightness + 0.6, 20.0), 0.0, 1.0)) * instensity * color.a;
+    gl_FragColor = normalBlend(vec4(color.rgb, 1.0), pupilColor);
+}
+```
+
+- ```InputTextureSampler```代表视频帧纹理。
+- ```InputTextureSampler1```代表需要叠加的图片。
+- ```VSOutTexCoord0```视频帧上代表眼部区域矩形的纹理坐标，位于[0,1]，将人脸关键点单位化得到。
+- ```VSOutTexCoord1```代表叠加图片四个顶点的纹理坐标，(0,0)，（0,1），（1,1），（1,0）。
+- ```g_Intensity```代表叠加强度。
+
+
+
+
+## 8.2 lookup
+
+
+
+![](./pics/filter/lookup_1.png)
+
+```
+precision mediump float;
+uniform sampler2D InputTextureSampler;
+uniform sampler2D LookupTexSampler;
+varying vec2 VSOutTexCoord;
+uniform float intensity;
+void main(){
+  vec4 texColour = texture2D(InputTextureSampler,VSOutTexCoord);
+  float blueColor = texColour.b * 63.0;
+  vec2 quad1;
+  quad1.y = floor(floor(blueColor) / 8.0);
+  quad1.x = floor(blueColor) - (quad1.y * 8.0);
+  vec2 quad2;
+  quad2.y = floor(ceil(blueColor) / 8.0);
+  quad2.x = ceil(blueColor) - (quad2.y * 8.0);
+  vec2 texPos1;
+  texPos1.x = (quad1.x * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * texColour.r);
+  texPos1.y = (quad1.y * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * texColour.g);
+  vec2 texPos2;
+  texPos2.x = (quad2.x * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * texColour.r);
+  texPos2.y = (quad2.y * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * texColour.g);
+  vec4 newColor1 = texture2D(LookupTexSampler, texPos1);
+  vec4 newColor2 = texture2D(LookupTexSampler, texPos2);
+  vec4 newColor = mix(newColor1, newColor2, fract(blueColor));
+  gl_FragColor = mix(texColour, vec4(newColor.rgb, texColour.a), intensity);
+}
+```
 
