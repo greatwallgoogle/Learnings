@@ -6484,6 +6484,14 @@ private:
 
 ## 5.2 反射机制
 
+**反射概念：**
+
+
+
+**反射的作用：**
+
+
+
 **应用场景:**
 
 简单理解就是根据类名(字符串)动态创建类的实例，反射机制能够很大程度上解耦。
@@ -6510,15 +6518,58 @@ C++反射实现：工厂模式+C++模板+宏定义。
 
 设计一个类，我们只能生成该类的一个实例。
 
+- 懒汉模式
+- 恶汉模式
+
 #### 6.1.1.1 非线程安全
 
 ```C++
-
+template<class T>
+class SingleTon
+{
+public:
+	static T* GetInstance()
+	{
+		return m_pIns;
+	}
+  static void Release()
+  {
+    if(m_pIns)
+    {
+      delete m_pIns;
+      m_pIns = NULL;
+    }
+  }
+private:
+	SingleTon(){}
+	~SingleTon(){}
+	SingleTon(const T& other){}
+  static T*  m_pIns = new T();
+};
 ```
 
 
 
 #### 6.1.1.2 线程安全
+
+```C++
+template<class T>
+class SingleTon
+{
+public:
+	static T* GetInstance()
+	{
+		static T _t;
+		return _t;
+	}
+private:
+	SingleTon(){}
+	~SingleTon(){}
+	SingleTon(const T& other){}
+};
+```
+
+
 
 ### 6.1.2 工厂模式
 

@@ -152,3 +152,14 @@ operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
 使用：
 
 ![](./pics/memory/overload_op_use.jpg)
+
+![](./pics/memory/demo.jpg)
+
+## 1.6 内存分配器
+
+### 1.6.1 简单版内存分配器
+
+![](./pics/memory/pre_allocator1.jpg)
+
+![](./pics/memory/pre_allocator1_2.jpg)
+
