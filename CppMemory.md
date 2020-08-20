@@ -1,3 +1,5 @@
+
+
 # 1. 标准库的内存管理接口
 
 ## 1.1 分类
@@ -124,6 +126,8 @@ delete[] buf;
 - ```delete```->```operator delete```->```::operator delete```->```free```。
 
 了解了内存分配的执行路径，知道如何通过函数重载来”接管“内存分配与释放，这就是所谓的所谓的内存管理。
+
+当重载了类的operator new/delete函数后，通过new/delete申请或释放内存时，不再执行
 
 **二、重载::operator new和::operator delete**
 
