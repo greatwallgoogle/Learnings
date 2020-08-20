@@ -159,7 +159,18 @@ operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
 
 ### 1.6.1 简单版内存分配器
 
+无论是否添加```static```关键字，```operator new```和```operator delete```是静态函数。
+
 ![](./pics/memory/pre_allocator1.jpg)
 
 ![](./pics/memory/pre_allocator1_2.jpg)
 
+### 1.6.2 升级版内存池
+
+与第一版非常相似，只是使用了union，并将operator new/delete声明为static。
+
+![](./pics/memory/pre_allocator2.jpg)
+
+
+
+![](./pics/memory/pre_allocator2_1.jpg)
