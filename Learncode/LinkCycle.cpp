@@ -1,6 +1,11 @@
 #include <iostream>
 using namespace std;
 
+/*
+* 题目：判断链表是否有环
+* 思路：利用快慢指针思想，慢指针每次前进一位，快指针每次前进两位，当快指针地址等于慢指针地址时，表示两个指针相遇，即链表有环；
+*/
+
 struct ListNode
 {
     int nData;
@@ -8,7 +13,6 @@ struct ListNode
     ListNode(int val):nData(val),pNext(NULL){}
 };
 
-//利用快慢指针思想，慢指针每次前进一位，快指针每次前进两位，当快指针地址等于慢指针地址时，表示两个指针相遇，即链表有环；
 bool HasCycle(ListNode* pNode)
 {
     ListNode* pSlowNode = pNode;
