@@ -2315,16 +2315,22 @@ vector<int> printListFromTailToHead(ListNode* head) {
 }
 ```
 
-**方法二：使用栈**
+**方法二：递归**
 
 ```C++
-
+void printListFromTailToHead(ListNode* head) {
+    if(head)
+    {
+      printListFromTailToHead(head->next);
+      printf("%d\t", head->val);
+    }
+}
 ```
 #### 2.1.3.3[链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 输入一个链表，输出该链表中倒数第k个结点。
 
-NOTE：使用两个指针，其中一个指针从头开始遍历，另一个指针提前(k - 1)步开始遍历。当第二个指针到达最后一个结点时，第一个指针指向的就是结点就是倒数第K个。
+思路：使用两个指针，其中一个指针从头开始遍历，另一个指针提前(k - 1)步开始遍历。当第二个指针到达最后一个结点时，第一个指针指向的就是结点就是倒数第K个。
 
 ```C++
 struct ListNode {
@@ -2518,6 +2524,48 @@ ListNode* deleteDuplicates(ListNode* head) {
 
 
 
+```C++
+struct LinkNode
+{
+    int nData;
+    LinkNode* pNext;
+    LinkNode(int val):nData(val),pNext(NULL){}
+};
+
+LinkNode* DeleteDuplicates(LinkNode* head)
+{
+    LinkNode* pRHead = new LinkNode(-1);
+    pRHead->pNext = head;
+
+    LinkNode* pPreNode = pRHead;
+    LinkNode* pCurNode = head;
+    while (NULL != pCurNode)
+    {
+        while (pCurNode->pNext != NULL && pCurNode->nData == pCurNode->pNext->nData)
+        {
+            pCurNode = pCurNode->pNext;
+        }
+
+        if (pPreNode->pNext == pCurNode)
+        {
+            pPreNode = pPreNode->pNext;
+        }
+        else
+        {
+            pPreNode->pNext = pCurNode;
+        }
+        
+        pCurNode = pCurNode->pNext;
+    }
+
+    LinkNode* pResNode = pRHead->pNext;
+    delete pRHead;
+    return pResNode;
+}
+```
+
+
+
 #### 2.1.3.8 [移除重复节点](https://leetcode-cn.com/problems/remove-duplicate-node-lcci/)
 
 移除未排序链表中的重复节点，保留最开始出现的节点。
@@ -2533,8 +2581,6 @@ ListNode* deleteDuplicates(ListNode* head) {
  输入：[1, 1, 1, 1, 2]
  输出：[1, 2]
 ```
-
-**进阶：**如果不得使用临时缓冲区，该怎么解决？
 
 思路是使用map或set记录某个值是否存在，如果存在，则将上一针的next指针指向当前指针的next指针。
 
@@ -2567,6 +2613,8 @@ ListNode* removeDuplicateNodes(ListNode* head) {
     return head;
 }
 ```
+
+**进阶：**如果不得使用临时缓冲区，该怎么解决？
 
 
 
@@ -2662,6 +2710,77 @@ ListNode* EntryNodeOfLoop2(ListNode* pHead)
     return NULL;
 }
 ```
+
+#### 2.1.3.11 获取两个链表的交点
+
+```
+题目：获取两个链表的交点
+*  A:        a1 -> a2
+*                   \
+*                     c1 -> c2 -> c3
+*                   /
+*  B:  b1 -> b2 -> b3
+*/
+```
+
+思路：
+
+1. 将长链表的头指针前进 abs(N) 步；
+
+2. N = size(A) - size(B)
+3. 当两个链表的当前指针都不为空，且相等时，即为交点
+
+```C++
+struct LinkNode
+{
+    int nData;
+    LinkNode* pNext;
+    LinkNode(int val):nData(val),pNext(NULL){}
+};
+int GetListSize(LinkNode* pNode)
+{
+    int nCount = 0;
+    while (NULL != pNode)
+    {
+        nCount++;
+        pNode = pNode->pNext;
+    }
+    return nCount;
+}
+LinkNode* GetIntersectionNode(LinkNode* pNode1,LinkNode* pNode2)
+{
+    int nCount1 = GetListSize(pNode1);
+    int nCount2 = GetListSize(pNode2);
+    int nDiff = nCount1 - nCount2;
+
+    LinkNode* pH1 = pNode1;
+    LinkNode* pH2 = pNode2;
+    //将长链表前进nDiff位
+    for (int i = 0; i < abs(nDiff); i++)
+    {
+        if(nDiff > 0)
+        {
+            pH1 = pH1->pNext;
+        }
+        else
+        {
+            pH2 = pH2->pNext;
+        }
+    }
+    while (NULL != pH1 && NULL != pH2)
+    {
+        if(pH1 == pH2)
+        {
+            return pH1;
+        }
+        pH1 = pH1->pNext;
+        pH2 = pH2->pNext;
+    }
+    return NULL;
+}
+```
+
+
 
 
 
@@ -6435,7 +6554,7 @@ UE4:
 5. UParticleLODLevel：管理一组模块（UParticleModule）。
 6. UParticleModule：代表一个模块，与FParticleEmitterInstance关联密切。
 7. FParticleEmitterInstance：发射器实例，与UParticleEmitter是模板和实例的关系。
-8. ​
+8. 
 
 #### 4.27.1 合批
 
@@ -6455,7 +6574,7 @@ UE4:
 ## 渲染的问题整理
 
 1. 欧拉角、四元数、旋转矩阵之间的关系
-2. ​
+2. 
 3. 延迟渲染的原理
 4. 后期渲染的框架----（MRT，FXAA，FBO--与MSAA）
 5. 光照的问题（blinn_phone PBR SSAO）

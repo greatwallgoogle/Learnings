@@ -1,6 +1,9 @@
 #include <iostream>
 using namespace std;
 
+/*
+* 单链表/双向链表逆序
+*/
 struct SingleNode
 {
     int nData;
@@ -40,6 +43,18 @@ Node *ReverseList(Node *pHead)
     {
         return NULL;
     }
+
+    Node* pPreNode = NULL;
+    Node* pCurNode = pHead;
+    while (NULL != pCurNode)
+    {
+        Node* pNext = pCurNode->pNextNode;
+        pCurNode->pNextNode = pPreNode;
+        pCurNode->pPreNode = pNext;
+        pPreNode = pCurNode;
+        pCurNode = pNext;
+    }
+    return pPreNode;
 }
 
 int main()
