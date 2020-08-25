@@ -208,3 +208,33 @@ allocator类的实现：
 标准库(每次挖去20块)：
 
 ![](./pics/memory/global_allocator.jpg)
+
+## 1.7 new handler
+
+![](./pics/memory/new_handler1.jpg)
+
+测试：
+
+![](./pics/memory/new_handler2.jpg)
+
+## 1.8 =default/=delete
+
+![](./pics/memory/default_delete1.jpg)
+
+测试：
+
+![](./pics/memory/default_delete2.jpg)
+
+## 1.9 标准库中的分配器
+
+### 1.9.1 VC6
+
+![](./pics/memory/vc6_std_allocator.jpg)
+
+### 1.9.2 BC5
+
+![](./pics/memory/bc5_allocator.jpg)
+
+### 1.9.3 G2.9
+
+![](./pics/memory/G2_9_allocator.jpg)
