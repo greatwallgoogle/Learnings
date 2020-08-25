@@ -1,5 +1,3 @@
-
-
 # 1. 标准库的内存管理接口
 
 ## 1.1 分类
@@ -178,3 +176,35 @@ operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
 
 
 ![](./pics/memory/pre_allocator2_1.jpg)
+
+
+
+### 1.6.3 static allocator
+
+为每个类单独实现一套完全相同的```operator new / operator delete ```，是非常繁琐，并且不遵循软件开发标准的，因此将```operator new / operator delete ```的实现抽离到独立的一个类中，在后续扩展的类中引入该类对象即可。
+
+allocator类的实现：
+
+![](./pics/memory/static_allocator2.jpg)
+
+使用：
+
+![](./pics/memory/static_allocator1.jpg)
+
+测试：
+
+![](./pics/memory/static_allocator3.jpg)
+
+
+
+### 1.6.4 使用宏定义
+
+1.6.3节中每个类调用Allocator中alloc/deAlloc函数完全相同，为了方便，可以使用宏定义代替：
+
+![](./pics/memory/macro_static_allocator.jpg)
+
+
+
+标准库(每次挖去20块)：
+
+![](./pics/memory/global_allocator.jpg)
