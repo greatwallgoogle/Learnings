@@ -89,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Alloctor1.h" />
+    <ClInclude Include="..\..\Alloctor2.h" />
     <ClInclude Include="AlgoUtil.h" />
     <ClInclude Include="Find.h" />
     <ClInclude Include="MyArray1.h" />

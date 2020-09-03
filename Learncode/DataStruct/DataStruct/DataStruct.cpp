@@ -9,6 +9,7 @@
 #include <stack>
 #include "ReverseList.h"
 #include "Alloctor1.h"
+#include "Alloctor2.h"
 using namespace LinkNode;
 
 using namespace AlgoUtil;
@@ -255,10 +256,11 @@ void InverseLinkNode()
 
 int main(int argc, char* argv[])
 {
-	//TestArray();
-	printf("hello world !\n");
-	//InverseLinkNode();
-	Alloctor1::TestAlloc1();
+// 	TestArray();
+// 	printf("hello world !\n");
+// 	InverseLinkNode();
+// 	Alloctor1::TestAlloc();
+	Alloctor2::TestAlloc();
 	system("pause");
 	return 0;
 }

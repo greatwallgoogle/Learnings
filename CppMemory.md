@@ -169,6 +169,8 @@ operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
 
 demo验证：左图为未重载```operator new/delete```的情况，右图为重载```operator new/delete```的结果。
 
+文件：```\Learncode\Alloctor1.h```。
+
 ![](./pics/memory/demo_ver.png)
 
 ### 1.6.2 升级版内存池

@@ -50,5 +50,8 @@
     <ClInclude Include="..\..\Alloctor1.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Alloctor2.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

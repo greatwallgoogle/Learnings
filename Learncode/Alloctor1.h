@@ -29,7 +29,7 @@ namespace Alloctor1
 			pFreeStore = pFreeStore->m_pNext;
 			return pRes;
 		}
-		void operator delete(void* ptr)
+		void operator delete(void* ptr,size_t size)
 		{
 			if(ptr)
 			{
@@ -52,7 +52,7 @@ namespace Alloctor1
 	{
 		printf("size:%ld \n", sizeof(Screen));
 		const int static SIZE = 100;
-		const int static PRINT_NUM = 30;
+		const int static PRINT_NUM = 20;
 		Screen* p[SIZE];
 		for (int i = 0; i < SIZE; i++)
 		{
