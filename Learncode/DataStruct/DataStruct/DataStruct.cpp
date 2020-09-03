@@ -8,6 +8,7 @@
 #include "AlgoUtil.h"
 #include <stack>
 #include "ReverseList.h"
+#include "Alloctor1.h"
 using namespace LinkNode;
 
 using namespace AlgoUtil;
@@ -250,11 +251,14 @@ void InverseLinkNode()
 	delete pNode1;
 }
 
+
+
 int main(int argc, char* argv[])
 {
 	//TestArray();
 	printf("hello world !\n");
-	InverseLinkNode();
+	//InverseLinkNode();
+	Alloctor1::TestAlloc1();
 	system("pause");
 	return 0;
 }

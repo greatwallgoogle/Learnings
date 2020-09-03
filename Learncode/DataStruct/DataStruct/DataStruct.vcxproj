@@ -54,6 +54,7 @@
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>.\..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -84,13 +85,12 @@
     <ClCompile Include="AlgoUtil.cpp" />
     <ClCompile Include="DataStruct.cpp" />
     <ClCompile Include="Find.cpp" />
-    <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="MyArray1.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Alloctor1.h" />
     <ClInclude Include="AlgoUtil.h" />
     <ClInclude Include="Find.h" />
-    <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="MyArray1.h" />
     <ClInclude Include="ReverseList.h" />
     <ClInclude Include="Singleton.h" />

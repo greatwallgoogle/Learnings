@@ -167,6 +167,10 @@ operate new[] 和operator delete[] 分别代表数组内存的分配和释放。
 
 ![](./pics/memory/pre_allocator1_2.jpg)
 
+demo验证：左图为未重载```operator new/delete```的情况，右图为重载```operator new/delete```的结果。
+
+![](./pics/memory/demo_ver.png)
+
 ### 1.6.2 升级版内存池
 
 与第一版非常相似，只是使用了union，并将operator new/delete声明为static。
