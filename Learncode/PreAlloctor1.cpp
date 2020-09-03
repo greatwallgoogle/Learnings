@@ -6,47 +6,54 @@ using namespace std;
 class Screen
 {
 public:
-    Screen():m_nData(0),m_pNext(NULL){}
-    ~Screen(){}
-    static void* operator new(size_t size)
-    {
-        cout<<"Screen::operator new"<<endl;
-        Screen* pRes = NULL;
-        size_t chunkSize = Chunk * size;
-        if (NULL == pFreeStore)
-        {
-            //分配一大块内存
-            pFreeStore = reinterpret_cast<Screen*>(new char[chunkSize]);
-            pRes = pFreeStore;
-            
-        }
-
-        pRes = pFreeStore;
-        pFreeStore = pFreeStore->m_pNext;
-        return pRes;
-    }
-    static void operator delete(void* ptr)
-    {
-        cout<<"Screen::operator delete"<<endl;
-        free(ptr);
-    }
+    // Screen():m_nData(0),m_pNext(NULL){}
+    // ~Screen(){}
+    // void* operator new(size_t size)
+    // {
+    //     Screen* pRes = nullptr;
+    //     if(nullptr == pFreeStore)
+    //     {
+    //         size_t chunk = size * BLOCK_SIZE;
+    //         pFreeStore = reinterpret_cast<Screen*>(new char[chunk]);
+    //         Screen* pCur = pFreeStore;
+    //         for (int i = 0; i < BLOCK_SIZE; i++)
+    //         {
+    //             Screen* pNext = pCur + 1;
+    //             pCur->m_pNext = pNext;
+    //             pCur = pNext;
+    //         }
+    //         pCur->m_pNext = nullptr;
+    //     }
+    //     pRes = pFreeStore;
+    //     pFreeStore = pFreeStore->m_pNext;
+    //     return pRes;
+    // }
+    // void operator delete(void* ptr)
+    // {
+    //     if(ptr)
+    //     {
+    //         Screen* pCur = reinterpret_cast<Screen*>(ptr);
+    //         pCur->m_pNext = pFreeStore;
+    //         pFreeStore = pCur;
+    //     }
+    // }
 private:
-    int m_nData;
-    Screen* m_pNext;
-    static const int Chunk ;
-    static Screen* pFreeStore;
+    // int m_nData;
+    // Screen* m_pNext;
+    // static const int BLOCK_SIZE ;
+    // static Screen* pFreeStore;
 };
 
-const int Screen::Chunk = 24;
-Screen* Screen::pFreeStore = NULL;
+// const int Screen::BLOCK_SIZE = 24;
+// Screen* Screen::pFreeStore = NULL;
 
 
 
 int main()
 {
     printf("size:%ld \n",sizeof(Screen));
-    const int static SIZE = 1;
-    const int static PRINT_NUM = 1;
+    const int static SIZE = 100;
+    const int static PRINT_NUM = 20;
     Screen* p[SIZE];
     for (int i = 0; i < SIZE; i++)
     {
