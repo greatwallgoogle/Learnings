@@ -278,113 +278,6 @@ Derived::~Derived
 Base1::~Base1
 ```
 
-#### 1.1.5.4 静态多态和动态多态
-
-**动态多态(运行期多态)**
-
-1. 动态多态的设计思想：
-
-   对于相关的对象类型，派生自同一个基类，在基类中声明公共的虚函数接口，此处的虚函数接口称为显示接口，各个派生类重写虚函数完成各自的逻辑。
-
-   客户端的代码（操作函数）通过指向基类的引用或指针来操作这些对象，对虚函数的调用会自动绑定到实际提供的子类对象上去。
-
-2. 动态多态：本质是面向对象设计中继承、多态的概念，通过虚函数表现。
-
-```c++
-namespace DynamicPoly1
-{
-    class Geometry
-    {
-    public:
-        virtual void Draw()const = 0;
-    };
-
-    class Line : public Geometry
-    {
-    public:
-        virtual void Draw()const{    std::cout << "Line Draw()\n";    }
-    };
-
-    class Circle : public Geometry
-    {
-    public:
-        virtual void Draw()const{    std::cout << "Circle Draw()\n";    }
-    };
-
-    class Rectangle : public Geometry
-    {
-    public:
-        virtual void Draw()const{    std::cout << "Rectangle Draw()\n";    }
-    };
-
-    //动态多态
-    void DrawGeometry(const Geometry *geo)
-    {
-        geo->Draw();
-    }
-    
-    //动态多态
-    void DrawGeometry(std::vector<DynamicPoly::Geometry*>& vecGeo)
-    {
-        const size_t size = vecGeo.size();
-        for(size_t i = 0; i < size; ++i)
-            vecGeo[i]->Draw();
-    }
-}
-```
-
-
-
-**静态多态(编译期多态)**
-
-1. 静态多态的设计思想：
-
-   对于相关的对象类型，直接实现各自的定义，不需要继承同一基类，只需要各自具体类的实现中具有相同的接口声明，此处的接口为隐式接口。
-
-   客户端把操作这些对象的函数定义为模板，当需要操作什么类型的对象时，直接对模板指定该类型实参即可（或通过实参演绎获得）。
-
-2. 静态多态：本质上是模板的具象化。静态多态中的接口调用称为隐式接口，相对于显示接口由函数的签名式（也就是函数名称、参数类型、返回类型）构成，隐式接口通常由有效表达式组成。
-3. 相对于面向对象编程中，以显式接口和运行期多态（虚函数）实现动态多态，在模板编程及泛型编程中，是以隐式接口和编译器多态来实现静态多态。
-
-```c++
-namespace DynamicPoly2
-{
-    class Line
-    {
-    public:
-        void Draw()const{    std::cout << "Line Draw()\n";    }
-    };
-    
-    class Circle
-    {
-    public:
-        void Draw(const char* name=NULL)const{ std::cout << "Circle Draw()\n";    }
-    };
-    
-    class Rectangle
-    {
-    public:
-        void Draw(int i = 0)const{ std::cout << "Rectangle Draw()\n";    }
-    };
-
-    //模板函数调用隐式接口
-    template<typename T>
-    void DrawGeometry(const T& geo)
-    {
-        geo.Draw();
-    }
-
-    //模板函数
-    template<typename T>
-    void DrawGeometry(std::vector<T>& vecGeo)
-    {
-        const size_t size = vecGeo.size();
-        for(size_t i = 0; i < size; ++i)
-            vecGeo[i].Draw();
-    }
-}
-```
-
 
 
 ### 1.1.5 继承与友元
@@ -2292,6 +2185,236 @@ Point<float>* ptr = new Point<float>();
 - 书籍：
 
   ![](./pics/memory/memory.png)
+
+### 1.2.18 类型转化
+
+C++中有四种类型转化操作符，分别是```static_cast```、```dynamic_cast```、```const_cast```和```reinterpret_cast```。
+
+#### 1.2.18.1 static_cast
+
+```static_cast```不提供运行时的检查，其应用场景为：
+
+1. 将**void指针**转化为目标类型的指针，不安全的类型装换。
+2. 基本类型之间的转换（不安全），如int 转化为double。
+3. 类体系中，父子类之间的转换：
+   - 上行转化：将子类对象的指针/引用转化为父类对象的指针/引用，这种安全的。
+   - 下行转化：将父类对象的指针/引用转化为子类对象的指针/引用，这种转换不安全。
+
+#### 1.2.18.2 dynamic_cast
+
+相比于```static_cast```，```dynamic_cast```会在运行时检查类型转化是否合法，**具有一定的安全性。**
+
+因为要检测转化是否合法，因此会有额外的性能消耗。
+
+应用场景：
+
+1. 类体系中，父子类之间转换：上行转换与static_cast相同，都是安全的；下行转换时，```dynamic_cast```会检查转换的类型，比```static_cast```更安全。**注意：类体系中必须存在虚函数。因为下行转换时，是根据虚函数表中的类型信息进行检测**。**指针转化失败时，会返回空指针；引用转化失败时，会发出异常。**
+
+2. 将指针转化为void类型指针：
+
+   ```cpp
+   A *pA = new A;
+   void *pV = dynamic_cast<void *>(pA);
+   ```
+
+3. 菱形继承的上行转换时，必须明确指定一条转换路径，否则只能得到一个空指针。
+
+```C++
+class A { virtual void f() {}; };
+class B :public A { void f() {}; };
+class C :public A { void f() {}; };
+class D :public B, public C { void f() {}; };
+
+void main()
+{
+    D *pD = new D;
+    A *pA = dynamic_cast<A *>(pD); // pA = NULL
+    
+    ///////////////////////////明确转换路径
+    B *pB = dynamic_cast<B *>(pD);
+    A *pA2 = dynamic_cast<A *>(pB);//OK
+}
+```
+
+4. 向下转化时，虽然是安全的，但是并不一定会转换成功。
+
+```C++
+class A { virtual void func() {}; };
+class B :public A { void func() {}; };
+class C :public B { void func() {}; };
+class D :public C { void func() {}; };
+
+void Test1()
+{
+    A *pa = new A();
+   
+    //情况1
+    B *pb = dynamic_cast<B*>(pa);  //向下转型失败
+    if(pb == NULL){
+        cout<<"Downcasting failed: A* to B*"<<endl;
+    }else{
+        cout<<"Downcasting successfully: A* to B*"<<endl;
+        pb -> func();
+    }
+    
+    //情况2
+    C *pc = dynamic_cast<C*>(pa);  //向下转型失败
+    if(pc == NULL){
+        cout<<"Downcasting failed: A* to C*"<<endl;
+    }else{
+        cout<<"Downcasting successfully: A* to C*"<<endl;
+        pc -> func();
+    }
+    delete pa;
+}
+
+void Test2()
+{
+    
+}
+
+void main()
+{
+ 	Test1();//failed
+    Test2();//successed    
+}
+```
+
+
+
+#### 1.2.18.3 const_cast
+
+```const_cast```用于移除类型的const、volatile和__unaligned属性。
+
+```C++
+const char *pc;
+char *p = const_cast<char*>(pc);
+```
+
+#### 1.2.18.4 reinterpret_cast
+
+非常激进的指针类型转换，在**编译期**完成，可以转换任何类型的指针，所以**极不安全**。非极端情况不要使用。
+
+reinterpret_cast 可以认为是 static_cast 的一种补充，一些 static_cast 不能完成的转换，就可以用 reinterpret_cast 来完成，例如两个具体类型指针之间的转换：
+
+```C++
+//将 char* 转换为 float*
+char str[]="http://c.biancheng.net";
+float *p1 = reinterpret_cast<float*>(str);
+
+//将 int 转换为 int*
+int *p = reinterpret_cast<int*>(100);
+//将 A* 转换为 int*
+p = reinterpret_cast<int*>(new A(25, 96));
+```
+
+### 1.2.19 静态多态和动态多态
+
+**动态多态(运行期多态)**
+
+1. 动态多态的设计思想：
+
+   对于相关的对象类型，派生自同一个基类，在基类中声明公共的虚函数接口，此处的虚函数接口称为显示接口，各个派生类重写虚函数完成各自的逻辑。
+
+   客户端的代码（操作函数）通过指向基类的引用或指针来操作这些对象，对虚函数的调用会自动绑定到实际提供的子类对象上去。
+
+2. 动态多态：本质是面向对象设计中继承、多态的概念，通过虚函数表现。
+
+```c++
+namespace DynamicPoly1
+{
+    class Geometry
+    {
+    public:
+        virtual void Draw()const = 0;
+    };
+
+    class Line : public Geometry
+    {
+    public:
+        virtual void Draw()const{    std::cout << "Line Draw()\n";    }
+    };
+
+    class Circle : public Geometry
+    {
+    public:
+        virtual void Draw()const{    std::cout << "Circle Draw()\n";    }
+    };
+
+    class Rectangle : public Geometry
+    {
+    public:
+        virtual void Draw()const{    std::cout << "Rectangle Draw()\n";    }
+    };
+
+    //动态多态
+    void DrawGeometry(const Geometry *geo)
+    {
+        geo->Draw();
+    }
+    
+    //动态多态
+    void DrawGeometry(std::vector<DynamicPoly::Geometry*>& vecGeo)
+    {
+        const size_t size = vecGeo.size();
+        for(size_t i = 0; i < size; ++i)
+            vecGeo[i]->Draw();
+    }
+}
+```
+
+
+
+**静态多态(编译期多态)**
+
+1. 静态多态的设计思想：
+
+   对于相关的对象类型，直接实现各自的定义，不需要继承同一基类，只需要各自具体类的实现中具有相同的接口声明，此处的接口为隐式接口。
+
+   客户端把操作这些对象的函数定义为模板，当需要操作什么类型的对象时，直接对模板指定该类型实参即可（或通过实参演绎获得）。
+
+2. 静态多态：本质上是模板的具象化。静态多态中的接口调用称为隐式接口，相对于显示接口由函数的签名式（也就是函数名称、参数类型、返回类型）构成，隐式接口通常由有效表达式组成。
+
+3. 相对于面向对象编程中，以显式接口和运行期多态（虚函数）实现动态多态，在模板编程及泛型编程中，是以隐式接口和编译器多态来实现静态多态。
+
+```c++
+namespace DynamicPoly2
+{
+    class Line
+    {
+    public:
+        void Draw()const{    std::cout << "Line Draw()\n";    }
+    };
+    
+    class Circle
+    {
+    public:
+        void Draw(const char* name=NULL)const{ std::cout << "Circle Draw()\n";    }
+    };
+    
+    class Rectangle
+    {
+    public:
+        void Draw(int i = 0)const{ std::cout << "Rectangle Draw()\n";    }
+    };
+
+    //模板函数调用隐式接口
+    template<typename T>
+    void DrawGeometry(const T& geo)
+    {
+        geo.Draw();
+    }
+
+    //模板函数
+    template<typename T>
+    void DrawGeometry(std::vector<T>& vecGeo)
+    {
+        const size_t size = vecGeo.size();
+        for(size_t i = 0; i < size; ++i)
+            vecGeo[i].Draw();
+    }
+}
+```
 
 
 
