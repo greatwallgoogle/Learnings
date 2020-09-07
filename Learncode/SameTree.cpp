@@ -3,8 +3,7 @@
 #include <queue>
 
 /*
-判断是否是平衡二叉树！
-平衡二叉树：如果某二叉树中任意节点的左右子树的深度相差不超过1，那么它就是一棵平衡二叉树。
+判断两个数是否完全相等：如果两个树在结构上相同，并且节点具有相同的值，则认为它们是相同的。
 */
 
 using namespace std;
@@ -17,39 +16,16 @@ struct TreeNode
     TreeNode(int x):val(x),left(NULL),right(NULL){}
 };
 
-//获取树的深度
-int GetDepth(TreeNode* pNode)
+bool isSameTree(TreeNode* p, TreeNode* q) 
 {
-    if(NULL == pNode)
+    if(NULL == p && NULL == q)
     {
-        return 0;
-    }
-    int nLeft = GetDepth(pNode->left);
-    int nRight = GetDepth(pNode->right);
-    return (nLeft > nRight) ? (nLeft + 1) : (nRight + 1);
-}
-
-bool isBalanced(TreeNode* root) 
-{
-    if(NULL == root)
-    {
-        return true;//is true
-    }
-    int depth1 = GetDepth(root->left);
-    int depth2 = GetDepth(root->right);
-    if(abs(depth1 - depth2) <= 1)
-    {
-        if(!isBalanced(root->left))
-        {
-            return false;
-        }
-
-        if(!isBalanced(root->right))
-        {
-            return false;
-        }
-
         return true;
+    }
+
+    if(p->val == q->val)
+    {
+        return isSameTree(p->left,q->left) && isSameTree(p->right ,q->right);
     }
     return false;
 }
@@ -106,8 +82,8 @@ int main()
     printf("origin tree:\n");
     Traval(pRoot);
     printf("\n===================\n");
-    bool falg = isBalanced(pRoot);
-    printf("falg:%d",falg);
+    // bool falg = isSameTree(pRoot);
+    // printf("falg:%d",falg);
 
     return 0;
 }

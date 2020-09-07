@@ -3743,6 +3743,38 @@ bool isBalanced(TreeNode* root)
 
 
 
+思路很简单，判断当前两个根节点的值是否相等，如果不相等，直接返回false；如果相等，则判断其对应左右子树的值是否相等，依次判断。
+
+```C++
+struct TreeNode
+{
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int x):val(x),left(NULL),right(NULL){}
+};
+
+bool isSameTree(TreeNode* p, TreeNode* q) 
+{
+    if(NULL == p && NULL == q)
+    {
+        return true;
+    }
+
+    if(p && q)
+    {
+        if(p->val == q->val)
+        {
+            return isSameTree(p->left,q->left) && isSameTree(p->right ,q->right);
+        }
+    }
+    
+    return false;
+}
+```
+
+
+
 
 
 ## 2.7 二分图
