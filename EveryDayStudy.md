@@ -278,6 +278,115 @@ Derived::~Derived
 Base1::~Base1
 ```
 
+#### 1.1.5.4 静态多态和动态多态
+
+**动态多态(运行期多态)**
+
+1. 动态多态的设计思想：
+
+   对于相关的对象类型，派生自同一个基类，在基类中声明公共的虚函数接口，此处的虚函数接口称为显示接口，各个派生类重写虚函数完成各自的逻辑。
+
+   客户端的代码（操作函数）通过指向基类的引用或指针来操作这些对象，对虚函数的调用会自动绑定到实际提供的子类对象上去。
+
+2. 动态多态：本质是面向对象设计中继承、多态的概念，通过虚函数表现。
+
+```c++
+namespace DynamicPoly1
+{
+    class Geometry
+    {
+    public:
+        virtual void Draw()const = 0;
+    };
+
+    class Line : public Geometry
+    {
+    public:
+        virtual void Draw()const{    std::cout << "Line Draw()\n";    }
+    };
+
+    class Circle : public Geometry
+    {
+    public:
+        virtual void Draw()const{    std::cout << "Circle Draw()\n";    }
+    };
+
+    class Rectangle : public Geometry
+    {
+    public:
+        virtual void Draw()const{    std::cout << "Rectangle Draw()\n";    }
+    };
+
+    //动态多态
+    void DrawGeometry(const Geometry *geo)
+    {
+        geo->Draw();
+    }
+    
+    //动态多态
+    void DrawGeometry(std::vector<DynamicPoly::Geometry*>& vecGeo)
+    {
+        const size_t size = vecGeo.size();
+        for(size_t i = 0; i < size; ++i)
+            vecGeo[i]->Draw();
+    }
+}
+```
+
+
+
+**静态多态(编译期多态)**
+
+1. 静态多态的设计思想：
+
+   对于相关的对象类型，直接实现各自的定义，不需要继承同一基类，只需要各自具体类的实现中具有相同的接口声明，此处的接口为隐式接口。
+
+   客户端把操作这些对象的函数定义为模板，当需要操作什么类型的对象时，直接对模板指定该类型实参即可（或通过实参演绎获得）。
+
+2. 静态多态：本质上是模板的具象化。静态多态中的接口调用称为隐式接口，相对于显示接口由函数的签名式（也就是函数名称、参数类型、返回类型）构成，隐式接口通常由有效表达式组成。
+3. 相对于面向对象编程中，以显式接口和运行期多态（虚函数）实现动态多态，在模板编程及泛型编程中，是以隐式接口和编译器多态来实现静态多态。
+
+```c++
+namespace DynamicPoly2
+{
+    class Line
+    {
+    public:
+        void Draw()const{    std::cout << "Line Draw()\n";    }
+    };
+    
+    class Circle
+    {
+    public:
+        void Draw(const char* name=NULL)const{ std::cout << "Circle Draw()\n";    }
+    };
+    
+    class Rectangle
+    {
+    public:
+        void Draw(int i = 0)const{ std::cout << "Rectangle Draw()\n";    }
+    };
+
+    //模板函数调用隐式接口
+    template<typename T>
+    void DrawGeometry(const T& geo)
+    {
+        geo.Draw();
+    }
+
+    //模板函数
+    template<typename T>
+    void DrawGeometry(std::vector<T>& vecGeo)
+    {
+        const size_t size = vecGeo.size();
+        for(size_t i = 0; i < size; ++i)
+            vecGeo[i].Draw();
+    }
+}
+```
+
+
+
 ### 1.1.5 继承与友元
 
 #### 1.1.5.1 友元类
