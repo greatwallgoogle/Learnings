@@ -2,6 +2,10 @@
 #include <stack>
 #include <queue>
 
+/*
+计算二叉树的深度
+*/
+
 using namespace std;
 
 struct TreeNode

@@ -3222,6 +3222,11 @@ N叉树的遍历又可以扩展为图，因为图就是多个N叉树的组合。
 
 ## 2.6 二叉树
 
+要点：
+
+- 层次遍历（队列）
+- 深度遍历（递归或者栈）
+
 ### 2.6.1 [重建二叉树](https://www.nowcoder.com/practice/8a19cbe657394eeaac2f6ea9b0f6fcf6?tpId=13&tqId=11157&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 
 
@@ -3513,6 +3518,64 @@ public:
   7     2
  / \   / \
 9   6 3   1
+```
+
+比较简单：只要将每个节点的左右子子节点交换即可。
+
+两种方法实现：层次遍历和递归遍历。
+
+```C++
+
+struct TreeNode
+{
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int x):val(x),left(NULL),right(NULL){}
+};
+
+//获取树的深度
+int GetDepth(TreeNode* pNode)
+{
+    if(NULL == pNode)
+    {
+        return 0;
+    }
+    int nLeft = GetDepth(pNode->left);
+    int nRight = GetDepth(pNode->right);
+    return (nLeft > nRight) ? (nLeft + 1) : (nRight + 1);
+}
+
+//非递归，层次遍历
+int GetDepth2(TreeNode* pNode)
+{
+    if(NULL == pNode)
+    {
+        return 0;
+    }
+    queue<TreeNode*> nodes;
+    nodes.push(pNode);
+    int nRes = 0;
+    while (!nodes.empty())
+    {
+        int size = nodes.size();
+        for (int i = 0; i < size; i++)
+        {
+            TreeNode* pCurNode = nodes.front();
+            nodes.pop();
+            if(pCurNode->left)
+            {
+                nodes.push(pCurNode->left);
+            }
+            if(pCurNode->right)
+            {
+                nodes.push(pCurNode->right);
+            }
+        }
+        nRes++;
+    }
+    return nRes;
+}
 ```
 
 
