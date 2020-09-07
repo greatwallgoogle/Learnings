@@ -2440,9 +2440,7 @@ namespace DynamicPoly2
 | 数组   | $O(1)$ | $O(n)$   | $O( n )$ |
 | 链表   | $O(n)$ | $O( 1 )$ | $O( 1 )$ |
 
-### 2.1.3 关于链表的算法题
-
-#### 2.1.3.1[反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
+### 2.1.3[反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
 
 反转一个单链表。
 
@@ -2513,7 +2511,7 @@ LinkedNode *ReverseList(LinkedNode *pHead)
 
 
 
-#### 2.1.3.2 [从尾到头打印链表](https://www.nowcoder.com/practice/d0267f7f55b3412ba93bd35cfa8e8035?tpId=13&tqId=11156&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
+### 2.1.4 [从尾到头打印链表](https://www.nowcoder.com/practice/d0267f7f55b3412ba93bd35cfa8e8035?tpId=13&tqId=11156&tPage=1&rp=1&ru=%2Fta%2Fcoding-interviews&qru=%2Fta%2Fcoding-interviews%2Fquestion-ranking)
 
 输入一个链表，按链表从尾到头的顺序返回一个ArrayList。
 
@@ -2562,7 +2560,7 @@ void printListFromTailToHead(ListNode* head) {
     }
 }
 ```
-#### 2.1.3.3[链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+### 2.1.5[链表中倒数第k个结点](https://www.nowcoder.com/practice/529d3ae5a407492994ad2a246518148a?tpId=13&tqId=11167&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 输入一个链表，输出该链表中倒数第k个结点。
 
@@ -2605,7 +2603,7 @@ ListNode* FindKthToTail(ListNode* pListHead, unsigned int k) {
     return pCurNode;
 }
 ```
-#### 2.1.3.4[合并两个排序的链表](https://www.nowcoder.com/practice/d8b6b4358f774294a89de2a6ac4d9337?tpId=13&tqId=11169&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+### 2.1.6[合并两个排序的链表](https://www.nowcoder.com/practice/d8b6b4358f774294a89de2a6ac4d9337?tpId=13&tqId=11169&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 输入两个单调递增的链表，输出两个链表合成后的链表，当然我们需要合成后的链表满足单调不减规则。
 
@@ -2664,7 +2662,7 @@ ListNode* Merge(ListNode* pHead1, ListNode* pHead2)
 ```
 
 
-#### 2.1.3.5[两个链表的第一个公共结点](https://www.nowcoder.com/practice/6ab1d9a29e88450685099d45c9e31e46?tpId=13&tqId=11189&tPage=2&rp=2&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+### 2.1.7 [两个链表的第一个公共结点](https://www.nowcoder.com/practice/6ab1d9a29e88450685099d45c9e31e46?tpId=13&tqId=11189&tPage=2&rp=2&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 输入两个链表，找出它们的第一个公共结点。（注意因为传入数据是链表，所以错误测试数据的提示是用其他方式显示的，保证传入数据是正确的）。
 
@@ -2693,7 +2691,7 @@ ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
 
 判断两个链表是否相交，也可以采用此方法判断。
 
-#### 2.1.3.6 [删除排序链表中重复的节点1](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-list/)
+### 2.1.8 [删除排序链表中重复的节点1](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-list/)
 
 给定一个排序链表，删除所有重复的元素，**使得每个元素只出现一次**。
 
@@ -2742,7 +2740,7 @@ ListNode* deleteDuplicates(ListNode* head) {
 
 
 
-#### 2.1.3.7 [删除排序链表中重复的结点2](https://www.nowcoder.com/practice/fc533c45b73a41b0b44ccba763f866ef?tpId=13&tqId=11209&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+### 2.1.9 [删除排序链表中重复的结点2](https://www.nowcoder.com/practice/fc533c45b73a41b0b44ccba763f866ef?tpId=13&tqId=11209&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，**重复的结点不保留**，返回链表头指针。
 
@@ -2802,7 +2800,7 @@ LinkNode* DeleteDuplicates(LinkNode* head)
 
 
 
-#### 2.1.3.8 [移除重复节点](https://leetcode-cn.com/problems/remove-duplicate-node-lcci/)
+### 2.1.10 [移除重复节点](https://leetcode-cn.com/problems/remove-duplicate-node-lcci/)
 
 移除未排序链表中的重复节点，保留最开始出现的节点。
 
@@ -2854,7 +2852,7 @@ ListNode* removeDuplicateNodes(ListNode* head) {
 
 
 
-#### 2.1.3.9 [判断是否为环形链表](https://leetcode-cn.com/problems/linked-list-cycle/)
+### 2.1.11[判断是否为环形链表](https://leetcode-cn.com/problems/linked-list-cycle/)
 
 给定一个链表，判断链表中是否有环。
 
@@ -2879,7 +2877,7 @@ bool hasCycle(ListNode *head) {
 }
 ```
 
-#### 2.1.3.10 [链表中环的入口结点](https://www.nowcoder.com/practice/253d2c59ec3e4bc68da16833f79a38e4?tpId=13&tqId=11208&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
+### 2.1.12 [链表中环的入口结点](https://www.nowcoder.com/practice/253d2c59ec3e4bc68da16833f79a38e4?tpId=13&tqId=11208&tPage=3&rp=3&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking)
 
 给一个链表，若其中包含环，请找出该链表的环的入口结点，否则，输出null。
 
@@ -2947,7 +2945,7 @@ ListNode* EntryNodeOfLoop2(ListNode* pHead)
 }
 ```
 
-#### 2.1.3.11 获取两个链表的交点
+### 2.1.13 获取两个链表的交点
 
 ```
 题目：获取两个链表的交点
@@ -3016,7 +3014,7 @@ LinkNode* GetIntersectionNode(LinkNode* pNode1,LinkNode* pNode2)
 }
 ```
 
-#### 2.1.3.12 将小于和大于给指定的节点划分到链表两侧
+### 2.1.14 将小于和大于给指定的节点划分到链表两侧
 
 题目：给定一个值，将链表中小于和大于等于此值得节点划分到链表两侧。
 
@@ -3495,6 +3493,143 @@ public:
 };
 ```
 
+### 2.6.6 [反转二叉树](https://leetcode.com/problems/invert-binary-tree/description/)
+
+反转二叉树：
+
+```
+     4
+   /   \
+  2     7
+ / \   / \
+1   3 6   9
+```
+
+反转之后为：
+
+```
+     4
+   /   \
+  7     2
+ / \   / \
+9   6 3   1
+```
+
+
+
+
+
+### 2.6.7 [是否是平衡二叉树](https://leetcode.com/problems/balanced-binary-tree/description/)
+
+给定一棵二叉树，确定它是否高度平衡。
+
+对于此问题，将高度平衡的二叉树定义为：
+
+> 二叉树，其中*每个*节点的左和右子树的高度差不超过1。
+
+**范例1：**给定以下树`[3,9,20,null,null,15,7]`：
+
+```
+    3
+   / \
+  9  20
+    /  \
+   15   7
+```
+
+返回true。
+
+**范例2：**给定以下树`[1,2,2,3,3,null,null,4,4]`：
+
+```
+       1
+      / \
+     2   2
+    / \
+   3   3
+  / \
+ 4   4
+```
+
+返回false。
+
+
+
+### 2.6.8 [是否是镜像树](https://leetcode.com/problems/symmetric-tree/description/)
+
+判断是否是镜像树(Symmetric Tree)。
+
+示例1：二叉树```[1,2,2,3,4,4,3]```是镜像树。
+
+```
+    1
+   / \
+  2   2
+ / \ / \
+3  4 4  3
+```
+
+示例2：```[1,2,2,null,3,null,3]```不是镜像树。
+
+```
+    1
+   / \
+  2   2
+   \   \
+   3    3
+```
+
+
+
+
+
+### 2.6.9 [树是否相等](https://leetcode.com/problems/same-tree/)
+
+题目：
+
+给定两个二叉树，编写一个函数来检验它们是否相同。
+
+如果两个树在结构上相同，并且节点具有相同的值，则认为它们是相同的。
+
+示例1：
+
+```
+输入:       1         1
+          / \       / \
+         2   3     2   3
+
+        [1,2,3],   [1,2,3]
+
+输出: true
+```
+
+示例2：
+
+```
+
+输入:      1          1
+          /           \
+         2             2
+
+        [1,2],     [1,null,2]
+
+输出: false
+```
+
+示例3：
+
+```
+输入:       1         1
+          / \       / \
+         2   1     1   2
+
+        [1,2,1],   [1,1,2]
+
+输出: false
+```
+
+
+
 
 
 ## 2.7 二分图
@@ -3506,6 +3641,14 @@ public:
 ![](./pics/algo/2ft.png)
 
 二叉平衡树如何用一维数组存储？
+
+
+
+## 2.8 字符串
+
+### 2.8.1 [反转字符串](https://leetcode.com/problems/reverse-string/description/)
+
+示例1：给定 s = "hello", 返回 "olleh"。
 
 
 

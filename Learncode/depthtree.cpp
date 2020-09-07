@@ -12,121 +12,47 @@ struct TreeNode
     TreeNode(int x):val(x),left(NULL),right(NULL){}
 };
 
-void depthFirstSearch(TreeNode* pRoot)
+//获取树的深度
+int GetDepth(TreeNode* pNode)
 {
-    if(NULL == pRoot)
-    {
-        return;
-    }
-
-    stack<TreeNode*> stack1;
-    stack1.push(pRoot);
-    while(!stack1.empty())
-    {
-        TreeNode* pCurNode = stack1.top();
-        printf("%d ",pCurNode->val);
-        stack1.pop();
-        if(pCurNode->right)
-        {
-            stack1.push(pCurNode->right);
-        }
-        if(pCurNode->left)
-        {
-            stack1.push(pCurNode->left);
-        }
-    }
-}
-
-void levelFirstSearch(TreeNode* pRoot)
-{
-    if(NULL == pRoot)
-    {
-        return;
-    }
-    queue<TreeNode*> que;
-    que.push(pRoot);
-    while(!que.empty())
-    {
-        TreeNode* pCurNode = que.front();
-        printf("%d ",pCurNode->val);
-        que.pop();
-        
-        if(pCurNode->left)
-        {
-            que.push(pCurNode->left);
-        }
-
-        if(pCurNode->right)
-        {
-            que.push(pCurNode->right);
-        }
-    }
-}
-
-int getDepth(TreeNode* pRoot)
-{
-    if(NULL == pRoot)
+    if(NULL == pNode)
     {
         return 0;
     }
-    int left = getDepth(pRoot->left);
-    int right = getDepth(pRoot->right);
-    if(left > right)
-    {
-        return (left + 1);
-    }
-    return (right + 1);
+    int nLeft = GetDepth(pNode->left);
+    int nRight = GetDepth(pNode->right);
+    return (nLeft > nRight) ? (nLeft + 1) : (nRight + 1);
 }
 
-int getDepth2(TreeNode* pRoot)
+//非递归，层次遍历
+int GetDepth2(TreeNode* pNode)
 {
-    if(NULL == pRoot)
+    if(NULL == pNode)
     {
         return 0;
     }
-
-    queue<TreeNode*> que;
-    que.push(pRoot);
-    int depth = 0;
-    while(!que.empty())
+    queue<TreeNode*> nodes;
+    nodes.push(pNode);
+    int nRes = 0;
+    while (!nodes.empty())
     {
-        int size = que.size();
-        for(int i = 0;i < size;i++)
+        int size = nodes.size();
+        for (int i = 0; i < size; i++)
         {
-            TreeNode* pCurNode = que.front();
-            que.pop();
+            TreeNode* pCurNode = nodes.front();
+            nodes.pop();
             if(pCurNode->left)
             {
-                que.push(pCurNode->left);
+                nodes.push(pCurNode->left);
             }
             if(pCurNode->right)
             {
-                que.push(pCurNode->right);
+                nodes.push(pCurNode->right);
             }
         }
-        depth++;
+        nRes++;
     }
-    return depth;
-}
-
-TreeNode* lcaDeepestLeaves(TreeNode* root) 
-{
-    if(NULL == root)
-    {
-        return NULL;
-    }
-
-    int left = getDepth2(root->left);
-    int right = getDepth2(root->right);
-    if(left == right)
-    {
-        return root;
-    }
-    if(left > right)
-    {
-        return lcaDeepestLeaves(root->left);
-    }
-    return lcaDeepestLeaves(root->right);
+    return nRes;
 }
 
 int main()
@@ -147,14 +73,8 @@ int main()
     TreeNode* pNode5= new TreeNode(8);
     pNode4->left = pNode5;
 
-    // int depth = getDepth2(pRoot);
-    // printf("depth:%d",depth);
-
-    TreeNode* pParentNode = lcaDeepestLeaves(pRoot);
-    if(pParentNode)
-    {
-        printf("val:%d",pParentNode->val);
-    }
+    int depth = GetDepth2(pRoot);
+    printf("depth:%d",depth);
 
     return 0;
 }
