@@ -3588,7 +3588,7 @@ int GetDepth2(TreeNode* pNode)
 
 对于此问题，将高度平衡的二叉树定义为：
 
-> 二叉树，其中*每个*节点的左和右子树的高度差不超过1。
+> 二叉树，其中任何节点的左和右子树的高度差不超过1。
 
 **范例1：**给定以下树`[3,9,20,null,null,15,7]`：
 
@@ -3615,6 +3615,56 @@ int GetDepth2(TreeNode* pNode)
 ```
 
 返回false。
+
+```C++
+
+struct TreeNode
+{
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int x):val(x),left(NULL),right(NULL){}
+};
+
+//获取树的深度
+int GetDepth(TreeNode* pNode)
+{
+    if(NULL == pNode)
+    {
+        return 0;
+    }
+    int nLeft = GetDepth(pNode->left);
+    int nRight = GetDepth(pNode->right);
+    return (nLeft > nRight) ? (nLeft + 1) : (nRight + 1);
+}
+
+bool isBalanced(TreeNode* root) 
+{
+    if(NULL == root)
+    {
+        return true;//is true
+    }
+    int depth1 = GetDepth(root->left);
+    int depth2 = GetDepth(root->right);
+    if(abs(depth1 - depth2) <= 1)
+    {
+        if(!isBalanced(root->left))
+        {
+            return false;
+        }
+
+        if(!isBalanced(root->right))
+        {
+            return false;
+        }
+
+        return true;
+    }
+    return false;
+}
+```
+
+
 
 
 
