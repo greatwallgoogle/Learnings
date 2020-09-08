@@ -3534,47 +3534,52 @@ struct TreeNode
     TreeNode(int x):val(x),left(NULL),right(NULL){}
 };
 
-//获取树的深度
-int GetDepth(TreeNode* pNode)
-{
-    if(NULL == pNode)
-    {
-        return 0;
-    }
-    int nLeft = GetDepth(pNode->left);
-    int nRight = GetDepth(pNode->right);
-    return (nLeft > nRight) ? (nLeft + 1) : (nRight + 1);
-}
 
-//非递归，层次遍历
-int GetDepth2(TreeNode* pNode)
+//非递归/层次遍历/基于队列
+TreeNode* InvertTree(TreeNode* pTree)
 {
-    if(NULL == pNode)
+    if(NULL == pTree)
+        return pTree;
+
+    queue<TreeNode*> trees;
+    trees.push(pTree);
+    while (trees.size() > 0)
     {
-        return 0;
-    }
-    queue<TreeNode*> nodes;
-    nodes.push(pNode);
-    int nRes = 0;
-    while (!nodes.empty())
-    {
-        int size = nodes.size();
+        int size = trees.size();
         for (int i = 0; i < size; i++)
         {
-            TreeNode* pCurNode = nodes.front();
-            nodes.pop();
+            TreeNode* pCurNode = trees.front();
+            trees.pop();
+            TreeNode* pLeft = pCurNode->left;
+            pCurNode->left = pCurNode->right;
+            pCurNode->right = pLeft;
+
             if(pCurNode->left)
             {
-                nodes.push(pCurNode->left);
+                trees.push(pCurNode->left);
             }
             if(pCurNode->right)
             {
-                nodes.push(pCurNode->right);
+                trees.push(pCurNode->right);
             }
         }
-        nRes++;
     }
-    return nRes;
+    return pTree;
+}
+
+//递归遍历
+TreeNode* InvertTree2(TreeNode* pTree)
+{
+    if(NULL == pTree)
+    {
+        return NULL;
+    }
+    TreeNode* pTemp = pTree->left;
+    pTree->left = pTree->right;
+    pTree->right = pTemp;
+    InvertTree2(pTree->left);
+    InvertTree2(pTree->right);
+    return pTree;
 }
 ```
 
@@ -3690,6 +3695,75 @@ bool isBalanced(TreeNode* root)
   2   2
    \   \
    3    3
+```
+
+递归实现：
+
+```C++
+bool isSymmetricImpl(TreeNode* leftNode,TreeNode* rightNode)
+{
+    if(NULL == leftNode && NULL == rightNode)
+    {
+        return true;
+    }
+    if(NULL == leftNode || NULL == rightNode)
+    {
+        return false;
+    }
+
+    if(leftNode->val == rightNode->val)
+    {
+        return isSymmetricImpl(leftNode->left,rightNode->right) && isSymmetricImpl(leftNode->right,rightNode->left);
+    }
+    return false;
+}
+
+bool isSymmetric(TreeNode* root) 
+{
+    if(NULL == root)
+    {
+        return true;
+    }
+    return isSymmetricImpl(root->left,root->right);
+}
+```
+
+迭代实现：
+
+```C++
+bool isSymmetricImpl2(TreeNode* leftNode,TreeNode* rightNode)
+{
+    queue<TreeNode*> trees;
+    trees.push(leftNode);
+    trees.push(rightNode);
+    while (!trees.empty())
+    {
+        TreeNode* p1 = trees.front();
+        trees.pop();
+        TreeNode* p2 = trees.front();
+        trees.pop();
+        if(p1 == p2 && p2 == NULL)
+        {
+            continue;
+        }
+
+        if(p1 == NULL || p2 == NULL)
+        {
+            return false;
+        }
+
+        if(p1->val != p2->val)
+        {
+            return false;
+        }
+
+        trees.push(p1->left);
+        trees.push(p2->right);
+        trees.push(p1->right);
+        trees.push(p2->left);
+    }
+    return true;
+}
 ```
 
 
