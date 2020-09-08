@@ -21,25 +21,32 @@ namespace Alloctor2
 			}
 
 			Screen* pRes = nullptr;
-			if (pHeadOfFreeList)
-			{
-				pRes = pHeadOfFreeList;
-				pHeadOfFreeList = pRes->pNext;
-			}
-			else
+			if (NULL == pHeadOfFreeList)
 			{
 				//申请一大块内存
 				size_t nChunk = BLOCK_SIZE * sizeof(Screen);
-				Screen* pNewBlock = static_cast<Screen*>(::operator new(nChunk));
-				//分成一片片
+				pHeadOfFreeList = static_cast<Screen*>(::operator new(nChunk));
+
+ 				//分成一片片
+				//第一种写法：
+// 				for (int i = 0; i < (BLOCK_SIZE - 1); i++)
+// 				{
+// 					pHeadOfFreeList[i].pNext = &pHeadOfFreeList[i + 1];
+// 				}
+// 				pHeadOfFreeList[BLOCK_SIZE - 1].pNext = nullptr;
+				//////////////////////////////////////////////////////////////////////////
+				//第二种写法
+				Screen* pCur = pHeadOfFreeList;
 				for (int i = 0; i < (BLOCK_SIZE - 1); i++)
 				{
-					pNewBlock[i].pNext = &pNewBlock[i + 1];
+					//必须先将pCur转化为char*，否则会直接crash!!!
+					pCur->pNext = (Screen*)((char*)pCur + sizeof(Screen));
+					pCur = pCur->pNext;
 				}
-				pNewBlock[BLOCK_SIZE - 1].pNext = nullptr;
-				pRes = pNewBlock;
-				pHeadOfFreeList = &pNewBlock[1];
+				pCur->pNext = NULL;
 			}
+			pRes = pHeadOfFreeList;
+			pHeadOfFreeList = pHeadOfFreeList->pNext;
 			return pRes;
 		}
 		static void operator delete(void* ptr,size_t size)
