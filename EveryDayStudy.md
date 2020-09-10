@@ -3943,19 +3943,121 @@ void reverseString(vector<char>& s)
 
 ## 3.2 排序算法
 
-### 3.2.1 时间复杂度为$O(n)$的排序算法
+![](./pics/algo/sort.png)
+
+![](./pics/algo/sort_compare.png)
+
+
+
+- **稳定**：如果a原本在b前面，而a=b，排序之后a仍然在b的前面。
+- **不稳定**：如果a原本在b的前面，而a=b，排序之后 a 可能会出现在 b 的后面。
+
+### 3.2.1 时间复杂度为$O(n2)$的排序算法
 
 冒泡排序、插入排序、选择排序都是基于比较的算法。
 
-#### 3.2.1.1 冒泡排序
+#### 3.2.1.1 冒泡排序![](./pics/algo/bubble_sort.gif)
 
+要点：
 
+1. 冒泡排序执行n-1趟对比；
+2. 每趟的遍历中，比较并交换相邻两个元素的值；
+3. 时间复杂度O(n2)，空间复杂度为O(1)，为稳定排序；
+4. 冒泡排序本质上两层for循环，每趟遍历中，通过交换顺序以达到将当前趟中最大/最小值排列到有序序列中。
 
-#### 3.2.1.2 插入排序
+代码：
 
+```C++
+void BubbleSort(int data[],int size)
+{
+    for (int i = 0; i < (size - 1); i++)
+    {
+        for (int j = 0; j < (size - 1 - i); j++)
+        {
+            if(data[j] > data[j + 1])
+            {
+                int temp = data[j];
+                data[j] = data[j + 1];
+                data[j + 1] = temp;
+            }
+        }
+    }
+}
+```
 
+#### 3.2.1.2 选择排序![](./pics/algo/select_sort.gif)
 
-#### 3.2.1.3 选择排序
+要点：
+
+1. 对于n个元素，执行n-1趟比较。
+2. 每趟的遍历中，在剩余元素中查找最小/最大值，放到排好序的序列的尾部；
+3. 时间复杂度O(n2)，空间复杂度O(1)，为稳定排序。
+4. 选择排序本质上也是两层for循环，每趟遍历查找最大/最小值，并将其排列到有序序列中。
+
+代码：
+
+```C++
+void SelectSort(int data[],int size)
+{
+    for (int i = 0; i < (size - 1); i++)
+    {
+        int minIndex = i;
+        for (int j = i + 1; j < size; j++)
+        {
+            if(data[j] < data[minIndex])
+            {
+                minIndex = j;
+            }
+        }
+
+        int temp = data[i];
+        data[i] = data[minIndex];
+        data[minIndex] = temp;
+    }
+}
+```
+
+#### 3.2.1.3 插入排序![](./pics/algo/insert_sort.gif)
+
+插入排序的原理非常简单，就是将未排序的元素，在已排序的数组中从后往前遍历，找到正确位置插入。
+
+要点：
+
+1. 对于未排序的元素，从已排序的数组中从后往前扫描，将当前元素插入到合适的位置。
+
+2. 合适位置是指此位置的前一个元素小于待插入的值，后一个元素大于待插入的值。
+
+代码：
+
+```C++
+void InsertSort(int data[],int size)
+{
+    for (int i = 1; i < size; i++)
+    {
+        int nValidIndex = i;
+        for (int j = i - 1; j >= 0; j--)
+        {
+            if(data[j] > data[i])
+            {
+                nValidIndex = j;
+            }
+        }
+        
+        int temp = data[i];
+        //全部元素后移一位
+        for (int j = i - 1;j >= nValidIndex;j--)
+        {
+            data[j + 1] = data[j];
+        }
+
+        //插入到合适位置
+        if(nValidIndex != i)
+        {
+            data[nValidIndex] = temp;
+        }
+    }
+}
+```
 
 
 
@@ -3971,7 +4073,7 @@ void reverseString(vector<char>& s)
 
 
 
-### 3.2.3 时间复杂度为$O(n)$的排序算法
+### 3.2.3 时间复杂度为$O(n)$ 的排序算法
 
 桶、计数、基数都是不基于比较的算法。
 
