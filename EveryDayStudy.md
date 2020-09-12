@@ -4185,19 +4185,76 @@ void MergeSort(int data[],int left,int right)
 
 
 
-
-
-
-
 ### 3.2.3 时间复杂度为$O(n)$ 的排序算法
 
 桶、计数、基数都是不基于比较的算法。
 
-#### 3.2.3.1 桶排序
+#### 3.2.3.1 计数排序
+
+计数排序不是基于元素比较，而是利用数组下表确定元素的正确位置。
+
+要点：
+
+1. 计数排序要求数组内的元素必须明确值的范围；
+2. 声明一个数组temp，数组的长度为范围值内元素的个数；
+3. temp的每个元素值为对应索引出现的次数。
+4. 然后遍历指定范围内的每个元素element，temp[element]的值是几，就输出element几次，最终得到的结果就是排好序的数组。
+
+```C++
+//获取数组内某个元素出现的次数
+int GetElement(int data[],int size,int val)
+{
+    int res = 0;
+    for (int i = 0; i < size; i++)
+    {
+        res = data[i] == val ? (res + 1) : res;
+    }
+    return res;
+}
+
+//获取数组的最大值和最小值，用来确定范围
+void GetMinAndMax(int data[],int size,int& min,int& max)
+{
+    for (int i = 0; i < size; i++)
+    {
+        max = data[i] > max ? data[i] : max;
+        min = data[i] < min ? data[i] : min;
+    }
+}
+//计数排序
+void CountSort(int data[],int size)
+{
+    int min = 0,max = 0;
+    GetMinAndMax(data,size,min,max);
+    int temp[max + 1];
+    for (int i = min; i <= max; i++)
+    {
+        temp[i] = GetElement(data,size,i);
+    }
+
+    int index = 0;
+    for (int i = min; i <= max; i++)
+    {
+        while (temp[i] > 0)
+        {
+            data[index++] = i;
+            temp[i]--;
+        }
+    }
+}
+```
 
 
 
-#### 3.2.3.2 计数排序
+有这样一道排序题：数组里有20个随机数，取值范围为从0到10，要求用最快的速度把这20个整数从小到大进行排序。
+
+这个最快的方式是使用计数排序。
+
+假设数组为：```9, 3, 5, 4, 9, 1, 2, 7, 8, 1, 3, 6, 5, 3, 4, 0, 10, 9, 7, 9```，经过计数排序后，得到的结果为```0, 1, 1, 2, 3, 3, 3, 4, 4, 5, 5, 6, 7, 7, 8, 9, 9, 9, 9, 10```。
+
+
+
+#### 3.2.3.2 桶排序
 
 
 
