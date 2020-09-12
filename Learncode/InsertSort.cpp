@@ -12,24 +12,23 @@ void InsertSort(int data[],int size)
     for (int i = 1; i < size; i++)
     {
         int nValidIndex = i;
+        int temp = data[i];
         for (int j = i - 1; j >= 0; j--)
         {
-            if(data[j] > data[i])
+            if(data[j] > temp)
             {
                 nValidIndex = j;
             }
-        }
-        
-        int temp = data[i];
-        //全部元素后移一位
-        for (int j = i - 1;j >= nValidIndex;j--)
-        {
-            data[j + 1] = data[j];
         }
 
         //插入到合适位置
         if(nValidIndex != i)
         {
+            //全部元素后移一位
+            for (int j = i - 1;j >= nValidIndex;j--)
+            {
+                data[j + 1] = data[j];
+            }
             data[nValidIndex] = temp;
         }
     }

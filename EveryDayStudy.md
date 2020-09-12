@@ -4067,6 +4067,63 @@ void InsertSort(int data[],int size)
 
 #### 3.2.2.1 快排
 
+![](./pics/algo/quick_sort.gif)
+
+基本思想：
+
+1. 从数组中找出任意一个元素作为基准；
+2. 将数组中小于基准的值放到数组的左侧，将大于基准的值放到数组的右侧；
+3. 然后分别对左右子数组进行上述操作，最终得到的就是排好序的数组。
+
+快速排序中将一个数组分为两部分采用的是分而治之的思想：
+
+1. 将右侧第一个元素的索引记为right，将左侧第一个元素的索引记为left；
+2. 从数组right索引处开始往左查找，将小于基准的值放到left索引位置，否则right一直往左移动。
+3. 将right处小于基准的值放到left位置后，right索引不变，然后left开始往右查找，将大于基准的值放到索引right处，否则left一直往右移动。依次执行，当left与right相等时，将基准值放到left(right)索引处，此时数组已经被分为大于和小于基准值的两部分。
+
+代码：
+
+```C++
+//将数组分为大于和小于基准值的两部分
+int partition(int arr[],int left,int right)
+{
+    int pivot = arr[left];
+    while (left < right)
+    {
+      	//查找小于基准的值
+        while (left < right && arr[right] > pivot)
+        {
+            right--;
+        }
+      	//将小于基准的值放到左侧
+        arr[left] = arr[right];
+      	//查找大于基准的值
+        while (left < right && arr[left] < pivot)
+        {
+            left++;
+        }
+      	//将大于基准的值放到右侧
+        arr[right] = arr[left];
+    }
+  	//当right == left时，将基准放到此处
+    arr[left] = pivot;
+    return left;
+}
+
+void QuickSort(int data[],int left, int right)
+{
+    if(left < right)
+    {
+      //将数组分为两部分，并记录基准所在的索引，然后分别对左右子数组执行快速排序
+        int middle = partition(data,left,right);
+        QuickSort(data,left,middle - 1);
+        QuickSort(data,middle + 1,right);
+    }
+}
+```
+
+
+
 
 
 #### 3.2.2.2 归并
@@ -4129,7 +4186,7 @@ int BinaryFindRecurveImpl(const vector<int>& values,int target,int start,int end
         return -1;
     }
 
-    int middle = (start + end) / 2;
+    int middle = start + (end - start) / 2;
     if(values[middle] == target)
     {
         return middle;
@@ -4158,7 +4215,7 @@ int BinaryFind(const vector<int>& values,int target)
     int end = values.size() - 1;
     while(start <= end)
     {
-        int middle = (start + end) / 2;
+        int middle = start + (end - start) / 2;
         if(values[middle] == target)
         {
             return middle;
