@@ -4075,7 +4075,7 @@ void InsertSort(int data[],int size)
 2. 将数组中小于基准的值放到数组的左侧，将大于基准的值放到数组的右侧；
 3. 然后分别对左右子数组进行上述操作，最终得到的就是排好序的数组。
 
-快速排序中将一个数组分为两部分采用的是分而治之的思想：
+快速排序中将一个数组分为两部分采用的是分治策略将一个序列分为两个子序列：
 
 1. 将右侧第一个元素的索引记为right，将左侧第一个元素的索引记为left；
 2. 从数组right索引处开始往左查找，将小于基准的值放到left索引位置，否则right一直往左移动。
@@ -4124,9 +4124,68 @@ void QuickSort(int data[],int left, int right)
 
 
 
-
-
 #### 3.2.2.2 归并
+
+![](./pics/algo/merge_sort.gif)
+
+思想：
+
+归并排序采用的分治思想，分治模式在每一层递归上有三个步骤：
+
+1. 分解：将数组分为两部分；
+2. 解决：对每一子部分进行排序；
+3. 合并：合并两个顺序的子序列得到排序结果。
+
+代码：
+
+```C++
+void MergeSort(int data[],int left,int right)
+{
+    if(left < right)
+    {
+        int middle = left + (right - left) / 2;
+        int start1 = left;
+        int end1 = middle;
+        int start2 = middle + 1;
+        int end2 = right;
+        MergeSort(data, start1,end1);
+        MergeSort(data, start2,end2);
+
+        int temp[right + 1];
+        int index = left;
+        while (start1 <= end1 && start2 <= end2)
+        {
+            if(data[start1] < data[start2])
+            {
+                temp[index++] = data[start1++];
+            }
+            else
+            {
+                temp[index++] = data[start2++];
+            }
+        }
+        
+        while (start1 <= end1)
+        {
+            temp[index++] = data[start1++];
+        }
+
+        while (start2 <= end2)
+        {
+            temp[index++] = data[start2++];
+        }
+
+        for (int i = left; i <= right; i++)
+        {
+            data[i] = temp[i];
+        }
+    }
+}
+```
+
+
+
+
 
 
 
