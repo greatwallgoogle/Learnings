@@ -5817,8 +5817,9 @@ glDepthFunc(GL_LESS);
 深度冲突很难避免，只能尽可能的减少这类情况，常用的技术方案有三种：
 
 1. 永远不要将多个物体摆放的太近，避免面重叠。
-2. 尽可能的将近平面调远一些。注意：调整的距离需要实验和微调，避免物体被裁掉。
+2. 调整近平面和远平面之间的距离。注意：调整的距离需要实验和微调，避免物体被裁掉。
 3. 使用更高精度的深度缓冲区，默认是24位的，可以采用32位。
+4. 使用多边形偏移渲染命令，但是会造成性能浪费，可结合空间管理算法和LOD算法使用。
 
 ## 4.15 混合
 
@@ -6256,169 +6257,7 @@ void main()
 
 
 
-### 4.19.5 图像后处理
-
-图像后处理的整体模式如下：
-
-1. 将场景渲染到一个帧缓冲区对象。
-2. 将帧缓冲区对象绑定的纹理作为来源，并在屏幕上渲染一个全屏矩形。
-3. 执行片段着色器，在整个矩形空间进行后处理特效处理。
-
-![](./pics/glsl/origin.png)
-
-比较简单的后期处理效果如下：
-
-#### 4.19.5.1 反向
-
-反向的操作比较简单，就是1.0减去当前片段的颜色值。
-
-```
-void main()
-{
-    gl_FragColor = vec4(vec3(1.0 - texture(screenTexture, TexCoords)), 1.0);
-}
-```
-
-![](./pics/glsl/invert.png)
-
-#### 4.19.5.2 灰度
-
-剔除屏幕中除了黑白灰之外的所有颜色，让整个图像灰度化。
-
-```
-void main()
-{
-    vec4 vColor = texture(screenTexture, TexCoords);
-    float average = 0.2126 * vColor.r + 0.7152 * vColor.g + 0.0722 * vColor.b;
-    gl_FragColor = vec4(average, average, average, 1.0);
-}
-```
-
-![](./pics/glsl/gray.png)
-
-#### 4.19.5.3 模糊
-
-模糊应用的是3*3的卷积内核：
-$$
-\begin{bmatrix}
-1 & 2 & 1\\
-2 & 4 & 2\\
-1 & 2 & 1
-\end{bmatrix}/16
-$$
-卷积内核是一个类矩阵的数值数组，它的中心为当前的像素，它会用它的核值乘以周围的像素值，并将结果相加变成一个值。所以，基本上我们是在对当前像素周围的纹理坐标添加一个小的偏移量，并根据核将结果加权合并。
-
-```
-const float offset = 1.0 / 300.0;  
-
-void main()
-{
-    vec2 offsets[9] = vec2[](
-        vec2(-offset,  offset), // 左上
-        vec2( 0.0f,    offset), // 正上
-        vec2( offset,  offset), // 右上
-        vec2(-offset,  0.0f),   // 左
-        vec2( 0.0f,    0.0f),   // 中
-        vec2( offset,  0.0f),   // 右
-        vec2(-offset, -offset), // 左下
-        vec2( 0.0f,   -offset), // 正下
-        vec2( offset, -offset)  // 右下
-    );
-
-    float kernel[9] = float[](
-        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0,
-        2.0 / 16.0, 4.0 / 16.0, 2.0 / 16.0,
-        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0  
-	);
-
-    vec3 sampleTex[9];
-    for(int i = 0; i < 9; i++)
-    {
-        sampleTex[i] = vec3(texture(screenTexture, TexCoords.st + offsets[i]));
-    }
-    vec3 col = vec3(0.0);
-    for(int i = 0; i < 9; i++)
-    {
-        col += sampleTex[i] * kernel[i];
-    }
-
-    gl_FragColor = vec4(col, 1.0);
-}
-```
-
-![](./pics/glsl/blur.png)
-
-#### 4.19.5.4 边缘检测
-
-可以在后处理阶段执行执行边缘检测，同样也是应用卷积内核，值如下：
-$$
-\begin{bmatrix}
-1 & 1 & 1 \\
-1 & -8 & 1\\
-1 & 1 &1 
-\end{bmatrix}
-$$
-这个核高亮了所有的边缘，而暗化了其它部分，在我们只关心图像的边角的时候是非常有用的。
-
-![](./pics/glsl/edge_detect.png)
-
-#### 4.19.5.5 高斯模糊
-
-一维高斯模糊公式：
-$$
-G(x) = \frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{x^2}{2\sigma^2}}
-$$
-二维高斯模糊公式：
-$$
-G(x,y) = \frac{1}{2\pi\sigma^2}e^{-\frac{x^2 + y ^ 2}{2\sigma^2}}
-$$
-如果对于每个片元执行二维高斯模糊计算，性能消耗会非常大。比如对于1024*1024的纹理而言，对于每个纹理坐标，分别在横向和纵向方向采样33次，那么最终的计算量是1024 * 1024 * 33 * 33 ≈ 11.4亿次。
-
-
-
-为了更高效的处理模糊效果，可以将二维高斯模糊分解为两个一维高斯模糊，将两次的结果相乘实现。其计算量为1024 * 1024 * 33 * 2 ≈ 6900万次。
-
-一维纵向模糊的shader代码：
-
-```
-uniform sampler2D image;
- 
-out vec4 FragmentColor;
- 
-uniform float weight[5] = float[](0.2270270270, 0.1945945946, 0.1216216216,
-                                  0.0540540541, 0.0162162162);
-void main(void) {
-    FragmentColor = texture2D(image, vec2(gl_FragCoord) / 1024.0) * weight[0];
-    for (int i=1; i<5; i++)
-    {
-        FragmentColor +=
-            texture2D(image, (vec2(gl_FragCoord) + vec2(0.0, i)) / 1024.0) * weight[i];
-
-        FragmentColor +=
-            texture2D(image, (vec2(gl_FragCoord) - vec2(0.0, i)) / 1024.0) * weight[i];
-    }
-}
-```
-
-横向高斯模糊的实现与纵向的类似，只是将Y方向的偏移换成X方向。
-
-### 4.19.6 投影纹理
-
-
-
-### 4.19.7 使用3D纹理的噪声
-
-
-
-### 4.19.8 过程纹理
-
-
-
-### 4.19.9 使用顶点纹理读取的地形渲染
-
-
-
-### 4.19.10 使用深度纹理的阴影(阴影映射)
+### 4.19.5 使用深度纹理的阴影(阴影映射)
 
 本节介绍基于深度纹理，通过两遍渲染实现的阴影效果，这种技术也称为阴影映射(Shadow Mapping)。
 
@@ -6437,25 +6276,6 @@ void main(void) {
 2. 用第一遍渲染的深度纹理渲染场景，其中片元着色器中使用```sampler2DShadow```采样器从深度纹理上采样。
 
 
-
-### 4.19.11 [法线贴图](https://www.cnblogs.com/calence/p/5551504.html)
-
-法线贴图中的法向量位于切空间中，在切空间中，法向量永远朝向正Z轴。
-
-切空间用到TBN矩阵，由tangent、bitangent和normal三个向量组成。
-
-法线贴图的切线和副切线与纹理坐标的两个方向对齐，就是用到这个特性计算每个表面的切线和副切线的。需要用到一些数学才能得到它们；请看下图：
-
-![](./pics/glsl/tbn1.png)
-
-ΔU2与切线向量T方向相同，而ΔV2与副切线向量B方向相同。可以将三角形的边E1与E2写成切线向量T和副切线向量B的线性组合：
-
-
-
-两种使用方式：
-
-1. 使用TBN矩阵，将切空间的法向量转化到世界空间
-2. 使用TBN矩阵的逆矩阵，将世界空间的向量转化到切空间。将切空间的光源位置、视线向量等发送到片元着色器，无需在片元着色器执行矩阵运算，是一个极佳的优化。
 
 
 
@@ -7715,6 +7535,29 @@ UE4:
 
 
 
+## 4.28 [法线贴图](https://www.cnblogs.com/calence/p/5551504.html)
+
+### 4.28.1 TBN矩阵的计算与使用
+
+法线贴图中的法向量位于切空间中，在切空间中，法向量永远朝向正Z轴。
+
+切空间用到TBN矩阵，由tangent、bitangent和normal三个向量组成。
+
+法线贴图的切线和副切线与纹理坐标的两个方向对齐，就是用到这个特性计算每个表面的切线和副切线的。需要用到一些数学才能得到它们；请看下图：
+
+![](./pics/glsl/tbn1.png)
+
+ΔU2与切线向量T方向相同，而ΔV2与副切线向量B方向相同。可以将三角形的边E1与E2写成切线向量T和副切线向量B的线性组合：
+
+
+
+两种使用方式：
+
+1. 使用TBN矩阵，将切空间的法向量转化到世界空间
+2. 使用TBN矩阵的逆矩阵，将世界空间的向量转化到切空间。将切空间的光源位置、视线向量等发送到片元着色器，无需在片元着色器执行矩阵运算，是一个极佳的优化。
+
+### 4.28.2 法线贴图的生成
+
 
 
 ## 渲染的问题整理
@@ -7945,6 +7788,14 @@ private:
 
 # 八、图像
 
+图像后处理的整体模式如下：
+
+1. 将场景渲染到一个帧缓冲区对象。
+2. 将帧缓冲区对象绑定的纹理作为来源，并在屏幕上渲染一个全屏矩形。
+3. 执行片段着色器，在整个矩形空间进行后处理特效处理。
+
+![](./pics/glsl/origin.png)
+
 ## 8.1 美妆
 
 ### 8.1.1 瞳孔叠加图片
@@ -7999,7 +7850,101 @@ void main() {
 
 ## 8.2 滤镜
 
-### 8.2.1 [lookup](https://hello-david.github.io/archives/f116047e.html)
+### 8.2.1 反向
+
+反向的操作比较简单，就是1.0减去当前片段的颜色值。
+
+```
+void main()
+{
+    gl_FragColor = vec4(vec3(1.0 - texture(screenTexture, TexCoords)), 1.0);
+}
+```
+
+![](./pics/glsl/invert.png)
+
+### 8.2.2 灰度
+
+剔除屏幕中除了黑白灰之外的所有颜色，让整个图像灰度化。
+
+```
+void main()
+{
+    vec4 vColor = texture(screenTexture, TexCoords);
+    float average = 0.2126 * vColor.r + 0.7152 * vColor.g + 0.0722 * vColor.b;
+    gl_FragColor = vec4(average, average, average, 1.0);
+}
+```
+
+![](./pics/glsl/gray.png)
+
+### 8.2.3 边缘检测
+
+可以在后处理阶段执行执行边缘检测，同样也是应用卷积内核，值如下：
+$$
+\begin{bmatrix}
+1 & 1 & 1 \\
+1 & -8 & 1\\
+1 & 1 &1 
+\end{bmatrix}
+$$
+这个核高亮了所有的边缘，而暗化了其它部分，在我们只关心图像的边角的时候是非常有用的。
+
+![](./pics/glsl/edge_detect.png)
+
+### 8.2.4 简单版模糊
+
+模糊应用的是3*3的卷积内核：
+$$
+\begin{bmatrix}
+1 & 2 & 1\\
+2 & 4 & 2\\
+1 & 2 & 1
+\end{bmatrix}/16
+$$
+卷积内核是一个类矩阵的数值数组，它的中心为当前的像素，它会用它的核值乘以周围的像素值，并将结果相加变成一个值。所以，基本上我们是在对当前像素周围的纹理坐标添加一个小的偏移量，并根据核将结果加权合并。
+
+```
+const float offset = 1.0 / 300.0;  
+
+void main()
+{
+    vec2 offsets[9] = vec2[](
+        vec2(-offset,  offset), // 左上
+        vec2( 0.0f,    offset), // 正上
+        vec2( offset,  offset), // 右上
+        vec2(-offset,  0.0f),   // 左
+        vec2( 0.0f,    0.0f),   // 中
+        vec2( offset,  0.0f),   // 右
+        vec2(-offset, -offset), // 左下
+        vec2( 0.0f,   -offset), // 正下
+        vec2( offset, -offset)  // 右下
+    );
+
+    float kernel[9] = float[](
+        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0,
+        2.0 / 16.0, 4.0 / 16.0, 2.0 / 16.0,
+        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0  
+	);
+
+    vec3 sampleTex[9];
+    for(int i = 0; i < 9; i++)
+    {
+        sampleTex[i] = vec3(texture(screenTexture, TexCoords.st + offsets[i]));
+    }
+    vec3 col = vec3(0.0);
+    for(int i = 0; i < 9; i++)
+    {
+        col += sampleTex[i] * kernel[i];
+    }
+
+    gl_FragColor = vec4(col, 1.0);
+}
+```
+
+![](./pics/glsl/blur.png)
+
+### 8.2.5 [lookup](https://hello-david.github.io/archives/f116047e.html)
 
 
 
@@ -8053,17 +7998,56 @@ f(x) = \frac{1}{\sigma *\sqrt{2 * \pi}} *e^{-x^2/2*\sigma^2}
 $$
 
 
-#### 8.2.2.2 二维高斯模糊
+#### 8.2.6.2 二维高斯模糊
 
 公式：
 $$
 f(x) = \frac{1}{2 * \pi*\sigma^2 } *e^{-(x^2 + y^2)/2*\sigma^2}
 $$
 
+一维高斯模糊公式：
+$$
+G(x) = \frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{x^2}{2\sigma^2}}
+$$
+二维高斯模糊公式：
+$$
+G(x,y) = \frac{1}{2\pi\sigma^2}e^{-\frac{x^2 + y ^ 2}{2\sigma^2}}
+$$
+
+#### 8.2.6.3 shader应用
+
+如果对于每个片元执行二维高斯模糊计算，性能消耗会非常大。比如对于1024*1024的纹理而言，对于每个纹理坐标，分别在横向和纵向方向采样33次，那么最终的计算量是1024 * 1024 * 33 * 33 ≈ 11.4亿次。
 
 
 
-### 8.2.3 马赛克算法
+为了更高效的处理模糊效果，可以将二维高斯模糊分解为两个一维高斯模糊，将两次的结果相乘实现。其计算量为1024 * 1024 * 33 * 2 ≈ 6900万次。
+
+一维纵向模糊的shader代码：
+
+```
+uniform sampler2D image;
+ 
+out vec4 FragmentColor;
+ 
+uniform float weight[5] = float[](0.2270270270, 0.1945945946, 0.1216216216,
+                                  0.0540540541, 0.0162162162);
+void main(void) {
+    FragmentColor = texture2D(image, vec2(gl_FragCoord) / 1024.0) * weight[0];
+    for (int i=1; i<5; i++)
+    {
+        FragmentColor +=
+            texture2D(image, (vec2(gl_FragCoord) + vec2(0.0, i)) / 1024.0) * weight[i];
+
+        FragmentColor +=
+            texture2D(image, (vec2(gl_FragCoord) - vec2(0.0, i)) / 1024.0) * weight[i];
+    }
+}
+```
+
+横向高斯模糊的实现与纵向的类似，只是将Y方向的偏移换成X方向。
+
+
+### 8.2.7 马赛克算法
 
 
 
@@ -8077,10 +8061,12 @@ $$
 - 普瑞尔斯
 - 描边算子
 
-### 8.2.5 哈哈镜变形
+### 8.2.9 哈哈镜变形
 
 - 大眼
 - 瘦脸
+
+
 
 
 

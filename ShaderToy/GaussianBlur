@@ -1,0 +1,19 @@
+#iChannel0 "file://./pics/filter/ware_house.jpg"
+#iChannel1 "file://./pics/filter/wo_niu.jpg"
+
+
+//一维高斯模糊
+vec4 GetGaussianBlur(vec2 uv)
+{
+    vec4 res(1.0);
+    return res;
+}
+
+void main()
+{
+    //将纹理坐标转化到[0,1]区间
+    vec2 uv = gl_FragCoord.xy / iResolution.xy;
+    //模糊1
+    vec4 frag = texture(iChannel1,uv);
+    gl_FragColor = frag;
+}

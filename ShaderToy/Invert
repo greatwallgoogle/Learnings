@@ -1,0 +1,33 @@
+#iChannel0 "file://./pics/filter/ware_house.jpg"
+#iChannel1 "file://./pics/filter/wo_niu.jpg"
+
+
+//反向
+vec4 GetInvert(vec4 vOriginColor)
+{
+    vec4 res = 1.0 - vOriginColor;
+    return res;
+}
+
+//灰度
+vec4 GetGrayColor(vec4 vOriginColor)
+{
+    vec3 lum = vec3(0.2126,0.7152,0.0722);
+    vec3 orgin = vec3(vOriginColor.x,vOriginColor.y,vOriginColor.z);
+    float temp = dot(lum,orgin);
+    return vec4(temp,temp,temp,1.0);
+}
+
+void main() {
+    //将纹理坐标转化到[0,1]区间
+    vec2 uv = gl_FragCoord.xy / iResolution.xy;
+    //采样
+    vec4 frag = texture(iChannel1,uv);
+    
+    //反向
+    //frag = GetInvert(frag);
+
+    //灰度
+    frag = GetGrayColor(frag);
+    gl_FragColor = frag;
+}
