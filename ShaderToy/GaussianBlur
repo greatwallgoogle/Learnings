@@ -3,17 +3,31 @@
 
 
 //一维高斯模糊
-vec4 GetGaussianBlur(vec2 uv)
+vec4 GetGaussianBlur1(vec2 uv,vec2 blurDir,float sigma,float norm,int support)
 {
-    vec4 res(1.0);
-    return res;
+    vec4 frag = texture(iChannel1,uv);
+    for(int i = 1;i <= support;i++)
+    {
+        float coeff = exp(-0.5 * float(i) * float(i) / sigma * sigma);
+        vec2 left = uv - float(i) * blurDir / iResolution.xy;
+        frag += texture(iChannel1,left) * coeff;
+        vec2 right = uv + float(i) * blurDir / iResolution.xy;
+        frag += texture(iChannel1,right) * coeff;
+    }
+
+    frag = frag * norm;
+    return frag;
 }
 
 void main()
 {
+    const float PI = 3.1415926;
     //将纹理坐标转化到[0,1]区间
     vec2 uv = gl_FragCoord.xy / iResolution.xy;
-    //模糊1
-    vec4 frag = texture(iChannel1,uv);
-    gl_FragColor = frag;
+    vec2 blurDir = vec2(1.0,0.0);
+    float sigma = 1.0;
+    float norm = 1.0 / (sqrt(2.0 * PI) * sigma);
+    int support = int(sigma * 3.0);
+    gl_FragColor = GetGaussianBlur1(uv,blurDir,sigma,norm,support);
+    gl_FragColor = texture(iChannel1,uv);
 }
