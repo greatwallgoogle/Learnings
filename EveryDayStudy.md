@@ -7998,7 +7998,7 @@ f(x) = \frac{1}{\sigma *\sqrt{2 * \pi}} *e^{-x^2/2*\sigma^2}
 $$
 
 
-#### 8.2.6.2 二维高斯模糊
+#### 8.2.2.2 二维高斯模糊
 
 公式：
 $$
@@ -8013,38 +8013,66 @@ $$
 $$
 G(x,y) = \frac{1}{2\pi\sigma^2}e^{-\frac{x^2 + y ^ 2}{2\sigma^2}}
 $$
+参数sigma控制正态分布曲线的宽度，即曲线的平滑度，此值越大，曲线越平滑。
 
-#### 8.2.6.3 shader应用
+其中高斯模糊卷积核的半径为：3 * sigma。
+
+一维高斯模糊应用（Shadertoy）：
+
+```
+//一维高斯模糊
+vec4 GetGuassionBlur1(vec2 uv,vec2 blurDir,float sigma,float norm, int radius)
+{
+    vec4 res = texture(iChannel1,uv);
+    for(int i = 1; i <= radius;i++)
+    {
+        float coaff = exp(-0.5 * float(i) * float(i)/sigma * sigma);
+        vec2 diff = float(i) * blurDir / iResolution.xy;
+        res += texture(iChannel1,uv - diff) * coaff;
+        res += texture(iChannel1,uv + diff) * coaff;
+    }
+
+    res = res * norm;
+    return res;
+}
+
+void main()
+{
+    const float PI = 3.1415926;
+    //将纹理坐标转化到[0,1]区间
+    vec2 uv = gl_FragCoord.xy / iResolution.xy;
+    vec2 blurDir = vec2(1.0,0.0);
+    float sigma = 1.0;
+    float norm = 1.0 / (sqrt(2.0 * PI) * sigma);
+    int support = int(sigma * 3.0);
+    gl_FragColor = GetGuassionBlur1(uv,blurDir,sigma,norm,support);
+    //gl_FragColor = texture(iChannel1,uv);
+}
+```
+
+
+
+#### 8.2.2.3 高斯模糊优化
+
+根据正态分布函数计算权重系数引入了一些开销很大的运算，如求幂和除法，还有一些开销相对较小的乘法操作。
+
+优化方法是采用**多项式向前差分法**。
+
+
+
+什么是多项式向前差分法？
+
+
+
+
+
+#### 8.2.2.4 二维高斯模糊
 
 如果对于每个片元执行二维高斯模糊计算，性能消耗会非常大。比如对于1024*1024的纹理而言，对于每个纹理坐标，分别在横向和纵向方向采样33次，那么最终的计算量是1024 * 1024 * 33 * 33 ≈ 11.4亿次。
 
 
 
 为了更高效的处理模糊效果，可以将二维高斯模糊分解为两个一维高斯模糊，将两次的结果相乘实现。其计算量为1024 * 1024 * 33 * 2 ≈ 6900万次。
-
-一维纵向模糊的shader代码：
-
-```
-uniform sampler2D image;
- 
-out vec4 FragmentColor;
- 
-uniform float weight[5] = float[](0.2270270270, 0.1945945946, 0.1216216216,
-                                  0.0540540541, 0.0162162162);
-void main(void) {
-    FragmentColor = texture2D(image, vec2(gl_FragCoord) / 1024.0) * weight[0];
-    for (int i=1; i<5; i++)
-    {
-        FragmentColor +=
-            texture2D(image, (vec2(gl_FragCoord) + vec2(0.0, i)) / 1024.0) * weight[i];
-
-        FragmentColor +=
-            texture2D(image, (vec2(gl_FragCoord) - vec2(0.0, i)) / 1024.0) * weight[i];
-    }
-}
-```
-
-横向高斯模糊的实现与纵向的类似，只是将Y方向的偏移换成X方向。
 
 
 ### 8.2.7 马赛克算法

@@ -3,20 +3,20 @@
 
 
 //一维高斯模糊
-vec4 GetGaussianBlur1(vec2 uv,vec2 blurDir,float sigma,float norm,int support)
+
+vec4 GetGuassionBlur1(vec2 uv,vec2 blurDir,float sigma,float norm, int radius)
 {
-    vec4 frag = texture(iChannel1,uv);
-    for(int i = 1;i <= support;i++)
+    vec4 res = texture(iChannel1,uv);
+    for(int i = 1; i <= radius;i++)
     {
-        float coeff = exp(-0.5 * float(i) * float(i) / sigma * sigma);
-        vec2 left = uv - float(i) * blurDir / iResolution.xy;
-        frag += texture(iChannel1,left) * coeff;
-        vec2 right = uv + float(i) * blurDir / iResolution.xy;
-        frag += texture(iChannel1,right) * coeff;
+        float coaff = exp(-0.5 * float(i) * float(i)/sigma * sigma);
+        vec2 diff = float(i) * blurDir / iResolution.xy;
+        res += texture(iChannel1,uv - diff) * coaff;
+        res += texture(iChannel1,uv + diff) * coaff;
     }
 
-    frag = frag * norm;
-    return frag;
+    res = res * norm;
+    return res;
 }
 
 void main()
@@ -28,6 +28,6 @@ void main()
     float sigma = 1.0;
     float norm = 1.0 / (sqrt(2.0 * PI) * sigma);
     int support = int(sigma * 3.0);
-    gl_FragColor = GetGaussianBlur1(uv,blurDir,sigma,norm,support);
-    gl_FragColor = texture(iChannel1,uv);
+    gl_FragColor = GetGuassionBlur1(uv,blurDir,sigma,norm,support);
+    //gl_FragColor = texture(iChannel1,uv);
 }
