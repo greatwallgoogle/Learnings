@@ -8013,7 +8013,7 @@ $$
 $$
 G(x,y) = \frac{1}{2\pi\sigma^2}e^{-\frac{x^2 + y ^ 2}{2\sigma^2}}
 $$
-参数sigma控制正态分布曲线的宽度，即曲线的平滑度，此值越大，曲线越平滑。
+参数sigma控制正态分布曲线的宽度，即曲线的平滑度，此值越大，曲线越平滑，对应的图像也就越模糊。
 
 其中高斯模糊卷积核的半径为：3 * sigma。
 
@@ -8057,7 +8057,7 @@ void main()
 
 根据正态分布函数计算权重系数引入了一些开销很大的运算，如求幂和除法，还有一些开销相对较小的乘法操作。
 
-优化方法是采用**多项式向前差分法。具体参考《GPU Gems 3》P671
+优化方法是采用**多项式向前差分法。具体参考《GPU Gems 3》第40章——高斯函数的增量计算部分。
 
 对于一维线性方程式：
 
@@ -8082,6 +8082,25 @@ for(int i = 0;i < Count;i++)
 	p0 += p1;
 }
 ```
+
+**高斯函数的前向差分算法如下**：
+
+（推导过程没理解，但可以先记住下面的结论！！！）
+
+```
+vec3 gaussCoeff;
+gaussCoeff.x = 1.0 / (sqrt(2.0 * PI) * sigma);
+gaussCoeff.y = exp(-0.5 * delta * delta / (sigma * sigma));
+gaussCoeff.z = gaussCoeff.y * gaussCoeff.y;
+
+for(int i = 0;i < count;i++)
+{
+	DoSomethingWithGaussCoeff(gaussCoeff.x);
+	gaussCoeff.xy *= gaussCoeff.yz;
+}
+```
+
+
 
 #### 8.2.2.4 Urho3D优化后的一维高斯模糊
 
@@ -8109,7 +8128,6 @@ vec4 GaussianBlur(int blurKernelSize, vec2 blurDir, vec2 blurRadius, float sigma
     {
         avgValue += texture2D(texSampler, texCoord - float(i) * blurVec) * gaussCoeff.x;
         avgValue += texture2D(texSampler, texCoord + float(i) * blurVec) * gaussCoeff.x;
-
         gaussCoeffSum += 2.0 * gaussCoeff.x;
         gaussCoeff.xy *= gaussCoeff.yz;
     }
@@ -8119,17 +8137,55 @@ vec4 GaussianBlur(int blurKernelSize, vec2 blurDir, vec2 blurRadius, float sigma
 
 ```
 
+#### 8.2.2.5 自己实现一维高斯模糊优化
 
+```
 
+//多项式向前查分法优化
+// Adapted: http://callumhay.blogspot.com/2010/09/gaussian-blur-shader-glsl.html
+vec4 GaussianBlur2(vec2 uv,vec2 blurDir, float sigma, int blurKernelHalfSize,float blurRadius)
+{
+    vec3 gaussCoeff;
+    gaussCoeff.x = 1.0 / (sqrt(2.0 * PI) * sigma);
+    gaussCoeff.y = exp(-0.5 / (sigma * sigma));
+    gaussCoeff.z = gaussCoeff.y * gaussCoeff.y;
 
+    vec2 blurVec = blurRadius * blurDir; 
+    float gaussCoeffNum = 0.0;
+    vec4 colorRes = texture(iChannel1,uv) * gaussCoeff.x;
+    gaussCoeffNum += gaussCoeff.x;
+    gaussCoeff.xy *= gaussCoeff.yz;
 
-#### 8.2.2.4 二维高斯模糊
+    for(int i = 1;i <= blurKernelHalfSize;i++)
+    {
+        vec2 diff = float(i) * blurVec  / iResolution.xy;
+        colorRes += texture(iChannel1,uv - diff) * gaussCoeff.x;
+        colorRes += texture(iChannel1,uv + diff) * gaussCoeff.x;
+        gaussCoeffNum += 2.0 * gaussCoeff.x;
+        gaussCoeff.xy *= gaussCoeff.yz;
+    }
+
+    colorRes = colorRes / gaussCoeffNum;
+    return colorRes;
+}
+
+void main()
+{
+    //将纹理坐标转化到[0,1]区间
+    vec2 uv = gl_FragCoord.xy / iResolution.xy;//[0,1]范围内的纹理坐标
+    vec2 blurDir = vec2(1.0,0.0);//模糊方向，此时代表横向模糊
+    float sigma = 1.0;//高斯参数
+    int blurKernelHalfSize = int(sigma * 3.0);//高斯内核半径
+    float blurRadius = 2.0;//模糊半径
+    gl_FragColor = GaussianBlur2(uv,blurDir,sigma,blurKernelHalfSize,blurRadius);
+}
+```
+
+#### 8.2.2.6 二维高斯模糊
 
 如果对于每个片元执行二维高斯模糊计算，性能消耗会非常大。比如对于1024*1024的纹理而言，对于每个纹理坐标，分别在横向和纵向方向采样33次，那么最终的计算量是1024 * 1024 * 33 * 33 ≈ 11.4亿次。
 
-
-
-为了更高效的处理模糊效果，可以将二维高斯模糊分解为两个一维高斯模糊，将两次的结果相乘实现。其计算量为1024 * 1024 * 33 * 2 ≈ 6900万次。
+为了更高效的处理模糊效果，可以将二维高斯模糊分解为两个一维高斯模糊，第一个pass先进行横向模糊，第二个pass在第一个pass的基础上进行纵向模糊，其计算量为1024 * 1024 * 33 * 2 ≈ 6900万次。
 
 
 ### 8.2.7 马赛克算法

@@ -1,5 +1,6 @@
 #iChannel0 "file://./pics/filter/ware_house.jpg"
 #iChannel1 "file://./pics/filter/wo_niu.jpg"
+#iChannel2 "self"
 
 const float PI = 3.1415926;
 
@@ -20,20 +21,31 @@ vec4 GetGuassionBlur1(vec2 uv,vec2 blurDir,float sigma,float norm, int support)
 }
 
 //多项式向前查分法优化
-//GPU Gems P671
-vec4 GetGuassionBlur2(vec2 uv,vec2 blurDir,float sigma,float delta,int support)
+// Adapted: http://callumhay.blogspot.com/2010/09/gaussian-blur-shader-glsl.html
+vec4 GaussianBlur2(vec2 uv,vec2 blurDir, float sigma, int blurKernelHalfSize,float blurRadius)
 {
-    vec4 res;
-    vec3 gussCoff;
-    gussCoff.x = 1.0 / (sqrt(2.0 * PI) * sigma);
-    gussCoff.y = exp(-0.5 * delta * delta/ (sigma * sigma));
-    gussCoff.z = gussCoff.y * gussCoff.y;
-    for(int i = 1;i <= support;i++)
+    vec3 gaussCoeff;
+    gaussCoeff.x = 1.0 / (sqrt(2.0 * PI) * sigma);
+    gaussCoeff.y = exp(-0.5 / (sigma * sigma));
+    gaussCoeff.z = gaussCoeff.y * gaussCoeff.y;
+
+    vec2 blurVec = blurRadius * blurDir; 
+    float gaussCoeffNum = 0.0;
+    vec4 colorRes = texture(iChannel1,uv) * gaussCoeff.x;
+    gaussCoeffNum += gaussCoeff.x;
+    gaussCoeff.xy *= gaussCoeff.yz;
+
+    for(int i = 1;i <= blurKernelHalfSize;i++)
     {
-        
+        vec2 diff = float(i) * blurVec  / iResolution.xy;
+        colorRes += texture(iChannel1,uv - diff) * gaussCoeff.x;
+        colorRes += texture(iChannel1,uv + diff) * gaussCoeff.x;
+        gaussCoeffNum += 2.0 * gaussCoeff.x;
+        gaussCoeff.xy *= gaussCoeff.yz;
     }
 
-    return res;
+    colorRes = colorRes / gaussCoeffNum;
+    return colorRes;
 }
 
 void main()
@@ -41,10 +53,14 @@ void main()
     //将纹理坐标转化到[0,1]区间
     vec2 uv = gl_FragCoord.xy / iResolution.xy;
     vec2 blurDir = vec2(1.0,0.0);
-    float sigma = 2.0;
-    float norm = 1.0 / (sqrt(2.0 * PI) * sigma);
+    float sigma = 1.0;
     int support = int(sigma * 3.0);
+
+    /*
+    float norm = 1.0 / (sqrt(2.0 * PI) * sigma);
     vec4 vGuassianColor = GetGuassionBlur1(uv,blurDir,sigma,norm,support);
     gl_FragColor = vGuassianColor;
-    //gl_FragColor = texture(iChannel1,uv);
+    */
+    float blurRadius = 2.0;
+    gl_FragColor = GaussianBlur2(uv,blurDir,sigma,support,blurRadius);
 }
