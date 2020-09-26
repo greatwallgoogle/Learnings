@@ -1,0 +1,41 @@
+#iChannel0 "file://./pics/filter/lookup_1.png"
+#iChannel1 "file://./pics/filter/wo_niu.jpg"
+
+//floor函数：向下取整
+//ceil函数：向上取整
+//fract函数: 取小数部分
+
+const float instensity = 1.0;//强度
+
+void main()
+{
+    //将纹理坐标转化到[0,1]区间
+    vec2 uv = gl_FragCoord.xy / iResolution.xy;
+    vec4 texColour = texture2D(iChannel1,uv);
+    //1. 确定小方格
+    float blueColor = texColour.b * 63.0;
+    
+    vec2 quad1;
+    quad1.y = floor(floor(blueColor) / 8.0);
+    quad1.x = floor(blueColor) - quad1.y * 8.0;
+
+    vec2 quad2;
+    quad2.y = floor(ceil(blueColor) / 8.0);
+    quad2.x = ceil(blueColor) - quad2.y * 8.0;
+
+    vec2 texPos1;
+    texPos1.x = (quad1.x * 0.125) + 0.5 / 512.0 + ((0.125 - 1.0 / 512.0) * texColour.r);
+    texPos1.y = (quad1.y * 0.125) + 0.5 / 512.0 + ((0.125 - 1.0 / 512.0) * texColour.g);
+
+    vec2 texPos2;
+    texPos2.x = (quad2.x * 0.125) + 0.5 / 512.0 + ((0.125 - 1.0 / 512.0) * texColour.r);
+    texPos2.y = (quad2.y * 0.125) + 0.5 / 512.0 + ((0.125 - 1.0 / 512.0) * texColour.g);
+
+    vec4 newColor1 = texture2D(iChannel0,texPos1);
+    vec4 newColor2 = texture2D(iChannel0,texPos2);
+
+    // 根据小数点的部分进行mix
+    vec4 newColor = mix(newColor1,newColor2,fract(blueColor));
+    gl_FragColor = mix(texColour,vec4(newColor.rgb,texColour.a),instensity);
+    //gl_FragColor = texColour;
+}

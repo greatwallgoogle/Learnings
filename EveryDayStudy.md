@@ -7560,6 +7560,20 @@ UE4:
 
 
 
+
+
+## 4.29 GLES 3.0新增的内容
+
+### 4.29.1 变换反馈
+
+
+
+
+
+
+
+
+
 ## 渲染的问题整理
 
 1. 欧拉角、四元数、旋转矩阵之间的关系
@@ -7944,13 +7958,21 @@ void main()
 
 ![](./pics/glsl/blur.png)
 
-### 8.2.5 [lookup](https://hello-david.github.io/archives/f116047e.html)
+### 8.2.5 [lookup](https://hello-david.github.io/archives/f116047e.html)——颜色查找表
+
+- [PS生成颜色查找表](https://helpx.adobe.com/cn/photoshop/using/export-color-lookup-tables.html)
+
+颜色查找表本质上将一种颜色转化为另外一种新颜色。
+
+- 通过颜色值的B分量确定LUT中两个小方格的行列值，quad1/quad2；
+- 根据原色颜色的R和G分量，分别计算其在两个小方格上的位置，texPos1/texPos2；
+- 在LUT纹理上，分别采样两个位置的颜色值，newColor1/newColor2；
+- 根绝蓝色分量的小数部分，混合newColor1/newColor2，得到一个新的颜色值newColor；
+- 根据指定的强度值，混合原始纹理颜色和newColor。
 
 
 
-
-
-![](./pics/filter/lookup_1.png)
+![](./pics/filter/lookup_3.png)
 
 ```
 precision mediump float;
@@ -7960,21 +7982,31 @@ varying vec2 VSOutTexCoord;
 uniform float intensity;
 void main(){
   vec4 texColour = texture2D(InputTextureSampler,VSOutTexCoord);
+  //1. 确定小方格
   float blueColor = texColour.b * 63.0;
+  
+  //2.c 计算临近两个B通道所在的方形LUT单元格（从左到右从，上到下排列）
   vec2 quad1;
   quad1.y = floor(floor(blueColor) / 8.0);
   quad1.x = floor(blueColor) - (quad1.y * 8.0);
   vec2 quad2;
   quad2.y = floor(ceil(blueColor) / 8.0);
   quad2.x = ceil(blueColor) - (quad2.y * 8.0);
+  
+  //在对应的小正方形中查找原始图像当前像素锁对应的查找表中的位置
+  //0.5是小正方形里的小正方形的位置取均值
   vec2 texPos1;
   texPos1.x = (quad1.x * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * texColour.r);
   texPos1.y = (quad1.y * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * texColour.g);
   vec2 texPos2;
   texPos2.x = (quad2.x * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * texColour.r);
   texPos2.y = (quad2.y * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * texColour.g);
+  
+  //根据当前像素查找到的相邻的两个小正方形的位置从纹理中取出形影的像素颜色值
   vec4 newColor1 = texture2D(LookupTexSampler, texPos1);
   vec4 newColor2 = texture2D(LookupTexSampler, texPos2);
+  
+  //根据蓝色通道的值对生成的相邻的两个新图像色值做加权
   vec4 newColor = mix(newColor1, newColor2, fract(blueColor));
   gl_FragColor = mix(texColour, vec4(newColor.rgb, texColour.a), intensity);
 }

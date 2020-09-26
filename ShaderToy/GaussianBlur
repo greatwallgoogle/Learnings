@@ -1,6 +1,5 @@
 #iChannel0 "file://./pics/filter/ware_house.jpg"
 #iChannel1 "file://./pics/filter/wo_niu.jpg"
-#iChannel2 "self"
 
 const float PI = 3.1415926;
 
