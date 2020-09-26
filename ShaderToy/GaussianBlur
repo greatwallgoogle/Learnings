@@ -1,33 +1,50 @@
 #iChannel0 "file://./pics/filter/ware_house.jpg"
 #iChannel1 "file://./pics/filter/wo_niu.jpg"
 
+const float PI = 3.1415926;
 
 //一维高斯模糊
 
-vec4 GetGuassionBlur1(vec2 uv,vec2 blurDir,float sigma,float norm, int radius)
+vec4 GetGuassionBlur1(vec2 uv,vec2 blurDir,float sigma,float norm, int support)
 {
     vec4 res = texture(iChannel1,uv);
-    for(int i = 1; i <= radius;i++)
+    for(int i = 1;i <= support;i++)
     {
-        float coaff = exp(-0.5 * float(i) * float(i)/sigma * sigma);
+        float fCoaff = exp(-0.5 * float(i) * float(i)/(sigma * sigma));
         vec2 diff = float(i) * blurDir / iResolution.xy;
-        res += texture(iChannel1,uv - diff) * coaff;
-        res += texture(iChannel1,uv + diff) * coaff;
+        res += texture(iChannel1,uv - diff) * fCoaff;
+        res += texture(iChannel1,uv + diff) * fCoaff;
+    }
+    res = res * norm;
+    return res;
+}
+
+//多项式向前查分法优化
+//GPU Gems P671
+vec4 GetGuassionBlur2(vec2 uv,vec2 blurDir,float sigma,float delta,int support)
+{
+    vec4 res;
+    vec3 gussCoff;
+    gussCoff.x = 1.0 / (sqrt(2.0 * PI) * sigma);
+    gussCoff.y = exp(-0.5 * delta * delta/ (sigma * sigma));
+    gussCoff.z = gussCoff.y * gussCoff.y;
+    for(int i = 1;i <= support;i++)
+    {
+        
     }
 
-    res = res * norm;
     return res;
 }
 
 void main()
 {
-    const float PI = 3.1415926;
     //将纹理坐标转化到[0,1]区间
     vec2 uv = gl_FragCoord.xy / iResolution.xy;
     vec2 blurDir = vec2(1.0,0.0);
-    float sigma = 1.0;
+    float sigma = 2.0;
     float norm = 1.0 / (sqrt(2.0 * PI) * sigma);
     int support = int(sigma * 3.0);
-    gl_FragColor = GetGuassionBlur1(uv,blurDir,sigma,norm,support);
+    vec4 vGuassianColor = GetGuassionBlur1(uv,blurDir,sigma,norm,support);
+    gl_FragColor = vGuassianColor;
     //gl_FragColor = texture(iChannel1,uv);
 }

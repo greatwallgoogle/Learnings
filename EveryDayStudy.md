@@ -8021,17 +8021,17 @@ $$
 
 ```
 //一维高斯模糊
-vec4 GetGuassionBlur1(vec2 uv,vec2 blurDir,float sigma,float norm, int radius)
+
+vec4 GetGuassionBlur1(vec2 uv,vec2 blurDir,float sigma,float norm, int support)
 {
     vec4 res = texture(iChannel1,uv);
-    for(int i = 1; i <= radius;i++)
+    for(int i = 1;i <= support;i++)
     {
-        float coaff = exp(-0.5 * float(i) * float(i)/sigma * sigma);
+        float fCoaff = exp(-0.5 * float(i) * float(i)/(sigma * sigma));
         vec2 diff = float(i) * blurDir / iResolution.xy;
-        res += texture(iChannel1,uv - diff) * coaff;
-        res += texture(iChannel1,uv + diff) * coaff;
+        res += texture(iChannel1,uv - diff) * fCoaff;
+        res += texture(iChannel1,uv + diff) * fCoaff;
     }
-
     res = res * norm;
     return res;
 }
@@ -8042,25 +8042,82 @@ void main()
     //将纹理坐标转化到[0,1]区间
     vec2 uv = gl_FragCoord.xy / iResolution.xy;
     vec2 blurDir = vec2(1.0,0.0);
-    float sigma = 1.0;
+    float sigma = 2.0;
     float norm = 1.0 / (sqrt(2.0 * PI) * sigma);
     int support = int(sigma * 3.0);
-    gl_FragColor = GetGuassionBlur1(uv,blurDir,sigma,norm,support);
+    vec4 vGuassianColor = GetGuassionBlur1(uv,blurDir,sigma,norm,support);
+    gl_FragColor = vGuassianColor;
     //gl_FragColor = texture(iChannel1,uv);
 }
 ```
 
 
 
-#### 8.2.2.3 高斯模糊优化
+#### 8.2.2.3 多项式向前差分法
 
 根据正态分布函数计算权重系数引入了一些开销很大的运算，如求幂和除法，还有一些开销相对较小的乘法操作。
 
-优化方法是采用**多项式向前差分法**。
+优化方法是采用**多项式向前差分法。具体参考《GPU Gems 3》P671
 
+对于一维线性方程式：
 
+$f(x) = a * x + b$
 
-什么是多项式向前差分法？
+我们可以知道相邻值之间的差是个常量，如：
+$$
+f(x + \theta) - f(x) = [a * (x + \theta) + b] - [a * x + b] = a * \theta
+$$
+因此从 $t_0$ 处以间隔 $dt$来计算一系列一维线性方程的向前差分算法：
+$$
+p_0 = a * t_0 + b;  \\
+p_1 = a * dt; \\
+$$
+
+```
+p0 = a * t0 + b;
+p1 = a * dt;
+for(int i = 0;i < Count;i++)
+{
+	DoSomethingWithValue(p0);
+	p0 += p1;
+}
+```
+
+#### 8.2.2.4 Urho3D优化后的一维高斯模糊
+
+```
+// Adapted: http://callumhay.blogspot.com/2010/09/gaussian-blur-shader-glsl.html
+vec4 GaussianBlur(int blurKernelSize, vec2 blurDir, vec2 blurRadius, float sigma, sampler2D texSampler, vec2 texCoord)
+{
+    int blurKernelSizeHalfSize = blurKernelSize / 2;
+
+    // Incremental Gaussian Coefficent Calculation (See GPU Gems 3 pp. 877 - 889)
+    vec3 gaussCoeff;
+    gaussCoeff.x = 1.0 / (sqrt(2.0 * PI) * sigma);
+    gaussCoeff.y = exp(-0.5 / (sigma * sigma));
+    gaussCoeff.z = gaussCoeff.y * gaussCoeff.y;
+
+    vec2 blurVec = blurRadius * blurDir;
+    vec4 avgValue = vec4(0.0);
+    float gaussCoeffSum = 0.0;
+
+    avgValue += texture2D(texSampler, texCoord) * gaussCoeff.x;
+    gaussCoeffSum += gaussCoeff.x;
+    gaussCoeff.xy *= gaussCoeff.yz;
+
+    for (int i = 1; i <= blurKernelSizeHalfSize; i++)
+    {
+        avgValue += texture2D(texSampler, texCoord - float(i) * blurVec) * gaussCoeff.x;
+        avgValue += texture2D(texSampler, texCoord + float(i) * blurVec) * gaussCoeff.x;
+
+        gaussCoeffSum += 2.0 * gaussCoeff.x;
+        gaussCoeff.xy *= gaussCoeff.yz;
+    }
+
+    return avgValue / gaussCoeffSum;
+}
+
+```
 
 
 
