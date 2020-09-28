@@ -7568,9 +7568,42 @@ UE4:
 
 
 
+## 4.30 像素拷贝
 
+优秀笔记：
 
+1. [PBO是OpenGL最高效的像素拷贝方式吗？](https://www.jianshu.com/p/3be97e897531)
+2. Android 关于美颜/滤镜 利用PBO从OpenGL[录制视频](https://www.colabug.com/2017/0515/70079/)
+3. [像素缓冲区对象 PBO](https://blog.csdn.net/panda1234lee/article/details/51546502)
 
+### 4.30.1 glReadPixels
+
+glReadPixels是OpenGL ES 2.0 和3.0都支持的API，用于从FBO中读取像素数据，此方法使用非常简单，但是效率很低。
+
+效率低的原因是CPU需要等待GPU渲染结束。
+
+使用方法：
+
+```
+//绑定一个需要读取的FBO
+GLES20.glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+//从FBO中读取像素数据，并立即返回
+GLES20.glReadPixels(0, 0, width, height, Egl.GL_CLOLR_DEFAULT,
+GLES20.GL_UNSIGNED_BYTE, buffer);
+//取消绑定FBO
+GLES20.glBindFramebuffer(GL_FRAMEBUFFER, GLES20.GL_NONE);
+```
+
+### 4.30.2 PBO
+
+PBO全称为**PixelBufferObject（**像素缓冲对象），
+
+PBO是 **OpenGL ES 3.0开始 ** 支持的一种方式，主要应用于从内存快速拷贝纹理到显存，或从显存复制像素数据到内存，性能比glReadPixels高。
+
+PBO的优点：
+
+- 通过```DMA(Direct Memory Access)```快速地在显卡上传递数据，而不影响CPU的时间周期（中断）。
+- 具有异步DMA传输，因此此特性，使得在使用单个PBO时，性能提升不明显，所以通常需要两个PBO配合使用。
 
 
 
