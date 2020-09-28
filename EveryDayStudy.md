@@ -8222,6 +8222,41 @@ void main()
 
 ### 8.2.7 马赛克算法
 
+马赛克是一种常见的图像效果，画面看起来像由很多个小方格组成，当小方格小到一定程度时，呈现的风格也被称为像素风。
+
+假设将图片分成M * N个小方格，每个方格内的片元都取方格中心点的颜色，这样渲染出来的画面就是马赛克。
+
+<img src="./pics/filter/masaike.png" style="zoom:20%;" />
+
+```
+#iChannel0 "file://./pics/filter/wo_niu.jpg"
+
+//取小方块中心点的uv
+vec2 GetUVMapPos(vec2 uv,float hor_count,float ver_count)
+{
+    float block_width = 1.0 / hor_count;
+    float hor_index = floor(uv.x / block_width);
+    float start_posx = hor_index * block_width + block_width * 0.5;
+
+    float block_height = 1.0 / ver_count;
+    float ver_index = floor(uv.y / block_height);
+    float start_posy = ver_index * block_height + block_height * 0.5;
+
+    return vec2(start_posx,start_posy);
+}
+
+void main()
+{
+    //将纹理坐标转化到[0,1]区间
+    vec2 uv = gl_FragCoord.xy / iResolution.xy;
+    float hor_count = 150.0;
+    float ver_count = 150.0;
+    vec2 newUV = GetUVMapPos(uv,hor_count,ver_count);
+    vec4 frag = texture(iChannel0,newUV);
+    gl_FragColor = frag;
+}
+```
+
 
 
 ### 8.2.4 描边

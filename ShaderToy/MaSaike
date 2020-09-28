@@ -1,0 +1,26 @@
+#iChannel0 "file://./pics/filter/wo_niu.jpg"
+
+//取小方块中心点的uv
+vec2 GetUVMapPos(vec2 uv,float hor_count,float ver_count)
+{
+    float block_width = 1.0 / hor_count;
+    float hor_index = floor(uv.x / block_width);
+    float start_posx = hor_index * block_width + block_width * 0.5;
+
+    float block_height = 1.0 / ver_count;
+    float ver_index = floor(uv.y / block_height);
+    float start_posy = ver_index * block_height + block_height * 0.5;
+
+    return vec2(start_posx,start_posy);
+}
+
+void main()
+{
+    //将纹理坐标转化到[0,1]区间
+    vec2 uv = gl_FragCoord.xy / iResolution.xy;
+    float hor_count = 150.0;
+    float ver_count = 150.0;
+    vec2 newUV = GetUVMapPos(uv,hor_count,ver_count);
+    vec4 frag = texture(iChannel0,newUV);
+    gl_FragColor = frag;
+}
