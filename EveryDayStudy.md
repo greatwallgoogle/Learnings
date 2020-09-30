@@ -7573,8 +7573,8 @@ UE4:
 优秀笔记：
 
 1. [PBO是OpenGL最高效的像素拷贝方式吗？](https://www.jianshu.com/p/3be97e897531)
-2. Android 关于美颜/滤镜 利用PBO从OpenGL[录制视频](https://www.colabug.com/2017/0515/70079/)
-3. [像素缓冲区对象 PBO](https://blog.csdn.net/panda1234lee/article/details/51546502)
+2. [像素缓冲区对象 PBO中文](https://blog.csdn.net/panda1234lee/article/details/51546502)
+3. [像素缓冲区对象PBO英文](https://blog.csdn.net/panda1234lee/article/details/51546502)
 
 ### 4.30.1 glReadPixels
 
@@ -7596,9 +7596,16 @@ GLES20.glBindFramebuffer(GL_FRAMEBUFFER, GLES20.GL_NONE);
 
 ### 4.30.2 PBO
 
-PBO全称为**PixelBufferObject（**像素缓冲对象），
+PBO全称为**PixelBufferObject（**像素缓冲对象），是 **OpenGL ES 3.0开始 ** 支持的一种方式。
 
-PBO是 **OpenGL ES 3.0开始 ** 支持的一种方式，主要应用于从内存快速拷贝纹理到显存，或从显存复制像素数据到内存，性能比glReadPixels高。
+![](.\pics\glsl\opengl_pbo.png)
+
+PBO支持pack和unpack两种操作：
+
+-  pack过程：PBO绑定的Target为```GL_PIXEL_PACK_BUFFER_ARB```时，**glReadPixels**是从OpenGL帧缓冲(FBO)读取像素数据并写入PBO中。
+- unpack过程：PBO绑定的Target为```GL_PIXEL_UNPACK_BUFFER_ARB```时，**glDrawPixels**是从PBO中读取像素数据并复制到OpenGL帧缓冲中。
+
+主要应用于从内存快速拷贝纹理到显存，或从显存复制像素数据到内存，性能比glReadPixels高。
 
 PBO的优点：
 
