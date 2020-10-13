@@ -7596,14 +7596,16 @@ GLES20.glBindFramebuffer(GL_FRAMEBUFFER, GLES20.GL_NONE);
 
 ### 4.30.2 PBO
 
+#### 4.30.2.1 PBO基础
+
 PBO全称为**PixelBufferObject（**像素缓冲对象），是 **OpenGL ES 3.0开始 ** 支持的一种方式。
 
 ![](.\pics\glsl\opengl_pbo.png)
 
 PBO支持pack和unpack两种操作：
 
--  pack过程：PBO绑定的Target为```GL_PIXEL_PACK_BUFFER_ARB```时，**glReadPixels**是从OpenGL帧缓冲(FBO)读取像素数据并写入PBO中。
-- unpack过程：PBO绑定的Target为```GL_PIXEL_UNPACK_BUFFER_ARB```时，**glDrawPixels**是从PBO中读取像素数据并复制到OpenGL帧缓冲中。
+-  pack过程：PBO绑定的Target为```GL_PIXEL_PACK_BUFFER_ARB```时，**glReadPixels**是从OpenGL帧缓冲(FBO)读取像素数据并写入(pack)PBO中。
+- unpack过程：PBO绑定的Target为```GL_PIXEL_UNPACK_BUFFER_ARB```时，**glDrawPixels**是从PBO中读取(unpack)像素数据并复制到OpenGL帧缓冲中。
 
 主要应用于从内存快速拷贝纹理到显存，或从显存复制像素数据到内存，性能比glReadPixels高。
 
@@ -7611,6 +7613,51 @@ PBO的优点：
 
 - 通过```DMA(Direct Memory Access)```快速地在显卡上传递数据，而不影响CPU的时间周期（中断）。
 - 具有异步DMA传输，因此此特性，使得在使用单个PBO时，性能提升不明显，所以通常需要两个PBO配合使用。
+
+对比不使用PBO和使用PBO加载纹理的流程：
+
+![](./pics/glsl/PBO.png)
+
+左图为不使用PBO的流程：分为两步，首先加载纹理到内存中，然后将**像素数据**从内存往显存中复制纹理对象(Client=>Server)，这两个过程都是CPU执行。
+
+右图为使用PBO的流程：CPU负责加载纹理到PBO中，但是将像素数据从PBO传输到显存纹理对象是由GPU负责的，不占用CPU时钟周期。
+
+#### 4.20.2.2 PBO创建
+
+Pixel Buffer Object使用VBO的所有API，除此之外，PBO还增加了两个标志：**GL_PIXEL_PACK_BUFFER_ARB**和**GL_PIXEL_UNPACK_BUFFER_ARB**。
+
+- **GL_PIXEL_PACK_BUFFER_ARB** ：从OpenGL中往程序中传送像素数据。
+- **GL_PIXEL_UNPACK_BUFFER_ARB** ：从程序中往OpenGL中传送像素数据。
+
+OpenGL使用这两个标志决定PBO的最佳内存位置，例如，上传纹理数据到FBO(unpack)时，使用显卡内存。读帧缓冲区（FBO）时，使用系统内存。
+
+[GitHub Demo](https://github.com/a483210/myExample/blob/master/FilterRecord/library/src/main/java/com/seu/magicfilter/filter/base/MagicRecordFilter.java#L54-L81)
+
+创建PBO 的三步：
+
+```C++
+//OpenGLES默认应该是4字节对齐应，但是不知道为什么在索尼Z2上效率反而降低
+//并且跟ImageReader最终计算出来的rowStride也和我这样计算出来的不一样，这里怀疑跟硬件和分辨率有关
+//这里默认取得128的倍数，这样效率反而高，为什么？
+int align = 128;//128字节对齐
+int mRowStride = (width * mPixelStride + (align - 1)) & ~(align - 1);
+int mPboSize = mRowStride * height;
+
+GLuint mPboIds[2];
+//1.
+GLES30.glGenBuffers(2, mPboIds);
+//2.
+GLES30.glBindBuffer(GLES30.GL_PIXEL_PACK_BUFFER, mPboIds[0]);
+//3.
+GLES30.glBufferData(GLES30.GL_PIXEL_PACK_BUFFER, mPboSize, null, GLES30.GL_STATIC_READ);
+
+GLES30.glBindBuffer(GLES30.GL_PIXEL_PACK_BUFFER, mPboIds[1]);
+GLES30.glBufferData(GLES30.GL_PIXEL_PACK_BUFFER, mPboSize, null, GLES30.GL_STATIC_READ);
+
+GLES30.glBindBuffer(GLES30.GL_PIXEL_PACK_BUFFER, 0);
+```
+
+
 
 
 
