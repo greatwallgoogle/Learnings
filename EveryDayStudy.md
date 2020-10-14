@@ -7622,7 +7622,7 @@ PBO的优点：
 
 右图为使用PBO的流程：CPU负责加载纹理到PBO中，但是将像素数据从PBO传输到显存纹理对象是由GPU负责的，不占用CPU时钟周期。
 
-#### 4.20.2.2 PBO创建
+#### 4.30.2.2 PBO创建
 
 Pixel Buffer Object使用VBO的所有API，除此之外，PBO还增加了两个标志：**GL_PIXEL_PACK_BUFFER_ARB**和**GL_PIXEL_UNPACK_BUFFER_ARB**。
 
@@ -7655,6 +7655,114 @@ GLES30.glBindBuffer(GLES30.GL_PIXEL_PACK_BUFFER, mPboIds[1]);
 GLES30.glBufferData(GLES30.GL_PIXEL_PACK_BUFFER, mPboSize, null, GLES30.GL_STATIC_READ);
 
 GLES30.glBindBuffer(GLES30.GL_PIXEL_PACK_BUFFER, 0);
+```
+
+PBO提供了一种内存映射机制，可以将OpenGL控制的帧缓冲对象映射到客户端内存地址空间，客户端可以使用**glMapBuffer()**或**glMapBufferRange()**修改全部或部分缓冲区对象，使用**glUnmapBuffer()**解除映射。
+
+```
+void* glMapBuffer(GLenum target, GLenum access)
+
+GLboolean glUnmapBuffer(GLenum target)
+```
+
+glMapBuffer()将返回一个指向缓冲区对象的指针。缓冲区对象必须取消映射,可使用glUnmapBuffer()。
+
+- Target参数是GL_PIXEL_PACK_BUFFER 或GL_PIXEL_UNPACK_BUFFER。
+- access参数指定映射的缓冲区的访问方式：从PBO中读数据(GL_READ_ONLY)，写数据到PBO中(GL_WRITE_ONLY) 或读写PBO(GL_READ_WRITE)。
+
+#### 4.30.2.3 两个PBO实现streaming纹理上传
+
+在PBO模式下，每一帧都直接将源纹理写入映射的像素缓冲区（PBO）。然后使用glTexSubImage2D()函数将纹理数据从PBO传送到纹理对象中。
+
+使用PBO，OpenGL可以在PBO和纹理对象之间执行异步DMA传输。这显著提高了**纹理上传**的性能。如果显卡支持异步的DMA操作，glTexSubImage2D()会立即返回。CPU无需等待纹理拷贝，便可以做其它事情。
+
+可以使用多个PBO来尽可能提升streaming传输性能。 图中表示同时使用两个PBO：glTexSubImage2D()从一个PBO中读取数据，同时将源纹理写入到另一个PBO当中。
+
+<img src="./pics/glsl/pbo_stream_texture.png" style="zoom:50%;" />
+
+**第n帧，PBO1正被glTexSubImage2D()函数使用。而PBO2用于读取新的纹理。在第n+1帧时，2个PBO交换角色，并继续更新纹理。因为DMA传输的异步性，更新和复制可被同时执行。CPU将新纹理更新到一个PBO中，同时GPU从另一个PBO中复制纹理。**
+
+```
+// "index" 用于从PBO中拷贝像素数据至texture object
+// "nextIndex" 用于更新另一个PBO中的像素数据
+index = (index + 1) % 2;
+nextIndex = (index + 1) % 2;
+
+// bind the texture and PBO
+glBindTexture(GL_TEXTURE_2D, textureId);
+glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIds[index]);
+
+// copy pixels from PBO to texture object
+// Use offset instead of ponter.
+glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+
+
+// bind PBO to update texture source
+glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIds[nextIndex]);
+
+// Note that glMapBuffer() causes sync issue.
+// If GPU is working with this buffer, glMapBuffer() will wait(stall)
+// until GPU to finish its job. To avoid waiting (idle), you can call
+// first glBufferData() with NULL pointer before glMapBuffer().
+// If you do that, the previous data in PBO will be discarded and
+// glMapBuffer() returns a new allocated pointer immediately
+// even if GPU is still working with the previous data.
+glBufferData(GL_PIXEL_UNPACK_BUFFER, DATA_SIZE, 0, GL_STREAM_DRAW);
+
+// map the buffer object into client's memory
+GLubyte* ptr = (GLubyte*)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+if(ptr)
+{
+    // update data directly on the mapped buffer
+    updatePixels(ptr, DATA_SIZE);
+    glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER); // release the mapped buffer
+}
+
+// it is good idea to release PBOs with ID 0 after use.
+// Once bound with 0, all pixel operations are back to normal ways.
+glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+```
+
+#### 4.30.2.4 异步read-back
+
+[pboPack](http://www.songho.ca/opengl/files/pboPack.zip)
+
+从帧缓冲区(左侧图)读取像素数据到PBO中，之后在右侧窗体中画出来，并修改图像的亮度。
+
+<img src="./pics/glsl/asyn_read_back.png" style="zoom: 33%;" />
+
+传统的glReadPixels()阻塞渲染管线，直到所有的像素传输完毕。然后，它把控制权交给程序。使用PBO的glReadPixels()可使用异步DMA传输，立即返回，无需等待。因此当GPU传输数据时，程序(CPU)可执行其它操作。
+
+<img src="./pics/glsl/pbo_read_pixels.png" style="zoom: 67%;" />
+
+此Demo使用两个PBO，在第n帧时，程序使用glReadPixels()从OpenGL读取像素信息到PBO1中，在PBO2 中处理像素数据。读数据和处理数据是同时进行的。因为glReadPixels()在PBO1上立即返回，CPU可以在PBO2中处理数据而没有延迟。我们可以在每一帧中交换PBO1和PBO2。
+
+```
+// "index" 用于从FBO中读取像素到PBO
+// "nextIndex" 用于更新另一个PBO中的像素
+index = (index + 1) % 2;
+nextIndex = (index + 1) % 2;
+
+// set the target framebuffer to read
+glReadBuffer(GL_FRONT);
+
+// read pixels from framebuffer to PBO
+// glReadPixels() should return immediately.
+glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[index]);
+glReadPixels(0, 0, WIDTH, HEIGHT, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+
+// map the PBO to process its data by CPU
+glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[nextIndex]);
+GLubyte* ptr = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+if(ptr)
+{
+    processPixels(ptr, ...);
+    glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+}
+
+// back to conventional pixel operation
+glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 ```
 
 
