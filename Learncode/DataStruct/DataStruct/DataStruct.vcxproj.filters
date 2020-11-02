@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="DesignMode">
+      <UniqueIdentifier>{567aedf0-cd6e-4f27-9885-5a890a51b1c0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -55,6 +58,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Alloctor3.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DesignMode\FactoryMethod.h">
+      <Filter>DesignMode</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
